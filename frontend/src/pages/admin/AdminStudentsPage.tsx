@@ -42,21 +42,21 @@ export default function AdminStudentsPage() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-students'] })
-      toast.success('Saqlandi')
+      toast.success('Saved')
     },
-    onError: () => toast.error('Saqlashda xatolik'),
+    onError: () => toast.error('Saveda xatolik'),
   })
 
   return (
     <AdminLayout>
       <header className="border-b bg-white px-8 py-5">
-        <h1 className="text-2xl font-bold tracking-tight">Talabalar</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Students</h1>
         <p className="text-sm text-muted-foreground">
-          Talabalarga ustoz biriktirish
+          Studentsga ustoz biriktirish
         </p>
       </header>
       <div className="p-8">
-        {students.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {students.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {students.data && students.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
@@ -71,8 +71,8 @@ export default function AdminStudentsPage() {
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-6 py-3">Ism</th>
-                    <th className="px-6 py-3">Telefon</th>
-                    <th className="px-6 py-3">Ustoz</th>
+                    <th className="px-6 py-3">Username</th>
+                    <th className="px-6 py-3">Teacher</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">

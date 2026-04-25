@@ -49,7 +49,7 @@ export default function OrgLandingPage() {
   if (q.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Yuklanmoqda…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     )
   }
@@ -81,7 +81,7 @@ export default function OrgLandingPage() {
                 <Link to="/login"><Button variant="ghost" size="sm">Kirish</Button></Link>
                 <Link to={`/${slug}/register`}>
                   <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent)]">
-                    Ro‘yxatdan o‘tish
+                    Sign Up
                   </Button>
                 </Link>
               </>
@@ -119,7 +119,7 @@ export default function OrgLandingPage() {
                 <h3 className="font-semibold">{title}</h3>
                 <p className="mt-1 text-xs text-[var(--muted)]">{meta}</p>
                 {comingSoon && (
-                  <p className="mt-2 text-xs font-medium text-orange-700">🚧 Tez kunda</p>
+                  <p className="mt-2 text-xs font-medium text-orange-700">🚧 Coming soon</p>
                 )}
               </CardContent>
             </Card>

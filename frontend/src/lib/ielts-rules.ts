@@ -7,7 +7,7 @@
  *  - Copy/paste/cut bloklangan
  *  - Right-click context menu bloklangan
  *  - F12, Ctrl+Shift+I/J/C, Ctrl+U bloklangan
- *  - Sahifani yangilash bloklangan (beforeunload warning)
+ *  - Refresh page bloklangan (beforeunload warning)
  */
 
 export class IELTSEnforcement {

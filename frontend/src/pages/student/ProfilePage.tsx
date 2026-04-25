@@ -16,7 +16,7 @@ const LANGUAGES = [
   { value: 'en', label: 'English' },
 ]
 
-export default function ProfilePage() {
+export default function ProfileePage() {
   const user = useAuth((s) => s.user)
   const updateProfile = useAuth((s) => s.updateProfile)
   const [target, setTarget] = useState<string>(user?.target_band ?? '')
@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    document.title = 'ILDIZmock — Profil'
+    document.title = 'ILDIZmock — Profile'
     if (user) {
       setTarget(user.target_band ?? '')
       setLang(user.language ?? 'uz')
@@ -40,9 +40,9 @@ export default function ProfilePage() {
         target_band: target || null,
         language: lang as 'uz' | 'ru' | 'en',
       } as never)
-      toast.success('Profil saqlandi')
+      toast.success('Profile saqlandi')
     } catch {
-      toast.error('Saqlashda xatolik')
+      toast.error('Saveda xatolik')
     } finally {
       setSaving(false)
     }
@@ -57,7 +57,7 @@ export default function ProfilePage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Kabinetim
             </Button>
           </Link>
-          <h1 className="text-lg font-semibold">Profil</h1>
+          <h1 className="text-lg font-semibold">Profile</h1>
         </div>
       </header>
 
@@ -68,7 +68,7 @@ export default function ProfilePage() {
               <ReadOnly label="Ism" value={user.first_name} />
               <ReadOnly label="Familiya" value={user.last_name} />
             </div>
-            <ReadOnly label="Telefon" value={user.phone} />
+            <ReadOnly label="Username" value={user.phone} />
             <ReadOnly label="Rol" value={user.role} />
             <p className="text-xs text-[var(--muted)]">
               Ism, familiya va telefonni o‘zgartirish uchun adminga murojaat qiling.
@@ -77,7 +77,7 @@ export default function ProfilePage() {
             <hr />
 
             <div className="space-y-2">
-              <Label>Maqsad band</Label>
+              <Label>Target band</Label>
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
@@ -104,7 +104,7 @@ export default function ProfilePage() {
             </div>
 
             <Button onClick={onSave} disabled={saving} className="w-full">
-              {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+              {saving ? 'Saving…' : 'Save'}
             </Button>
           </CardContent>
         </Card>

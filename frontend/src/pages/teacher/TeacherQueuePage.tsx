@@ -34,19 +34,19 @@ export default function TeacherQueuePage() {
   return (
     <TeacherLayout>
       <header className="border-b bg-white px-8 py-5">
-        <h1 className="text-2xl font-bold tracking-tight">Tekshirish navbati</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Review queue</h1>
         <p className="text-sm text-muted-foreground">
-          Talabalaringiz tomonidan yuborilgan inshalar
+          Studentsingiz tomonidan yuborilgan inshalar
         </p>
       </header>
       <div className="p-8">
-        {q.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {q.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {q.isError && <p className="text-destructive">Yuklab bo‘lmadi.</p>}
         {q.data && q.data.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center gap-3 p-12 text-center">
               <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-              <p className="text-lg font-medium">Tekshirilmagan ish yo‘q ✓</p>
+              <p className="text-lg font-medium">No pending submissions ✓</p>
               <p className="text-sm text-muted-foreground">
                 Yangi insha kelganida bu yerda ko‘rinadi.
               </p>
@@ -75,7 +75,7 @@ export default function TeacherQueuePage() {
                     </div>
                   </div>
                   <Link to={`/teacher/grade/${s.id}`}>
-                    <Button size="sm">Tekshirish</Button>
+                    <Button size="sm">Review</Button>
                   </Link>
                 </CardContent>
               </Card>

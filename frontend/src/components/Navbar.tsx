@@ -18,7 +18,7 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             <Link to="/history">
               <Button variant="ghost" size="sm">
-                <History className="mr-2 h-4 w-4" /> Tarixim
+                <History className="mr-2 h-4 w-4" /> My History
               </Button>
             </Link>
             <UserMenu />
@@ -29,7 +29,7 @@ export function Navbar() {
               <Button variant="ghost" size="sm">Kirish</Button>
             </Link>
             <Link to="/register">
-              <Button size="sm">Ro‘yxatdan o‘tish</Button>
+              <Button size="sm">Sign Up</Button>
             </Link>
           </div>
         )}

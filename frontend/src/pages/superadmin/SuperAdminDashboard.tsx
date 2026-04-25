@@ -38,27 +38,27 @@ export default function SuperAdminDashboard() {
         </div>
         <Link to="/super/organizations">
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> Yangi markaz qo‘shish
+            <Plus className="mr-2 h-4 w-4" /> Add new center
           </Button>
         </Link>
       </header>
 
       <div className="space-y-6 p-8">
-        {q.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
-        {q.isError && <p className="text-destructive">Statistikani yuklab bo‘lmadi.</p>}
+        {q.isLoading && <p className="text-muted-foreground">Loading…</p>}
+        {q.isError && <p className="text-destructive">Statisticsni yuklab bo‘lmadi.</p>}
         {q.data && (
           <>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Stat
                 Icon={Building2}
-                label="Markazlar"
+                label="Centers"
                 value={q.data.orgs_total}
                 hint={`${q.data.orgs_by_status.active} faol · ${q.data.orgs_by_status.trial} sinov`}
                 tint="bg-blue-500"
               />
               <Stat
                 Icon={Users}
-                label="Talabalar"
+                label="Students"
                 value={q.data.students_total}
                 hint="Hamma markazlarda"
                 tint="bg-emerald-500"
@@ -67,7 +67,7 @@ export default function SuperAdminDashboard() {
                 Icon={ClipboardList}
                 label="Bu oy"
                 value={q.data.attempts_this_month}
-                hint="ta test topshirildi"
+                hint="tests topshirildi"
                 tint="bg-orange-500"
               />
               <Stat
@@ -82,12 +82,12 @@ export default function SuperAdminDashboard() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="mb-4 text-base font-semibold">Markazlar holati</h2>
+                  <h2 className="mb-4 text-base font-semibold">Centers holati</h2>
                   <ul className="space-y-2 text-sm">
-                    <StatusRow label="Faol" count={q.data.orgs_by_status.active} dot="bg-emerald-500" />
-                    <StatusRow label="Sinov" count={q.data.orgs_by_status.trial} dot="bg-amber-500" />
-                    <StatusRow label="Tarif tugagan" count={q.data.orgs_by_status.expired} dot="bg-rose-500" />
-                    <StatusRow label="Bloklangan" count={q.data.orgs_by_status.blocked} dot="bg-slate-500" />
+                    <StatusRow label="Active" count={q.data.orgs_by_status.active} dot="bg-emerald-500" />
+                    <StatusRow label="Trial" count={q.data.orgs_by_status.trial} dot="bg-amber-500" />
+                    <StatusRow label="Plan tugagan" count={q.data.orgs_by_status.expired} dot="bg-rose-500" />
+                    <StatusRow label="Blocked" count={q.data.orgs_by_status.blocked} dot="bg-slate-500" />
                   </ul>
                 </CardContent>
               </Card>
@@ -114,7 +114,7 @@ export default function SuperAdminDashboard() {
             <Card>
               <CardContent className="p-0">
                 <div className="border-b px-6 py-4">
-                  <h2 className="text-base font-semibold">So‘nggi to‘lovlar</h2>
+                  <h2 className="text-base font-semibold">Recent payments</h2>
                 </div>
                 {q.data.recent_payments.length === 0 ? (
                   <p className="p-6 text-sm text-muted-foreground">Hech narsa yo‘q.</p>
@@ -122,11 +122,11 @@ export default function SuperAdminDashboard() {
                   <table className="w-full text-sm">
                     <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                       <tr>
-                        <th className="px-6 py-3">Markaz</th>
-                        <th className="px-6 py-3">Tarif</th>
+                        <th className="px-6 py-3">Center</th>
+                        <th className="px-6 py-3">Plan</th>
                         <th className="px-6 py-3">Summa</th>
-                        <th className="px-6 py-3">Holat</th>
-                        <th className="px-6 py-3">Sana</th>
+                        <th className="px-6 py-3">Status</th>
+                        <th className="px-6 py-3">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -152,7 +152,7 @@ export default function SuperAdminDashboard() {
             <Card>
               <CardContent className="p-0">
                 <div className="border-b px-6 py-4">
-                  <h2 className="text-base font-semibold">So‘nggi yangi talabalar</h2>
+                  <h2 className="text-base font-semibold">Recently joined students</h2>
                 </div>
                 {q.data.recent_students.length === 0 ? (
                   <p className="p-6 text-sm text-muted-foreground">Hech narsa yo‘q.</p>

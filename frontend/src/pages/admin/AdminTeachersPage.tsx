@@ -49,7 +49,7 @@ export default function AdminTeachersPage() {
       (await api.post('/admin/teachers/', form)).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-teachers'] })
-      toast.success('Ustoz yaratildi')
+      toast.success('Teacher yaratildi')
       setOpen(false)
       setForm({ phone: '+998', first_name: '', last_name: '', password: '' })
     },
@@ -66,17 +66,17 @@ export default function AdminTeachersPage() {
     <AdminLayout>
       <header className="flex items-center justify-between border-b bg-white px-8 py-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Ustozlar</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Teachers</h1>
           <p className="text-sm text-muted-foreground">
             Teacher rolidagi foydalanuvchilar
           </p>
         </div>
         <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Yangi ustoz
+          <Plus className="mr-2 h-4 w-4" /> New teacher
         </Button>
       </header>
       <div className="p-8">
-        {list.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {list.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {list.data && list.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
@@ -91,9 +91,9 @@ export default function AdminTeachersPage() {
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-6 py-3">Ism</th>
-                    <th className="px-6 py-3">Telefon</th>
-                    <th className="px-6 py-3">Talabalar</th>
-                    <th className="px-6 py-3">Faol</th>
+                    <th className="px-6 py-3">Username</th>
+                    <th className="px-6 py-3">Students</th>
+                    <th className="px-6 py-3">Active</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -117,7 +117,7 @@ export default function AdminTeachersPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Yangi ustoz qo‘shish</DialogTitle>
+            <DialogTitle>New teacher qo‘shish</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -137,7 +137,7 @@ export default function AdminTeachersPage() {
               </div>
             </div>
             <div>
-              <Label>Telefon</Label>
+              <Label>Username</Label>
               <Input
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -145,7 +145,7 @@ export default function AdminTeachersPage() {
               />
             </div>
             <div>
-              <Label>Parol</Label>
+              <Label>Password</Label>
               <Input
                 type="password"
                 value={form.password}
@@ -155,7 +155,7 @@ export default function AdminTeachersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Bekor qilish
+              Cancel
             </Button>
             <Button onClick={() => create.mutate()} disabled={create.isPending}>
               {create.isPending ? 'Yaratilmoqda…' : 'Yaratish'}

@@ -13,9 +13,9 @@ const PHONE_RE = /^\+998\d{9}$/
 const schema = z.object({
   phone: z
     .string()
-    .min(13, 'Telefon raqam +998 va 9 raqamdan iborat bo‘lsin')
-    .regex(PHONE_RE, 'Format: +998XXXXXXXXX (jami 13 ta belgi)'),
-  password: z.string().min(8, 'Parol kamida 8 ta belgi bo‘lsin'),
+    .min(13, 'Username is required (min 2 chars)')
+    .regex(PHONE_RE, 'Use lowercase letters and digits only'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -35,7 +35,7 @@ export default function LoginPage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.phone, values.password)
-      toast.success('Tizimga kirdingiz')
+      toast.success('Signed in')
       // Role-based redirect
       const me = useAuth.getState().user
       const role = me?.role
@@ -53,7 +53,7 @@ export default function LoginPage() {
       const msg =
         (data && typeof data === 'object' && (data.detail as string | undefined)) ||
         (data && Object.values(data).flat().join(' ')) ||
-        'Telefon yoki parol noto‘g‘ri'
+        'Wrong username or password'
       toast.error(String(msg))
     }
   }
@@ -83,13 +83,13 @@ export default function LoginPage() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Kirish</h2>
             <p className="text-sm text-muted-foreground">
-              Telefon raqamingiz bilan hisobingizga kiring
+              Usernameingiz bilan hisobingizga kiring
             </p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
+              <Label htmlFor="phone">Username</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -105,7 +105,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            Hisobingiz yo‘qmi?{' '}
+            No account?{' '}
             <Link
               to="/register"
               className="font-medium text-foreground underline-offset-4 hover:underline"

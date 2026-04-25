@@ -24,16 +24,16 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white p-6 text-center">
-          <h1 className="text-2xl font-bold">Texnik xatolik</h1>
+          <h1 className="text-2xl font-bold">Technical error</h1>
           <p className="text-slate-600">
-            Sahifani yangilang yoki bizga xabar bering.
+            Refresh the page or contact us.
           </p>
           {this.state.message && (
             <p className="max-w-md font-mono text-xs text-slate-400">
               {this.state.message}
             </p>
           )}
-          <Button onClick={() => window.location.reload()}>Sahifani yangilash</Button>
+          <Button onClick={() => window.location.reload()}>Refresh page</Button>
         </div>
       )
     }

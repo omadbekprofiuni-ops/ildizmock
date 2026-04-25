@@ -25,21 +25,21 @@ type NavItem = {
 
 const MAIN_NAV: NavItem[] = [
   { to: '/super', label: 'Dashboard', Icon: LayoutDashboard, end: true },
-  { to: '/super/organizations', label: 'Markazlar', Icon: Building2 },
-  { to: '/super/payments', label: 'To‘lovlar', Icon: CreditCard },
-  { to: '/super/tests', label: 'Global testlar', Icon: FileText },
-  { to: '/super/audio', label: 'Audio fayllar', Icon: Headphones },
-  { to: '/super/stats', label: 'Statistika', Icon: BarChart3 },
-  { to: '/super/settings', label: 'Sozlamalar', Icon: Settings },
+  { to: '/super/organizations', label: 'Centers', Icon: Building2 },
+  { to: '/super/payments', label: 'Payments', Icon: CreditCard },
+  { to: '/super/tests', label: 'Global tests', Icon: FileText },
+  { to: '/super/audio', label: 'Audio files', Icon: Headphones },
+  { to: '/super/stats', label: 'Statistics', Icon: BarChart3 },
+  { to: '/super/settings', label: 'Settings', Icon: Settings },
 ]
 
 const ORG_CONTEXT_NAV: NavItem[] = [
-  { to: '/super/org/dashboard', label: 'Bosh sahifa', Icon: LayoutDashboard, end: true },
-  { to: '/super/org/students', label: 'Talabalar', Icon: Building2 },
-  { to: '/super/org/teachers', label: 'Ustozlar', Icon: Building2 },
-  { to: '/super/org/writings', label: 'Yozma ishlar', Icon: FileText },
-  { to: '/super/org/stats', label: 'Statistika', Icon: BarChart3 },
-  { to: '/super/org/billing', label: 'To‘lov', Icon: CreditCard },
+  { to: '/super/org/dashboard', label: 'Home', Icon: LayoutDashboard, end: true },
+  { to: '/super/org/students', label: 'Students', Icon: Building2 },
+  { to: '/super/org/teachers', label: 'Teachers', Icon: Building2 },
+  { to: '/super/org/writings', label: 'Writing submissions', Icon: FileText },
+  { to: '/super/org/stats', label: 'Statistics', Icon: BarChart3 },
+  { to: '/super/org/billing', label: 'Payment', Icon: CreditCard },
 ]
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
@@ -80,7 +80,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
               onClick={onExitOrgContext}
               className="mb-2 flex items-center gap-2 text-xs text-slate-400 hover:text-white"
             >
-              <ArrowLeft className="h-3 w-3" /> Asosiy panelga qaytish
+              <ArrowLeft className="h-3 w-3" /> Back to main panel
             </button>
             <div className="text-sm font-semibold">[{orgName}]</div>
           </div>
@@ -113,7 +113,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
             onClick={onLogout}
             className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
           >
-            <LogOut className="mr-2 h-4 w-4" /> Chiqish
+            <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>
       </aside>

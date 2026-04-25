@@ -38,7 +38,7 @@ export default function MyWritingsPage() {
         <div className="container flex h-16 items-center gap-3">
           <Link to="/home">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Bosh sahifa
+              <ArrowLeft className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
           <h1 className="text-lg font-semibold">Mening yozma ishlarim</h1>
@@ -46,11 +46,11 @@ export default function MyWritingsPage() {
       </header>
 
       <main className="container py-10">
-        {q.isLoading && <p className="text-[var(--muted)]">Yuklanmoqda…</p>}
+        {q.isLoading && <p className="text-[var(--muted)]">Loading…</p>}
         {q.data && q.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-[var(--muted)]">
-              Hali insha yubormagansiz.
+              You haven't submitted any essays yet.
             </CardContent>
           </Card>
         )}
@@ -68,11 +68,11 @@ export default function MyWritingsPage() {
                     </div>
                     {w.status === 'pending' ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
-                        <Clock className="h-3 w-3" /> Tekshirilmoqda
+                        <Clock className="h-3 w-3" /> Pending review
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
-                        <CheckCircle2 className="h-3 w-3" /> Baholangan ·{' '}
+                        <CheckCircle2 className="h-3 w-3" /> Graded ·{' '}
                         Band {w.teacher_band}
                       </span>
                     )}
@@ -82,7 +82,7 @@ export default function MyWritingsPage() {
                       {w.teacher_feedback && (
                         <div className="rounded-md border bg-slate-50 p-4">
                           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Ustoz izohi {w.teacher_name && `(${w.teacher_name})`}
+                            Teacher izohi {w.teacher_name && `(${w.teacher_name})`}
                           </p>
                           <p className="whitespace-pre-wrap text-sm text-slate-800">
                             {w.teacher_feedback}

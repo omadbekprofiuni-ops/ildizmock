@@ -81,16 +81,16 @@ export function UserMenu() {
           {isTeacher && (
             <Item to="/teacher" Icon={Users}>O‘qituvchi paneli</Item>
           )}
-          <Item to="/dashboard" Icon={LayoutDashboard}>Mening kabinetim</Item>
-          <Item to="/my-writings" Icon={FilePen}>Yozma ishlarim</Item>
-          <Item to="/history" Icon={History}>Tarix</Item>
-          <Item to="/profile" Icon={User}>Profil</Item>
+          <Item to="/dashboard" Icon={LayoutDashboard}>My Dashboard</Item>
+          <Item to="/my-writings" Icon={FilePen}>My Writings</Item>
+          <Item to="/history" Icon={History}>History</Item>
+          <Item to="/profile" Icon={User}>Profile</Item>
           <button
             type="button"
             onClick={onLogout}
             className="flex w-full items-center gap-2 border-t px-3 py-2 text-sm text-rose-600 hover:bg-rose-50"
           >
-            <LogOut className="h-4 w-4" /> Chiqish
+            <LogOut className="h-4 w-4" /> Logout
           </button>
         </div>
       )}

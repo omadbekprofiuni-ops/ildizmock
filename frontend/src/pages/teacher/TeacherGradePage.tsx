@@ -63,7 +63,7 @@ export default function TeacherGradePage() {
     },
     onError: (err) => {
       const data = (err as { response?: { data?: { detail?: string } } })?.response?.data
-      toast.error(data?.detail || 'Saqlashda xatolik')
+      toast.error(data?.detail || 'Saveda xatolik')
     },
   })
 
@@ -77,7 +77,7 @@ export default function TeacherGradePage() {
         </Link>
         <div>
           <h1 className="text-xl font-bold">
-            {q.data?.student_name ?? 'Yuklanmoqda…'}
+            {q.data?.student_name ?? 'Loading…'}
           </h1>
           <p className="text-sm text-muted-foreground">
             {q.data?.test_name} · {q.data?.word_count ?? '—'} so‘z
@@ -85,10 +85,10 @@ export default function TeacherGradePage() {
         </div>
       </header>
 
-      {q.isLoading && <p className="p-8 text-muted-foreground">Yuklanmoqda…</p>}
+      {q.isLoading && <p className="p-8 text-muted-foreground">Loading…</p>}
       {q.isError && (
         <p className="p-8 text-destructive">
-          Topshirilgan ishni yuklab bo‘lmadi (sizning shogirdingiz emasmikan?)
+          Submitted ishni yuklab bo‘lmadi (sizning shogirdingiz emasmikan?)
         </p>
       )}
       {q.data && (
@@ -113,7 +113,7 @@ export default function TeacherGradePage() {
           <section className="space-y-6">
             <div className="rounded-lg border bg-white p-6">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Talabaning insheasi
+                Studentning insheasi
               </h2>
               <div className="whitespace-pre-wrap rounded-md border bg-slate-50 p-4 text-sm leading-relaxed text-slate-800">
                 {q.data.essay_text}
@@ -122,7 +122,7 @@ export default function TeacherGradePage() {
 
             <div className="rounded-lg border bg-white p-6">
               <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Baholash
+                Grade
               </h2>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -166,7 +166,7 @@ export default function TeacherGradePage() {
                   onClick={() => grade.mutate()}
                   disabled={grade.isPending}
                 >
-                  {grade.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+                  {grade.isPending ? 'Saving…' : 'Save'}
                 </Button>
               </div>
             </div>

@@ -10,8 +10,8 @@ type Props = { children: ReactNode }
 const NAV = [
   { to: '/admin', label: 'Dashboard', Icon: LayoutDashboard, end: true },
   { to: '/admin/tests', label: 'Testlar', Icon: FileText, end: false },
-  { to: '/admin/teachers', label: 'Ustozlar', Icon: GraduationCap, end: false },
-  { to: '/admin/students', label: 'Talabalar', Icon: Users, end: false },
+  { to: '/admin/teachers', label: 'Teachers', Icon: GraduationCap, end: false },
+  { to: '/admin/students', label: 'Students', Icon: Users, end: false },
 ]
 
 export default function AdminLayout({ children }: Props) {
@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: Props) {
             onClick={handleLogout}
             className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
           >
-            <LogOut className="mr-2 h-4 w-4" /> Chiqish
+            <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>
       </aside>

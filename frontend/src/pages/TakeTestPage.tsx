@@ -121,7 +121,7 @@ function ReviewView({ result }: { result: Result }) {
               size="sm"
               className="text-white hover:bg-emerald-800 hover:text-white"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Natijaga qaytish
+              <ArrowLeft className="mr-2 h-4 w-4" /> Resultga qaytish
             </Button>
           </Link>
           <span className="rounded bg-emerald-700 px-2 py-0.5 text-xs font-medium uppercase tracking-wider">
@@ -302,7 +302,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
       try { guestAttempts.update(attempt.id, { status: 'graded' }) } catch { /* not a guest record */ }
       navigate(`/result/${attempt.id}`, { replace: true })
     },
-    onError: () => toast.error('Topshirishda xatolik'),
+    onError: () => toast.error('Submitda xatolik'),
   })
 
   // ===== IELTS rules enforcement =====
@@ -393,18 +393,18 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
   ).length
 
   const saveStatus = saveMutation.isPending
-    ? 'Saqlanmoqda…'
+    ? 'Saving…'
     : dirtyRef.current
       ? 'O‘zgarishlar bor'
       : saveMutation.isSuccess
-        ? 'Saqlandi'
+        ? 'Saved'
         : ''
 
   return (
     <div className="test-app flex h-screen flex-col bg-slate-50">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-6 text-white">
         <div className="flex items-center gap-3">
-          <a href="/home" title="Bosh sahifa">
+          <a href="/home" title="Home">
             <Button
               variant="ghost"
               size="sm"
@@ -565,7 +565,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Testni topshirishga tayyormisiz?</DialogTitle>
+            <DialogTitle>Submit the test??</DialogTitle>
             <DialogDescription>
               {answeredCount} / {allQuestions.length} savolga javob berdingiz.
               Topshirgandan keyin javoblarni o‘zgartirib bo‘lmaydi.
@@ -573,7 +573,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Bekor qilish
+              Cancel
             </Button>
             <Button
               onClick={() => {
@@ -582,7 +582,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
               }}
               disabled={submitMutation.isPending}
             >
-              {submitMutation.isPending ? 'Yuborilmoqda…' : 'Topshirish'}
+              {submitMutation.isPending ? 'Submitting…' : 'Submit'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -625,7 +625,7 @@ export default function TakeTestPage() {
     if (resultQuery.isError || !resultQuery.data) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50">
-          <p className="text-destructive">Natijani yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Resultni yuklab bo‘lmadi.</p>
         </div>
       )
     }
@@ -642,7 +642,7 @@ export default function TakeTestPage() {
   if (attemptQuery.isError || !attemptQuery.data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-destructive">Testni yuklab bo‘lmadi.</p>
+        <p className="text-destructive">Failed to load test.</p>
       </div>
     )
   }
@@ -662,7 +662,7 @@ function TestGate({ attempt }: { attempt: Attempt }) {
     return (
       <>
         <div className="flex min-h-screen items-center justify-center bg-white">
-          <p className="text-sm text-slate-500">Boshlash uchun qoidalarni qabul qiling…</p>
+          <p className="text-sm text-slate-500">Start uchun qoidalarni qabul qiling…</p>
         </div>
         <TestStartDialog
           open
@@ -716,7 +716,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     onSuccess: () => navigate('/writing/sent', { replace: true }),
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      toast.error(detail || 'Topshirishda xatolik')
+      toast.error(detail || 'Submitda xatolik')
     },
   })
 
@@ -786,18 +786,18 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const reachedMin = wordCount >= minWords
 
   const saveStatus = saveMutation.isPending
-    ? 'Saqlanmoqda…'
+    ? 'Saving…'
     : dirtyRef.current
       ? 'O‘zgarishlar bor'
       : saveMutation.isSuccess
-        ? 'Saqlandi'
+        ? 'Saved'
         : ''
 
   return (
     <div className="test-app flex h-screen flex-col bg-slate-50">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-6 text-white">
         <div className="flex items-center gap-3">
-          <a href="/home" title="Bosh sahifa">
+          <a href="/home" title="Home">
             <Button
               variant="ghost"
               size="sm"
@@ -864,7 +864,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
               dirtyRef.current = true
               setEssay(e.target.value)
             }}
-            placeholder="Insheyingizni shu yerda yozing…"
+            placeholder="Write your essay here…"
             className="flex-1 resize-none border-0 p-6 text-[15px] leading-relaxed text-slate-900 focus:outline-none"
           />
         </section>
@@ -873,7 +873,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Insheyni topshirishga tayyormisiz?</DialogTitle>
+            <DialogTitle>Submit your essay??</DialogTitle>
             <DialogDescription>
               {wordCount} ta so‘z yozdingiz (minimum {minWords}).
               Topshirgandan keyin o‘zgartirib bo‘lmaydi. AI baholash keyingi bosqichda.
@@ -881,7 +881,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Bekor qilish
+              Cancel
             </Button>
             <Button
               onClick={() => {
@@ -890,7 +890,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
               }}
               disabled={submitMutation.isPending}
             >
-              {submitMutation.isPending ? 'Yuborilmoqda…' : 'Topshirish'}
+              {submitMutation.isPending ? 'Submitting…' : 'Submit'}
             </Button>
           </DialogFooter>
         </DialogContent>

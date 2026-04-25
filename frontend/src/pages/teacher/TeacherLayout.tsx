@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/stores/auth'
 
 const NAV = [
-  { to: '/teacher', label: 'Bosh sahifa', Icon: Inbox, end: true },
-  { to: '/teacher/students', label: 'Talabalarim', Icon: Users, end: false },
+  { to: '/teacher', label: 'Home', Icon: Inbox, end: true },
+  { to: '/teacher/students', label: 'Studentsim', Icon: Users, end: false },
 ]
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {
@@ -59,7 +59,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
             onClick={onLogout}
             className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
           >
-            <LogOut className="mr-2 h-4 w-4" /> Chiqish
+            <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>
       </aside>

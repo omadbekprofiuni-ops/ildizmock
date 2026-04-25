@@ -27,7 +27,7 @@ export function TestStartDialog({ open, module, onConfirm, onCancel }: Props) {
         <DialogHeader>
           <DialogTitle className="text-xl">IELTS Test qoidalari</DialogTitle>
           <DialogDescription>
-            Boshlashdan oldin diqqat bilan o‘qib chiqing.
+            Startdan oldin diqqat bilan o‘qib chiqing.
           </DialogDescription>
         </DialogHeader>
 
@@ -64,13 +64,13 @@ export function TestStartDialog({ open, module, onConfirm, onCancel }: Props) {
         </label>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>Bekor qilish</Button>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button
             onClick={onConfirm}
             disabled={!agreed}
             className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]"
           >
-            Boshlash →
+            Start →
           </Button>
         </DialogFooter>
       </DialogContent>

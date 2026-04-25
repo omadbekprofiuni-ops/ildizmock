@@ -15,9 +15,9 @@ const schema = z.object({
   last_name: z.string().min(1, 'Familiya kiritilmagan'),
   phone: z
     .string()
-    .min(13, 'Telefon raqam +998 va 9 raqamdan iborat bo‘lsin')
-    .regex(PHONE_RE, 'Format: +998XXXXXXXXX (jami 13 ta belgi)'),
-  password: z.string().min(8, 'Parol kamida 8 ta belgi bo‘lsin'),
+    .min(13, 'Username is required (min 2 chars)')
+    .regex(PHONE_RE, 'Use lowercase letters and digits only'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -37,13 +37,13 @@ export default function RegisterPage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await register(values)
-      toast.success('Ro‘yxatdan o‘tdingiz')
+      toast.success('Signed up successfully')
       navigate('/home')
     } catch (err) {
       const data = (err as { response?: { data?: Record<string, unknown> } })
         ?.response?.data
       // Backend may return { phone: ['...'] } | { password: ['...'] } | { detail: '...' }
-      let msg = 'Ro‘yxatdan o‘tishda xatolik'
+      let msg = 'Sign Upda xatolik'
       if (data && typeof data === 'object') {
         if (typeof (data.detail as unknown) === 'string') {
           msg = data.detail as string
@@ -78,7 +78,7 @@ export default function RegisterPage() {
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-6">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Ro‘yxatdan o‘tish</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Sign Up</h2>
             <p className="text-sm text-muted-foreground">Bepul hisob yarating</p>
           </div>
 
@@ -105,7 +105,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
+              <Label htmlFor="phone">Username</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -121,7 +121,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -136,12 +136,12 @@ export default function RegisterPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Ro‘yxatdan o‘tilmoqda…' : 'Ro‘yxatdan o‘tish'}
+              {loading ? 'Signing up…' : 'Sign Up'}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            Hisobingiz bormi?{' '}
+            Have an account?{' '}
             <Link
               to="/login"
               className="font-medium text-foreground underline-offset-4 hover:underline"

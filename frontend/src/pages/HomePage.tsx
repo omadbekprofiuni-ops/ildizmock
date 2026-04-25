@@ -22,17 +22,17 @@ type ModuleEntry = {
 }
 
 const MODULES: ModuleEntry[] = [
-  { id: 'listening', title: 'Listening', meta: '30 daqiqa · 4 qism · 40 savol', Icon: Headphones, href: '/tests/listening' },
-  { id: 'reading', title: 'Reading', meta: '60 daqiqa · 3 qism · 40 savol', Icon: BookOpen, href: '/tests/reading' },
-  { id: 'writing', title: 'Writing', meta: '60 daqiqa · 2 task', Icon: PenTool, href: '/tests/writing', authRequired: true },
-  { id: 'speaking', title: 'Speaking', meta: '11–14 daqiqa · 3 qism', Icon: Mic, href: '/tests/speaking', comingSoon: true },
+  { id: 'listening', title: 'Listening', meta: '30 min · 4 qism · 40 savol', Icon: Headphones, href: '/tests/listening' },
+  { id: 'reading', title: 'Reading', meta: '60 min · 3 qism · 40 savol', Icon: BookOpen, href: '/tests/reading' },
+  { id: 'writing', title: 'Writing', meta: '60 min · 2 task', Icon: PenTool, href: '/tests/writing', authRequired: true },
+  { id: 'speaking', title: 'Speaking', meta: '11–14 min · 3 qism', Icon: Mic, href: '/tests/speaking', comingSoon: true },
 ]
 
 export default function HomePage() {
   const user = useAuth((s) => s.user)
   const [guestList, setGuestList] = useState<GuestAttemptRecord[]>([])
   useEffect(() => {
-    document.title = 'ILDIZmock — Bosh sahifa'
+    document.title = 'ILDIZmock — Home'
     if (!user) setGuestList(guestAttempts.list())
   }, [user])
 
@@ -51,17 +51,17 @@ export default function HomePage() {
             IELTS testini haqiqiy formatda sinab ko‘ring
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-[var(--muted)] md:text-lg">
-            Computer-delivered test interfeysi · 4 ta modul · Avtomatik baholash · Bepul boshlash
+            Computer-delivered test interfeysi · 4 ta modul · Avtomatik baholash · Start free
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to={user ? '/tests/reading' : '/register'}>
               <Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                ▶ Bepul boshlash
+                ▶ Start free
               </Button>
             </Link>
             {!user && (
               <Link to="/login">
-                <Button size="lg" variant="outline">Hisobingiz bormi?</Button>
+                <Button size="lg" variant="outline">Have an account?</Button>
               </Link>
             )}
           </div>
@@ -82,7 +82,7 @@ export default function HomePage() {
                   </div>
                   {comingSoon && (
                     <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                      🚧 Tez kunda
+                      🚧 Coming soon
                     </span>
                   )}
                   {writingLocked && (
@@ -97,19 +97,19 @@ export default function HomePage() {
                   {comingSoon
                     ? 'Speaking modul 2026 may oyida ishga tushadi'
                     : writingLocked
-                      ? 'Ro‘yxatdan o‘tib, ustozdan tahlil oling'
+                      ? 'Sign up to, ustozdan tahlil oling'
                       : counts.isLoading
                         ? <span className="inline-block h-3 w-20 animate-pulse rounded bg-gray-200" />
-                        : count !== null ? `${count} ta test mavjud` : ''}
+                        : count !== null ? `${count} tests mavjud` : ''}
                 </p>
                 <div className="mt-5">
                   {comingSoon ? (
                     <Button disabled className="w-full" variant="outline">Coming Soon</Button>
                   ) : writingLocked ? (
-                    <Button className="w-full" variant="outline">Ro‘yxatdan o‘tish</Button>
+                    <Button className="w-full" variant="outline">Sign Up</Button>
                   ) : (
                     <Button className="w-full bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                      Boshlash →
+                      Start →
                     </Button>
                   )}
                 </div>
@@ -148,14 +148,14 @@ export default function HomePage() {
                     <div className="truncate text-sm font-medium">{g.test_name}</div>
                     <div className="text-xs text-[var(--muted)]">
                       {g.module} · {new Date(g.started_at).toLocaleDateString('uz-UZ')} ·{' '}
-                      {g.status === 'graded' ? 'Topshirilgan' : 'Davom etmoqda'}
+                      {g.status === 'graded' ? 'Submitted' : 'Davom etmoqda'}
                     </div>
                   </div>
                   <Link
                     to={g.status === 'in_progress' ? `/take/${g.id}` : `/result/${g.id}`}
                   >
                     <Button variant="outline" size="sm">
-                      {g.status === 'in_progress' ? 'Davom etish' : 'Natija'}
+                      {g.status === 'in_progress' ? 'Continue' : 'Result'}
                     </Button>
                   </Link>
                 </li>

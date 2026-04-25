@@ -54,16 +54,16 @@ export default function SuperAdminOrgsPage() {
     <SuperAdminLayout>
       <header className="flex items-center justify-between border-b bg-white px-8 py-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Markazlar</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Centers</h1>
           <p className="text-sm text-muted-foreground">{orgs.data?.length ?? 0} ta markaz</p>
         </div>
         <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Yangi markaz qo‘shish
+          <Plus className="mr-2 h-4 w-4" /> Add new center
         </Button>
       </header>
 
       <div className="p-8">
-        {orgs.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {orgs.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {orgs.data && orgs.data.length > 0 && (
           <Card>
             <CardContent className="p-0">
@@ -71,9 +71,9 @@ export default function SuperAdminOrgsPage() {
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-6 py-3">Nom</th>
-                    <th className="px-6 py-3">Tarif</th>
-                    <th className="px-6 py-3">Talaba</th>
-                    <th className="px-6 py-3">Holat</th>
+                    <th className="px-6 py-3">Plan</th>
+                    <th className="px-6 py-3">Student</th>
+                    <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Tugaydi</th>
                     <th className="px-6 py-3"></th>
                   </tr>
@@ -109,7 +109,7 @@ export default function SuperAdminOrgsPage() {
                           <Button
                             variant="outline" size="sm"
                             onClick={() => enterOrgContext(o)}
-                            title="Markaz ichiga kirish"
+                            title="Enter center"
                           >
                             <LogIn className="mr-1 h-3 w-3" /> Kirish
                           </Button>
@@ -144,10 +144,10 @@ function StatusBadge({ status }: { status: string }) {
     : status === 'expired' ? 'bg-rose-100 text-rose-700'
     : 'bg-slate-200 text-slate-700'
   const label =
-    status === 'active' ? '● Faol'
-    : status === 'trial' ? '● Sinov'
-    : status === 'expired' ? '⚠ Tugagan'
-    : '● Bloklangan'
+    status === 'active' ? '● Active'
+    : status === 'trial' ? '● Trial'
+    : status === 'expired' ? '⚠ Expired'
+    : '● Blocked'
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{label}</span>
 }
 
@@ -195,7 +195,7 @@ function CreateOrgDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Yangi markaz qo‘shish</DialogTitle>
+          <DialogTitle>Add new center</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Nomi" value={form.name}
@@ -205,7 +205,7 @@ function CreateOrgDialog({
           <Field label="Asosiy rang" value={form.primary_color}
                  onChange={(v) => setForm({ ...form, primary_color: v })} />
           <div className="space-y-1">
-            <Label className="text-xs">Tarif</Label>
+            <Label className="text-xs">Plan</Label>
             <select value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })}
                     className="h-9 w-full rounded-md border bg-white px-2 text-sm">
               <option value="">— tanlang —</option>
@@ -214,7 +214,7 @@ function CreateOrgDialog({
               ))}
             </select>
           </div>
-          <Field label="Telefon" value={form.contact_phone}
+          <Field label="Username" value={form.contact_phone}
                  onChange={(v) => setForm({ ...form, contact_phone: v })} />
           <Field label="Email" value={form.contact_email}
                  onChange={(v) => setForm({ ...form, contact_email: v })} />
@@ -226,23 +226,23 @@ function CreateOrgDialog({
 
         <hr className="my-2" />
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-slate-700">Markaz administratori</h3>
+          <h3 className="mb-2 text-sm font-semibold text-slate-700">Center administrator</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Ism" value={form.admin_first_name}
                    onChange={(v) => setForm({ ...form, admin_first_name: v })} />
             <Field label="Familiya" value={form.admin_last_name}
                    onChange={(v) => setForm({ ...form, admin_last_name: v })} />
-            <Field label="Telefon" value={form.admin_phone}
+            <Field label="Username" value={form.admin_phone}
                    onChange={(v) => setForm({ ...form, admin_phone: v })} />
-            <Field label="Parol" value={form.admin_password}
+            <Field label="Password" value={form.admin_password}
                    onChange={(v) => setForm({ ...form, admin_password: v })} type="password" />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={() => create.mutate()} disabled={create.isPending}>
-            {create.isPending ? 'Yaratilmoqda…' : 'Markaz yaratish ✓'}
+            {create.isPending ? 'Yaratilmoqda…' : 'Create center ✓'}
           </Button>
         </DialogFooter>
       </DialogContent>

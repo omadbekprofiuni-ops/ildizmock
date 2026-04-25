@@ -33,10 +33,10 @@ const MODULE_TITLES: Record<ModuleId, string> = {
 }
 
 const DIFFICULTY_LEVELS = [
-  { id: 'beginner', label: 'Boshlang‘ich', range: '4.5–5.5' },
-  { id: 'intermediate', label: 'O‘rta', range: '5.5–6.5' },
-  { id: 'advanced', label: 'Yuqori', range: '6.5–7.5' },
-  { id: 'expert', label: 'Mahoratli', range: '7.5+' },
+  { id: 'beginner', label: 'Beginner', range: '4.5–5.5' },
+  { id: 'intermediate', label: 'Intermediate', range: '5.5–6.5' },
+  { id: 'advanced', label: 'Advanced', range: '6.5–7.5' },
+  { id: 'expert', label: 'Expert', range: '7.5+' },
 ] as const
 
 export default function TestListPage() {
@@ -89,7 +89,7 @@ export default function TestListPage() {
     },
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      toast.error(detail || 'Testni boshlab bo‘lmadi')
+      toast.error(detail || 'Failed to start test')
     },
   })
 
@@ -116,8 +116,8 @@ export default function TestListPage() {
             Insheyingiz ustoz tomonidan tekshiriladi va batafsil feedback olasiz.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/register"><Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">Ro‘yxatdan o‘tish</Button></Link>
-            <Link to="/login"><Button size="lg" variant="outline">Hisobingiz bormi?</Button></Link>
+            <Link to="/register"><Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">Sign Up</Button></Link>
+            <Link to="/login"><Button size="lg" variant="outline">Have an account?</Button></Link>
           </div>
         </main>
         <Footer />
@@ -138,7 +138,7 @@ export default function TestListPage() {
       <main className="container mx-auto max-w-6xl flex-1 px-4 py-10">
         <div className="mb-8">
           <Link to="/" className="mb-3 inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:underline">
-            <ArrowLeft className="h-4 w-4" /> Bosh sahifa
+            <ArrowLeft className="h-4 w-4" /> Home
           </Link>
           <h1 className="text-3xl font-bold tracking-tight">{moduleTitle} testlari</h1>
           {showLevelSelector && (
@@ -165,7 +165,7 @@ export default function TestListPage() {
                     <article className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-black hover:shadow-lg">
                       <div className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">Band {lvl.range}</div>
                       <h3 className="mt-2 text-xl font-semibold">{lvl.label}</h3>
-                      <p className="mt-3 flex-1 text-sm text-[var(--muted)]">{count} ta test</p>
+                      <p className="mt-3 flex-1 text-sm text-[var(--muted)]">{count} tests</p>
                       <span className="mt-4 text-sm font-medium text-[var(--accent)] group-hover:underline">Tanlash →</span>
                     </article>
                   </Link>
@@ -174,7 +174,7 @@ export default function TestListPage() {
             </div>
             <div className="mt-6 text-center">
               <Link to={`/tests/${moduleParam}?all=1`} className="text-sm text-[var(--muted)] hover:underline">
-                ← Hammasini ko‘rish (filter siz)
+                ← Show all (filter siz)
               </Link>
             </div>
           </>
@@ -190,13 +190,13 @@ export default function TestListPage() {
                   : `Hamma testlar (${filtered.length} ta)`}
               </p>
               <Link to={`/tests/${moduleParam}`} className="text-sm text-[var(--muted)] hover:underline">
-                ← Daraja tanlash
+                ← Choose level
               </Link>
             </div>
 
             {filtered.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-[var(--muted)]">
-                Bu darajada hali test yo‘q.
+                No tests at this level yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -223,7 +223,7 @@ export default function TestListPage() {
                       disabled={startAttempt.isPending}
                       onClick={() => startAttempt.mutate(t)}
                     >
-                      {startAttempt.isPending ? 'Boshlanmoqda…' : 'Boshlash'}
+                      {startAttempt.isPending ? 'Starting…' : 'Start'}
                     </Button>
                   </article>
                 ))}

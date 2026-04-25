@@ -180,14 +180,14 @@ export default function AdminTestEditPage() {
     },
     onError: (err) => {
       const data = (err as { response?: { data?: unknown } })?.response?.data
-      toast.error('Saqlashda xatolik: ' + JSON.stringify(data).slice(0, 200))
+      toast.error('Saveda xatolik: ' + JSON.stringify(data).slice(0, 200))
     },
   })
 
   if (!isNew && query.isLoading) {
     return (
       <AdminLayout>
-        <div className="p-8 text-muted-foreground">Yuklanmoqda…</div>
+        <div className="p-8 text-muted-foreground">Loading…</div>
       </AdminLayout>
     )
   }
@@ -331,11 +331,11 @@ export default function AdminTestEditPage() {
             </Button>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isNew ? 'Yangi test' : 'Testni tahrirlash'}
+            {isNew ? 'New test' : 'Testni tahrirlash'}
           </h1>
         </div>
         <Button onClick={onSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+          {saveMutation.isPending ? 'Saving…' : 'Save'}
         </Button>
       </header>
 
@@ -353,7 +353,7 @@ export default function AdminTestEditPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Modul</Label>
+                <Label>Module</Label>
                 <select
                   value={draft.module}
                   onChange={(e) =>
@@ -382,7 +382,7 @@ export default function AdminTestEditPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Davomiyligi (daqiqa)</Label>
+                <Label>Duration (min)</Label>
                 <Input
                   type="number"
                   min={1}
@@ -783,7 +783,7 @@ function AudioUploadField({
           disabled={uploading}
         >
           <Upload className="mr-2 h-4 w-4" />
-          {uploading ? 'Yuklanmoqda…' : currentPath ? 'Yangilash' : 'Fayl tanlash'}
+          {uploading ? 'Loading…' : currentPath ? 'Refresh' : 'Fayl tanlash'}
         </Button>
         {currentPath && (
           <>

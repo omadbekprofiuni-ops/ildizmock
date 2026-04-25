@@ -47,24 +47,24 @@ export default function HistoryPage() {
         <div className="container flex h-16 items-center gap-3">
           <Link to="/home">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Bosh sahifa
+              <ArrowLeft className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
-          <h1 className="text-lg font-semibold">Topshirishlar tarixi</h1>
+          <h1 className="text-lg font-semibold">Submitlar tarixi</h1>
         </div>
       </header>
 
       <main className="container py-8">
         {query.isLoading && (
-          <p className="text-muted-foreground">Yuklanmoqda…</p>
+          <p className="text-muted-foreground">Loading…</p>
         )}
         {query.isError && (
-          <p className="text-destructive">Tarixni yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Historyni yuklab bo‘lmadi.</p>
         )}
         {query.data && query.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
-              Hali bitta ham test topshirmagansiz.
+              You haven't submitted any tests yet.
             </CardContent>
           </Card>
         )}
@@ -74,9 +74,9 @@ export default function HistoryPage() {
               <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Test</th>
-                  <th className="px-4 py-3">Modul</th>
-                  <th className="px-4 py-3">Sana</th>
-                  <th className="px-4 py-3">Natija</th>
+                  <th className="px-4 py-3">Module</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Result</th>
                   <th className="px-4 py-3">Band</th>
                   <th className="px-4 py-3"></th>
                 </tr>
@@ -121,7 +121,7 @@ export default function HistoryPage() {
                           </Link>
                         ) : a.status === 'in_progress' ? (
                           <Link to={`/take/${a.id}`}>
-                            <Button size="sm">Davom etish</Button>
+                            <Button size="sm">Continue</Button>
                           </Link>
                         ) : null}
                       </td>

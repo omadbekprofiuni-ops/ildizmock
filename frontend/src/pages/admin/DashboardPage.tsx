@@ -50,10 +50,10 @@ export default function DashboardPage() {
         </p>
       </header>
       <div className="space-y-6 p-8">
-        {query.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {query.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {query.isError && (
           <p className="text-destructive">
-            Statistikani yuklab bo‘lmadi. (Admin huquqi borligiga ishonchingiz komilmi?)
+            Statisticsni yuklab bo‘lmadi. (Admin huquqi borligiga ishonchingiz komilmi?)
           </p>
         )}
         {query.data && (
@@ -81,7 +81,7 @@ export default function DashboardPage() {
                 tint="bg-orange-500"
               />
               <StatCard
-                label="O‘rtacha band"
+                label="Intermediatecha band"
                 value={query.data.avg_band?.toFixed(1) ?? '—'}
                 hint="Graded urinishlar bo‘yicha"
                 Icon={TrendingUp}
@@ -102,8 +102,8 @@ export default function DashboardPage() {
                       <tr>
                         <th className="px-6 py-3">Foydalanuvchi</th>
                         <th className="px-6 py-3">Test</th>
-                        <th className="px-6 py-3">Modul</th>
-                        <th className="px-6 py-3">Sana</th>
+                        <th className="px-6 py-3">Module</th>
+                        <th className="px-6 py-3">Date</th>
                         <th className="px-6 py-3">Status</th>
                         <th className="px-6 py-3">Band</th>
                       </tr>

@@ -37,7 +37,7 @@ export default function ResultPage() {
   if (query.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-muted-foreground">Natija yuklanmoqda…</p>
+        <p className="text-muted-foreground">Result yuklanmoqda…</p>
       </div>
     )
   }
@@ -45,7 +45,7 @@ export default function ResultPage() {
   if (query.isError || !query.data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-destructive">Natijani yuklab bo‘lmadi.</p>
+        <p className="text-destructive">Resultni yuklab bo‘lmadi.</p>
       </div>
     )
   }
@@ -64,7 +64,7 @@ export default function ResultPage() {
           <div className="container flex h-16 items-center gap-3">
             <Link to="/home">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Bosh sahifa
+                <ArrowLeft className="mr-2 h-4 w-4" /> Home
               </Button>
             </Link>
             <h1 className="text-lg font-semibold">Inshang topshirildi</h1>
@@ -106,11 +106,11 @@ export default function ResultPage() {
           )}
           <div className="flex gap-3">
             <Link to={`/tests/${r.module}`}>
-              <Button variant="outline">Boshqa testlar</Button>
+              <Button variant="outline">Other tests</Button>
             </Link>
             <Link to="/history">
               <Button variant="ghost">
-                <History className="mr-2 h-4 w-4" /> Tarix
+                <History className="mr-2 h-4 w-4" /> History
               </Button>
             </Link>
           </div>
@@ -129,7 +129,7 @@ export default function ResultPage() {
         <div className="container flex h-16 items-center gap-3">
           <Link to="/home">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Bosh sahifa
+              <ArrowLeft className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
           <h1 className="text-lg font-semibold">{r.test_name}</h1>
@@ -143,7 +143,7 @@ export default function ResultPage() {
               <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
               <div className="flex-1">
                 <p className="font-medium text-amber-900">
-                  Natijani saqlash va tarixingizni ko‘rish uchun ro‘yxatdan o‘ting →
+                  Resultni saqlash va tarixingizni ko‘rish uchun ro‘yxatdan o‘ting →
                 </p>
                 <p className="mt-1 text-amber-800">
                   Hozir bu natija sizning hisobingizga bog‘lanmagan.
@@ -151,7 +151,7 @@ export default function ResultPage() {
               </div>
               <Link to="/register">
                 <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                  Ro‘yxatdan o‘tish
+                  Sign Up
                 </Button>
               </Link>
             </div>
@@ -183,11 +183,11 @@ export default function ResultPage() {
             </Button>
           </Link>
           <Link to={`/tests/${r.module}`}>
-            <Button variant="outline">Boshqa testlar</Button>
+            <Button variant="outline">Other tests</Button>
           </Link>
           <Link to="/home">
             <Button variant="ghost">
-              <History className="mr-2 h-4 w-4" /> Bosh sahifa
+              <History className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
         </div>

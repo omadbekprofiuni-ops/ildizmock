@@ -38,7 +38,7 @@ export default function AdminTestsPage() {
       (await api.post(`/admin/tests/${id}/publish/`)).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
-      toast.success('Holat yangilandi')
+      toast.success('Status yangilandi')
     },
   })
 
@@ -48,7 +48,7 @@ export default function AdminTestsPage() {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
       toast.success('Test o‘chirildi')
     },
-    onError: () => toast.error('O‘chirishda xatolik'),
+    onError: () => toast.error('Deleteda xatolik'),
   })
 
   return (
@@ -62,12 +62,12 @@ export default function AdminTestsPage() {
         </div>
         <Link to="/admin/tests/new">
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> Yangi test
+            <Plus className="mr-2 h-4 w-4" /> New test
           </Button>
         </Link>
       </header>
       <div className="p-8">
-        {list.isLoading && <p className="text-muted-foreground">Yuklanmoqda…</p>}
+        {list.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {list.isError && (
           <p className="text-destructive">Yuklab bo‘lmadi.</p>
         )}
@@ -89,12 +89,12 @@ export default function AdminTestsPage() {
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-6 py-3">Nom</th>
-                    <th className="px-6 py-3">Modul</th>
-                    <th className="px-6 py-3">Davomiyligi</th>
+                    <th className="px-6 py-3">Module</th>
+                    <th className="px-6 py-3">Duration</th>
                     <th className="px-6 py-3">Savol</th>
                     <th className="px-6 py-3">Urinishlar</th>
                     <th className="px-6 py-3">Nashr</th>
-                    <th className="px-6 py-3">Sana</th>
+                    <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3"></th>
                   </tr>
                 </thead>

@@ -10,15 +10,15 @@ export default function WritingSentPage() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
           <CheckCircle2 className="h-8 w-8 text-emerald-600" />
         </div>
-        <h1 className="text-2xl font-bold">Insheyingiz yuborildi ✓</h1>
+        <h1 className="text-2xl font-bold">Your essay has been submitted ✓</h1>
         <p className="text-[var(--muted)]">
-          Ustozingiz tekshirib chiqadi (1–2 kun ichida).
+          Teacheringiz tekshirib chiqadi (1–2 kun ichida).
           <br />
-          Natijani <strong>"Mening yozma ishlarim"</strong> bo‘limida ko‘rasiz.
+          Resultni <strong>"Mening yozma ishlarim"</strong> bo‘limida ko‘rasiz.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <Link to="/home">
-            <Button variant="outline">Bosh sahifa</Button>
+            <Button variant="outline">Home</Button>
           </Link>
           <Link to="/my-writings">
             <Button className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">

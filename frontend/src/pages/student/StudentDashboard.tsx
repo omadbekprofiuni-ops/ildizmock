@@ -42,7 +42,7 @@ function formatDate(iso: string) {
 
 export default function StudentDashboard() {
   const user = useAuth((s) => s.user)
-  useEffect(() => { document.title = 'ILDIZmock — Mening kabinetim' }, [])
+  useEffect(() => { document.title = 'ILDIZmock — My Dashboard' }, [])
 
   const q = useQuery({
     queryKey: ['my-dashboard'],
@@ -71,43 +71,43 @@ export default function StudentDashboard() {
             Salom, {user?.first_name}!
           </h1>
           <p className="mt-1 text-[var(--muted)]">
-            {target ? `Maqsad: ${target} band.` : 'Profil sahifasida maqsadingizni belgilang.'}{' '}
+            {target ? `Target: ${target} band.` : 'Profile sahifasida maqsadingizni belgilang.'}{' '}
             {q.data?.teacher && (
-              <>Ustozingiz: <strong>{q.data.teacher.name}</strong></>
+              <>Teacheringiz: <strong>{q.data.teacher.name}</strong></>
             )}
           </p>
         </div>
 
         {/* Stat cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Topshirilgan" value={q.data?.attempts_graded ?? 0} hint={`${q.data?.attempts_total ?? 0} ta urinish`} />
-          <Stat label="O‘rtacha band" value={avg !== null ? avg.toFixed(1) : '—'} hint={q.data?.best_band ? `Eng yuqori: ${q.data.best_band.toFixed(1)}` : ''} Icon={TrendingUp} />
-          <Stat label="So‘nggi test" value={lastDate ? formatDate(lastDate) : '—'} hint={q.data?.recent_attempts[0]?.test_name?.slice(0, 30) ?? ''} />
+          <Stat label="Submitted" value={q.data?.attempts_graded ?? 0} hint={`${q.data?.attempts_total ?? 0} attempts`} />
+          <Stat label="Intermediatecha band" value={avg !== null ? avg.toFixed(1) : '—'} hint={q.data?.best_band ? `Best: ${q.data.best_band.toFixed(1)}` : ''} Icon={TrendingUp} />
+          <Stat label="Last test" value={lastDate ? formatDate(lastDate) : '—'} hint={q.data?.recent_attempts[0]?.test_name?.slice(0, 30) ?? ''} />
           <Stat
-            label="Maqsadgacha"
+            label="Targetgacha"
             value={targetGap !== null ? `+${targetGap.toFixed(1)}` : '—'}
-            hint={target ? `${target} → hozir ${avg?.toFixed(1) ?? '—'}` : 'Maqsad belgilanmagan'}
+            hint={target ? `${target} → hozir ${avg?.toFixed(1) ?? '—'}` : 'Target belgilanmagan'}
             Icon={Target}
           />
         </div>
 
         {/* Recent results */}
         <section>
-          <h2 className="mb-3 text-xl font-semibold">So‘nggi natijalar</h2>
+          <h2 className="mb-3 text-xl font-semibold">Recent results</h2>
           <Card>
             <CardContent className="p-0">
               {!q.data || q.data.recent_attempts.length === 0 ? (
                 <p className="p-8 text-center text-sm text-[var(--muted)]">
-                  Hali test topshirmagansiz.
+                  You haven't submitted any tests yet.
                 </p>
               ) : (
                 <table className="w-full text-sm">
                   <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="px-6 py-3">Test</th>
-                      <th className="px-6 py-3">Modul</th>
-                      <th className="px-6 py-3">Sana</th>
-                      <th className="px-6 py-3">Natija</th>
+                      <th className="px-6 py-3">Module</th>
+                      <th className="px-6 py-3">Date</th>
+                      <th className="px-6 py-3">Result</th>
                       <th className="px-6 py-3">Band</th>
                     </tr>
                   </thead>
@@ -136,12 +136,12 @@ export default function StudentDashboard() {
 
         {/* Quick actions */}
         <section>
-          <h2 className="mb-3 text-xl font-semibold">Tezkor harakatlar</h2>
+          <h2 className="mb-3 text-xl font-semibold">Quick actions</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <ActionCard to="/home" label="Yangi test" Icon={ArrowRight} />
+            <ActionCard to="/home" label="New test" Icon={ArrowRight} />
             <ActionCard
               to="/my-writings"
-              label="Yozma ishlarim"
+              label="My Writings"
               Icon={FilePen}
               hint={
                 q.data
@@ -149,8 +149,8 @@ export default function StudentDashboard() {
                   : ''
               }
             />
-            <ActionCard to="/history" label="Tarix" Icon={History} />
-            <ActionCard to="/profile" label="Profil" Icon={User} />
+            <ActionCard to="/history" label="History" Icon={History} />
+            <ActionCard to="/profile" label="Profile" Icon={User} />
           </div>
         </section>
       </main>

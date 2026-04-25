@@ -17,7 +17,7 @@ const schema = z.object({
   first_name: z.string().min(1, 'Ism kiritilmagan'),
   last_name: z.string().min(1, 'Familiya kiritilmagan'),
   phone: z.string().regex(PHONE_RE, 'Format: +998XXXXXXXXX'),
-  password: z.string().min(8, 'Parol kamida 8 ta belgi'),
+  password: z.string().min(8, 'Password kamida 8 ta belgi'),
   agreed: z.boolean().refine((v) => v, 'Roziligingizni tasdiqlang'),
 })
 type FormValues = z.infer<typeof schema>
@@ -52,7 +52,7 @@ export default function OrgRegisterPage() {
 
   if (user) return <Navigate to="/home" replace />
   if (q.isLoading) {
-    return <div className="flex min-h-screen items-center justify-center"><p>Yuklanmoqda…</p></div>
+    return <div className="flex min-h-screen items-center justify-center"><p>Loading…</p></div>
   }
   if (q.isError || !q.data) return <Navigate to="/" replace />
   const org = q.data
@@ -73,7 +73,7 @@ export default function OrgRegisterPage() {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
       const msg = data
         ? Object.values(data).map((v) => Array.isArray(v) ? v.join(' ') : v).join(' · ')
-        : 'Ro‘yxatdan o‘tishda xatolik'
+        : 'Sign Upda xatolik'
       toast.error(String(msg))
     }
   }
@@ -108,14 +108,14 @@ export default function OrgRegisterPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Telefon</Label>
+            <Label>Username</Label>
             <Input type="tel" {...form.register('phone')} />
             {form.formState.errors.phone && (
               <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label>Parol</Label>
+            <Label>Password</Label>
             <Input type="password" {...form.register('password')} />
             {form.formState.errors.password && (
               <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
@@ -134,12 +134,12 @@ export default function OrgRegisterPage() {
             style={{ background: org.primary_color, color: '#fff' }}
             disabled={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting ? 'Yuborilmoqda…' : 'Ro‘yxatdan o‘tish'}
+            {form.formState.isSubmitting ? 'Submitting…' : 'Sign Up'}
           </Button>
         </form>
 
         <p className="text-center text-sm text-[var(--muted)]">
-          Hisobingiz bormi? <Link to="/login" className="font-medium text-foreground hover:underline">Kirish</Link>
+          Have an account? <Link to="/login" className="font-medium text-foreground hover:underline">Kirish</Link>
         </p>
       </div>
     </div>
