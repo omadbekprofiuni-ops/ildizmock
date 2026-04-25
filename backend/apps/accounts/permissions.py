@@ -2,7 +2,7 @@ from rest_framework import permissions
 
 
 class IsAdmin(permissions.BasePermission):
-    """Access for users with role admin/super_admin or is_staff=True."""
+    """Access for users with role superadmin / org_admin (or is_staff)."""
 
     message = 'Admin huquqi talab qilinadi.'
 
@@ -10,11 +10,11 @@ class IsAdmin(permissions.BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        return user.role in ('admin', 'super_admin') or user.is_staff
+        return user.role in ('superadmin', 'org_admin') or user.is_staff
 
 
 class IsTeacher(permissions.BasePermission):
-    """Access for users with role teacher (or admins for oversight)."""
+    """Access for role=teacher (org admins / superadmin allowed too)."""
 
     message = 'O‘qituvchi huquqi talab qilinadi.'
 
@@ -22,4 +22,4 @@ class IsTeacher(permissions.BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        return user.role in ('teacher', 'admin', 'super_admin')
+        return user.role in ('teacher', 'org_admin', 'superadmin')

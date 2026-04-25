@@ -21,6 +21,14 @@ class Test(models.Model):
     ACCESS_CHOICES = [('free', 'Free'), ('standard', 'Standard'), ('premium', 'Premium')]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        null=True, blank=True,
+        related_name='tests',
+        on_delete=models.CASCADE,
+        help_text='Null = superadmin global test (hamma markazlar uchun)',
+    )
+    is_global = models.BooleanField(default=False)
     name = models.CharField(max_length=200)
     module = models.CharField(max_length=20, choices=MODULE_CHOICES)
     test_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='academic')

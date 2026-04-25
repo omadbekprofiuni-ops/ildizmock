@@ -18,6 +18,12 @@ class Attempt(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attempts',
                              null=True, blank=True,
                              on_delete=models.CASCADE)
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        null=True, blank=True,
+        related_name='attempts',
+        on_delete=models.CASCADE,
+    )
     test = models.ForeignKey(Test, related_name='attempts', on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
     started_at = models.DateTimeField(auto_now_add=True)
@@ -44,6 +50,11 @@ class Attempt(models.Model):
 
     def __str__(self):
         return f'{self.user.phone} — {self.test.name} ({self.status})'
+
+    def save(self, *args, **kwargs):
+        if not self.organization_id and self.user_id and self.user.organization_id:
+            self.organization_id = self.user.organization_id
+        super().save(*args, **kwargs)
 
 
 class WritingSubmission(models.Model):
