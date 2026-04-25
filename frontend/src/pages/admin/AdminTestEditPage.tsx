@@ -1,0 +1,802 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/toaster'
+import { api } from '@/lib/api'
+
+import AdminLayout from './AdminLayout'
+
+type QType = 'mcq' | 'tfng' | 'fill' | 'matching'
+
+type QDraft = {
+  order: number
+  question_type: QType
+  text: string
+  options: string[]
+  correct_answer: string
+  acceptable_answers: string[]
+  group_id: number
+  instruction: string
+  points: number
+}
+
+type PDraft = {
+  part_number: number
+  title: string
+  content: string
+  order: number
+  questions: QDraft[]
+  min_words?: number | null
+  audio_file_path?: string | null
+  audio_file?: string | null  // read-only preview URL
+}
+
+type TestDraft = {
+  name: string
+  module: 'reading' | 'listening' | 'writing' | 'speaking'
+  test_type: 'academic' | 'general'
+  difficulty: 'easy' | 'medium' | 'hard'
+  duration_minutes: number
+  description: string
+  is_published: boolean
+  access_level: 'free' | 'standard' | 'premium'
+  passages: PDraft[]
+}
+
+const blankQuestion = (order: number): QDraft => ({
+  order,
+  question_type: 'mcq',
+  text: '',
+  options: ['', '', '', ''],
+  correct_answer: '',
+  acceptable_answers: [],
+  group_id: 1,
+  instruction: '',
+  points: 1,
+})
+
+const blankPassage = (partNumber: number): PDraft => ({
+  part_number: partNumber,
+  title: '',
+  content: '',
+  order: partNumber,
+  questions: [blankQuestion(1)],
+  min_words: null,
+  audio_file_path: null,
+  audio_file: null,
+})
+
+const blankTest = (): TestDraft => ({
+  name: '',
+  module: 'reading',
+  test_type: 'academic',
+  difficulty: 'medium',
+  duration_minutes: 60,
+  description: '',
+  is_published: false,
+  access_level: 'free',
+  passages: [blankPassage(1)],
+})
+
+function normaliseOnChangeType(q: QDraft, newType: QType): QDraft {
+  if (newType === 'mcq') return { ...q, question_type: 'mcq', options: ['', '', '', ''], correct_answer: '' }
+  if (newType === 'tfng') return { ...q, question_type: 'tfng', options: ['True', 'False', 'Not Given'], correct_answer: '' }
+  if (newType === 'fill') return { ...q, question_type: 'fill', options: [], correct_answer: '' }
+  return { ...q, question_type: 'matching', options: q.options.length ? q.options : ['', ''], correct_answer: '' }
+}
+
+function draftFromServer(data: {
+  name: string
+  module: TestDraft['module']
+  test_type: TestDraft['test_type']
+  difficulty: TestDraft['difficulty']
+  duration_minutes: number
+  description: string
+  is_published: boolean
+  access_level: TestDraft['access_level']
+  passages: Array<{
+    part_number: number
+    title: string
+    content: string
+    order: number
+    questions: Array<QDraft>
+  }>
+}): TestDraft {
+  return {
+    name: data.name,
+    module: data.module,
+    test_type: data.test_type,
+    difficulty: data.difficulty,
+    duration_minutes: data.duration_minutes,
+    description: data.description,
+    is_published: data.is_published,
+    access_level: data.access_level,
+    passages: data.passages.map((p) => ({
+      part_number: p.part_number,
+      title: p.title,
+      content: p.content,
+      order: p.order,
+      min_words: (p as { min_words?: number | null }).min_words ?? null,
+      audio_file: (p as { audio_file?: string | null }).audio_file ?? null,
+      audio_file_path:
+        (p as { audio_file?: string | null }).audio_file
+          ? String((p as { audio_file?: string | null }).audio_file).replace(/^\/media\//, '')
+          : null,
+      questions: p.questions.map((q, i) => ({
+        order: q.order ?? i + 1,
+        question_type: q.question_type,
+        text: q.text,
+        options: Array.isArray(q.options) ? q.options : [],
+        correct_answer:
+          typeof q.correct_answer === 'string'
+            ? q.correct_answer
+            : JSON.stringify(q.correct_answer ?? ''),
+        acceptable_answers: Array.isArray(q.acceptable_answers) ? q.acceptable_answers : [],
+        group_id: q.group_id ?? 0,
+        instruction: q.instruction ?? '',
+        points: q.points ?? 1,
+      })),
+    })),
+  }
+}
+
+export default function AdminTestEditPage() {
+  const { testId } = useParams<{ testId?: string }>()
+  const isNew = !testId || testId === 'new'
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  const [draft, setDraft] = useState<TestDraft>(blankTest)
+
+  const query = useQuery({
+    queryKey: ['admin-test', testId],
+    queryFn: async () =>
+      (await api.get(`/admin/tests/${testId}/`)).data as Parameters<typeof draftFromServer>[0],
+    enabled: !isNew,
+  })
+
+  useEffect(() => {
+    if (!isNew && query.data) setDraft(draftFromServer(query.data))
+  }, [isNew, query.data])
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: TestDraft) => {
+      const { passages: _ignored, ...body } = payload
+      void _ignored
+      const withInput = { ...body, passages_input: payload.passages }
+      if (isNew) return (await api.post('/admin/tests/', withInput)).data
+      return (await api.patch(`/admin/tests/${testId}/`, withInput)).data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-tests'] })
+      toast.success(isNew ? 'Test yaratildi' : 'O‘zgarishlar saqlandi')
+      navigate('/admin/tests')
+    },
+    onError: (err) => {
+      const data = (err as { response?: { data?: unknown } })?.response?.data
+      toast.error('Saqlashda xatolik: ' + JSON.stringify(data).slice(0, 200))
+    },
+  })
+
+  if (!isNew && query.isLoading) {
+    return (
+      <AdminLayout>
+        <div className="p-8 text-muted-foreground">Yuklanmoqda…</div>
+      </AdminLayout>
+    )
+  }
+  if (!isNew && query.isError) {
+    return <Navigate to="/admin/tests" replace />
+  }
+
+  const updatePassage = (pi: number, patch: Partial<PDraft>) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) => (i === pi ? { ...p, ...patch } : p)),
+    }))
+  }
+
+  const addPassage = () => {
+    setDraft((d) => ({
+      ...d,
+      passages: [...d.passages, blankPassage(d.passages.length + 1)],
+    }))
+  }
+
+  const removePassage = (pi: number) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages
+        .filter((_, i) => i !== pi)
+        .map((p, i) => ({ ...p, part_number: i + 1, order: i + 1 })),
+    }))
+  }
+
+  const updateQuestion = (pi: number, qi: number, patch: Partial<QDraft>) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) =>
+        i !== pi
+          ? p
+          : {
+              ...p,
+              questions: p.questions.map((q, j) =>
+                j === qi ? { ...q, ...patch } : q,
+              ),
+            },
+      ),
+    }))
+  }
+
+  const addQuestion = (pi: number) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) =>
+        i !== pi
+          ? p
+          : { ...p, questions: [...p.questions, blankQuestion(p.questions.length + 1)] },
+      ),
+    }))
+  }
+
+  const removeQuestion = (pi: number, qi: number) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) =>
+        i !== pi
+          ? p
+          : {
+              ...p,
+              questions: p.questions
+                .filter((_, j) => j !== qi)
+                .map((q, j) => ({ ...q, order: j + 1 })),
+            },
+      ),
+    }))
+  }
+
+  const changeQuestionType = (pi: number, qi: number, newType: QType) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) =>
+        i !== pi
+          ? p
+          : {
+              ...p,
+              questions: p.questions.map((q, j) =>
+                j === qi ? normaliseOnChangeType(q, newType) : q,
+              ),
+            },
+      ),
+    }))
+  }
+
+  const updateMCQOption = (pi: number, qi: number, oi: number, val: string) => {
+    setDraft((d) => ({
+      ...d,
+      passages: d.passages.map((p, i) =>
+        i !== pi
+          ? p
+          : {
+              ...p,
+              questions: p.questions.map((q, j) =>
+                j !== qi
+                  ? q
+                  : {
+                      ...q,
+                      options: q.options.map((o, k) => (k === oi ? val : o)),
+                    },
+              ),
+            },
+      ),
+    }))
+  }
+
+  const onSave = () => {
+    if (!draft.name.trim()) return toast.error('Test nomini kiriting')
+    for (const p of draft.passages) {
+      if (!p.title.trim() || !p.content.trim())
+        return toast.error('Passage nom va matnini to‘ldiring')
+      // Writing: no questions required; min_words required
+      if (draft.module === 'writing') continue
+      for (const q of p.questions) {
+        if (!q.text.trim()) return toast.error('Savol matnini to‘ldiring')
+        if (!q.correct_answer.trim())
+          return toast.error('Har savolga to‘g‘ri javobni belgilang')
+      }
+    }
+    // Strip questions from writing passages before send
+    const payload: TestDraft = {
+      ...draft,
+      passages: draft.passages.map((p) =>
+        draft.module === 'writing' ? { ...p, questions: [] } : p,
+      ),
+    }
+    saveMutation.mutate(payload)
+  }
+
+  return (
+    <AdminLayout>
+      <header className="flex items-center justify-between border-b bg-white px-8 py-5">
+        <div className="flex items-center gap-3">
+          <Link to="/admin/tests">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isNew ? 'Yangi test' : 'Testni tahrirlash'}
+          </h1>
+        </div>
+        <Button onClick={onSave} disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+        </Button>
+      </header>
+
+      <div className="space-y-6 p-8">
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <h2 className="text-lg font-semibold">Asosiy ma’lumotlar</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Test nomi</Label>
+                <Input
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  placeholder="The Concept of Intelligence"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Modul</Label>
+                <select
+                  value={draft.module}
+                  onChange={(e) =>
+                    setDraft({ ...draft, module: e.target.value as TestDraft['module'] })
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="reading">Reading</option>
+                  <option value="listening">Listening</option>
+                  <option value="writing">Writing</option>
+                  <option value="speaking">Speaking</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Qiyinlik</Label>
+                <select
+                  value={draft.difficulty}
+                  onChange={(e) =>
+                    setDraft({ ...draft, difficulty: e.target.value as TestDraft['difficulty'] })
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Davomiyligi (daqiqa)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={draft.duration_minutes}
+                  onChange={(e) =>
+                    setDraft({ ...draft, duration_minutes: Number(e.target.value) || 0 })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tavsif</Label>
+                <Input
+                  value={draft.description}
+                  onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                  placeholder="Academic Reading — Passage 1"
+                />
+              </div>
+              <div className="flex items-center gap-2 md:col-span-2">
+                <input
+                  id="is_published"
+                  type="checkbox"
+                  checked={draft.is_published}
+                  onChange={(e) =>
+                    setDraft({ ...draft, is_published: e.target.checked })
+                  }
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_published">Nashr qilingan (foydalanuvchilar ko‘radi)</Label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {draft.passages.map((p, pi) => (
+          <Card key={pi}>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Part {p.part_number}</h2>
+                {draft.passages.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePassage(pi)}
+                    className="text-rose-600 hover:text-rose-700"
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" /> Passageni o‘chirish
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Passage nomi</Label>
+                <Input
+                  value={p.title}
+                  onChange={(e) => updatePassage(pi, { title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {draft.module === 'writing' ? 'Task prompt' : 'Passage matni / transkript'}
+                </Label>
+                <textarea
+                  value={p.content}
+                  onChange={(e) => updatePassage(pi, { content: e.target.value })}
+                  rows={draft.module === 'writing' ? 6 : 8}
+                  className="w-full rounded-md border border-input bg-background p-3 text-sm"
+                />
+              </div>
+
+              {draft.module === 'writing' && (
+                <div className="space-y-2">
+                  <Label>Minimal so‘z soni</Label>
+                  <Input
+                    type="number"
+                    min={50}
+                    value={p.min_words ?? 150}
+                    onChange={(e) =>
+                      updatePassage(pi, { min_words: Number(e.target.value) || 150 })
+                    }
+                    className="w-32"
+                  />
+                </div>
+              )}
+
+              {draft.module === 'listening' && (
+                <AudioUploadField
+                  currentUrl={p.audio_file ?? null}
+                  currentPath={p.audio_file_path ?? null}
+                  onUploaded={(path, url) =>
+                    updatePassage(pi, { audio_file_path: path, audio_file: url })
+                  }
+                  onClear={() =>
+                    updatePassage(pi, { audio_file_path: null, audio_file: null })
+                  }
+                />
+              )}
+
+              {draft.module === 'writing' ? null : (
+              <div className="mt-6 space-y-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  Savollar ({p.questions.length})
+                </h3>
+                {p.questions.map((q, qi) => (
+                  <QuestionBuilder
+                    key={qi}
+                    q={q}
+                    qi={qi}
+                    onChangeType={(t) => changeQuestionType(pi, qi, t)}
+                    onText={(v) => updateQuestion(pi, qi, { text: v })}
+                    onPoints={(v) => updateQuestion(pi, qi, { points: v })}
+                    onInstruction={(v) => updateQuestion(pi, qi, { instruction: v })}
+                    onCorrect={(v) => updateQuestion(pi, qi, { correct_answer: v })}
+                    onOption={(oi, v) => updateMCQOption(pi, qi, oi, v)}
+                    onAddMatchingOption={() =>
+                      updateQuestion(pi, qi, { options: [...q.options, ''] })
+                    }
+                    onRemoveMatchingOption={(oi) =>
+                      updateQuestion(pi, qi, {
+                        options: q.options.filter((_, k) => k !== oi),
+                      })
+                    }
+                    onAcceptable={(vals) =>
+                      updateQuestion(pi, qi, { acceptable_answers: vals })
+                    }
+                    onRemove={() => removeQuestion(pi, qi)}
+                  />
+                ))}
+                <Button variant="outline" size="sm" onClick={() => addQuestion(pi)}>
+                  <Plus className="mr-2 h-4 w-4" /> Savol qo‘shish
+                </Button>
+              </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+
+        <Button variant="outline" onClick={addPassage}>
+          <Plus className="mr-2 h-4 w-4" /> Passage qo‘shish
+        </Button>
+      </div>
+    </AdminLayout>
+  )
+}
+
+// ============= QuestionBuilder component =============
+
+type QBProps = {
+  q: QDraft
+  qi: number
+  onChangeType: (t: QType) => void
+  onText: (v: string) => void
+  onPoints: (v: number) => void
+  onInstruction: (v: string) => void
+  onCorrect: (v: string) => void
+  onOption: (oi: number, v: string) => void
+  onAddMatchingOption: () => void
+  onRemoveMatchingOption: (oi: number) => void
+  onAcceptable: (vals: string[]) => void
+  onRemove: () => void
+}
+
+function QuestionBuilder({
+  q,
+  qi,
+  onChangeType,
+  onText,
+  onPoints,
+  onInstruction,
+  onCorrect,
+  onOption,
+  onAddMatchingOption,
+  onRemoveMatchingOption,
+  onAcceptable,
+  onRemove,
+}: QBProps) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50/50 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-semibold text-slate-700">
+          Savol #{qi + 1}
+        </span>
+        <div className="flex items-center gap-3">
+          <select
+            value={q.question_type}
+            onChange={(e) => onChangeType(e.target.value as QType)}
+            className="h-9 rounded-md border border-input bg-white px-2 text-sm"
+          >
+            <option value="mcq">Multiple Choice</option>
+            <option value="tfng">True/False/NG</option>
+            <option value="fill">Fill in blank</option>
+            <option value="matching">Matching</option>
+          </select>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRemove}
+            className="text-rose-600 hover:text-rose-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Ko‘rsatma (ixtiyoriy)</Label>
+          <Input
+            value={q.instruction}
+            onChange={(e) => onInstruction(e.target.value)}
+            placeholder="Choose A, B, C or D"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Savol matni</Label>
+          <Input value={q.text} onChange={(e) => onText(e.target.value)} />
+        </div>
+
+        {q.question_type === 'mcq' && (
+          <div className="space-y-2">
+            <Label className="text-xs">Variantlar (to‘g‘ri javobni belgilang)</Label>
+            {q.options.map((opt, oi) => (
+              <div key={oi} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name={`correct-${qi}`}
+                  checked={q.correct_answer === opt && opt !== ''}
+                  onChange={() => onCorrect(opt)}
+                  className="h-4 w-4"
+                />
+                <span className="w-6 text-sm text-slate-500">
+                  {String.fromCharCode(65 + oi)}
+                </span>
+                <Input
+                  value={opt}
+                  onChange={(e) => onOption(oi, e.target.value)}
+                  placeholder={`Variant ${String.fromCharCode(65 + oi)}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {q.question_type === 'tfng' && (
+          <div className="space-y-2">
+            <Label className="text-xs">To‘g‘ri javob</Label>
+            <div className="flex gap-2">
+              {['True', 'False', 'Not Given'].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => onCorrect(v)}
+                  className={`rounded-md border px-3 py-1.5 text-sm ${
+                    q.correct_answer === v
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-300 bg-white text-slate-800'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {q.question_type === 'fill' && (
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <Label className="text-xs">To‘g‘ri javob</Label>
+              <Input value={q.correct_answer} onChange={(e) => onCorrect(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Qabul qilinadigan alternativalar (har biri yangi qatorda)</Label>
+              <textarea
+                value={q.acceptable_answers.join('\n')}
+                onChange={(e) =>
+                  onAcceptable(e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))
+                }
+                rows={2}
+                className="w-full rounded-md border border-input bg-background p-2 text-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {q.question_type === 'matching' && (
+          <div className="space-y-2">
+            <Label className="text-xs">Variantlar</Label>
+            {q.options.map((opt, oi) => (
+              <div key={oi} className="flex items-center gap-2">
+                <Input
+                  value={opt}
+                  onChange={(e) => onOption(oi, e.target.value)}
+                  placeholder={`Variant ${oi + 1}`}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveMatchingOption(oi)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={onAddMatchingOption}>
+              <Plus className="mr-1 h-4 w-4" /> Variant
+            </Button>
+            <div className="mt-2 space-y-1">
+              <Label className="text-xs">To‘g‘ri javob</Label>
+              <select
+                value={q.correct_answer}
+                onChange={(e) => onCorrect(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-white px-2 text-sm"
+              >
+                <option value="">— tanlang —</option>
+                {q.options.filter(Boolean).map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <Label className="text-xs">Ball:</Label>
+          <Input
+            type="number"
+            min={0}
+            value={q.points}
+            onChange={(e) => onPoints(Number(e.target.value) || 0)}
+            className="w-20"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============= AudioUploadField =============
+
+type AudioFieldProps = {
+  currentUrl: string | null
+  currentPath: string | null
+  onUploaded: (path: string, url: string) => void
+  onClear: () => void
+}
+
+function AudioUploadField({
+  currentUrl,
+  currentPath,
+  onUploaded,
+  onClear,
+}: AudioFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handlePick = () => inputRef.current?.click()
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const { data } = await api.post<{ path: string; url: string }>(
+        '/admin/upload/audio',
+        form,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      onUploaded(data.path, data.url)
+      toast.success('Audio yuklandi')
+    } catch (err) {
+      toast.error('Yuklashda xatolik')
+      void err
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Listening audio fayl</Label>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="audio/*"
+          onChange={handleChange}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handlePick}
+          disabled={uploading}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          {uploading ? 'Yuklanmoqda…' : currentPath ? 'Yangilash' : 'Fayl tanlash'}
+        </Button>
+        {currentPath && (
+          <>
+            <span className="max-w-xs truncate text-xs text-muted-foreground">
+              {currentPath}
+            </span>
+            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+              <Trash2 className="h-4 w-4 text-rose-600" />
+            </Button>
+          </>
+        )}
+      </div>
+      {currentUrl && <audio controls src={currentUrl} className="w-full" />}
+    </div>
+  )
+}
