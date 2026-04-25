@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     PublicOrganizationView,
     PublicPlanListView,
+    PublicStudentRegisterView,
     SuperAdminOrganizationViewSet,
     SuperAdminPaymentViewSet,
     SuperAdminPlanViewSet,
@@ -20,4 +21,5 @@ urlpatterns = [
     path('superadmin/', include(super_router.urls)),
     path('public/organizations/<slug:slug>/', PublicOrganizationView.as_view()),
     path('public/plans/', PublicPlanListView.as_view()),
+    path('public/register/', PublicStudentRegisterView.as_view()),
 ]

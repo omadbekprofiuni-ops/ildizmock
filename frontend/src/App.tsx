@@ -21,6 +21,8 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
+import OrgLandingPage from './pages/OrgLandingPage'
+import OrgRegisterPage from './pages/OrgRegisterPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ResultPage from './pages/ResultPage'
 import SpeakingComingSoonPage from './pages/SpeakingComingSoonPage'
@@ -74,6 +76,10 @@ export default function App() {
           <Route path="/admin/tests/:testId/edit" element={<AdminRoute><AdminTestEditPage /></AdminRoute>} />
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
+
+          {/* Org-branded — must come AFTER all static routes */}
+          <Route path="/:slug/register" element={<OrgRegisterPage />} />
+          <Route path="/:slug" element={<OrgLandingPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

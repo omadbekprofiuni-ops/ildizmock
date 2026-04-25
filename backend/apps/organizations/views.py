@@ -203,3 +203,60 @@ class PublicPlanListView(APIView):
 
     def get(self, request):
         return Response(PlanSerializer(Plan.objects.all(), many=True).data)
+
+
+class PublicStudentRegisterView(APIView):
+    """POST /public/register/ — student o'zi markaz slug bilan ro'yxatdan o'tadi."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from apps.accounts.serializers import UserSerializer, _validate_phone_format
+        from apps.accounts.views import _set_cookies
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        slug = request.data.get('org_slug')
+        if not slug:
+            return Response({'detail': 'org_slug majburiy.'}, status=400)
+        try:
+            org = Organization.objects.get(slug=slug)
+        except Organization.DoesNotExist:
+            return Response({'detail': 'Markaz topilmadi.'}, status=404)
+        if org.status not in ('active', 'trial'):
+            return Response(
+                {'detail': 'Markaz faol emas. Administratorga murojaat qiling.'},
+                status=403,
+            )
+        if org.plan.max_students > 0 and org.students_count >= org.plan.max_students:
+            return Response(
+                {'detail': f'Markaz tarif limiti to‘ldi ({org.plan.max_students} ta talaba). '
+                           'Markaz adminiga murojaat qiling.'},
+                status=400,
+            )
+
+        phone = (request.data.get('phone') or '').strip()
+        password = request.data.get('password') or ''
+        first_name = (request.data.get('first_name') or '').strip()
+        last_name = (request.data.get('last_name') or '').strip()
+
+        try:
+            _validate_phone_format(phone)
+        except Exception as e:
+            return Response({'phone': str(e)}, status=400)
+        if len(password) < 8:
+            return Response({'password': 'Parol kamida 8 ta belgi.'}, status=400)
+        if User.objects.filter(phone=phone).exists():
+            return Response(
+                {'phone': 'Bu telefon allaqachon ro‘yxatdan o‘tgan.'},
+                status=400,
+            )
+
+        user = User.objects.create_user(
+            phone=phone, password=password,
+            first_name=first_name, last_name=last_name,
+            role='student', organization=org, is_active=True,
+        )
+        # Auto-login: JWT cookies set
+        refresh = RefreshToken.for_user(user)
+        response = Response(UserSerializer(user).data, status=201)
+        return _set_cookies(response, str(refresh.access_token), str(refresh))

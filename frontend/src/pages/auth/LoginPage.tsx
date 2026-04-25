@@ -36,7 +36,18 @@ export default function LoginPage() {
     try {
       await login(values.phone, values.password)
       toast.success('Tizimga kirdingiz')
-      navigate('/')
+      // Role-based redirect
+      const me = useAuth.getState().user
+      const role = me?.role
+      if (role === 'superadmin' || role === 'super_admin') {
+        navigate('/super')
+      } else if (role === 'org_admin' || role === 'admin') {
+        navigate('/admin')
+      } else if (role === 'teacher') {
+        navigate('/teacher')
+      } else {
+        navigate('/home')
+      }
     } catch (err) {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
       const msg =
