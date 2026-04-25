@@ -23,7 +23,6 @@ import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
 import OrgRegisterPage from './pages/OrgRegisterPage'
-import RegisterPage from './pages/auth/RegisterPage'
 import ResultPage from './pages/ResultPage'
 import SpeakingComingSoonPage from './pages/SpeakingComingSoonPage'
 import ProfilePage from './pages/student/ProfilePage'
@@ -47,7 +46,6 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
           <Route path="/take/:attemptId" element={<TakeTestPage />} />

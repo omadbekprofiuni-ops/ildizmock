@@ -5,10 +5,10 @@ from .admin_views import (
     AdminStudentListView,
     AdminTeacherListCreateView,
 )
-from .views import LoginView, LogoutView, MeView, RefreshView, RegisterView
+from .views import LoginView, LogoutView, MeView, RefreshView
 
 urlpatterns = [
-    path('register', RegisterView.as_view()),
+    # public registration is closed — superadmin/center_admin creates users
     path('login', LoginView.as_view()),
     path('logout', LogoutView.as_view()),
     path('refresh', RefreshView.as_view()),

@@ -54,7 +54,7 @@ export default function HomePage() {
             Computer-delivered test interfeysi · 4 ta modul · Avtomatik baholash · Start free
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to={user ? '/tests/reading' : '/register'}>
+            <Link to={user ? '/tests/reading' : '/login'}>
               <Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
                 ▶ Start free
               </Button>
@@ -72,7 +72,7 @@ export default function HomePage() {
           {MODULES.map(({ id, title, meta, Icon, href, authRequired, comingSoon }) => {
             const count = counts.data?.[id] ?? null
             const writingLocked = authRequired && !user
-            const target = comingSoon ? '/tests/speaking' : (writingLocked ? '/register' : href)
+            const target = comingSoon ? '/tests/speaking' : (writingLocked ? '/login' : href)
 
             const inner = (
               <article className={`group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6 transition-all ${comingSoon ? 'cursor-default opacity-70' : 'cursor-pointer hover:border-black hover:shadow-lg'}`}>
@@ -106,7 +106,7 @@ export default function HomePage() {
                   {comingSoon ? (
                     <Button disabled className="w-full" variant="outline">Coming Soon</Button>
                   ) : writingLocked ? (
-                    <Button className="w-full" variant="outline">Sign Up</Button>
+                    <Button className="w-full" variant="outline">Sign In</Button>
                   ) : (
                     <Button className="w-full bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
                       Start →

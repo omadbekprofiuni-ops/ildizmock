@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -120,18 +120,12 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Kirilmoqda…' : 'Kirish'}
+              {loading ? 'Signing in…' : 'Sign In'}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            No account?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              Ro‘yxatdan o‘ting
-            </Link>
+            Forgot password? Contact your education center.
           </p>
         </div>
       </main>
