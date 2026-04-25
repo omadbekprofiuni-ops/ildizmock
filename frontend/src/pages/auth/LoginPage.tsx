@@ -15,7 +15,7 @@ const schema = z.object({
     .string()
     .min(13, 'Telefon raqam +998 va 9 raqamdan iborat bo‘lsin')
     .regex(PHONE_RE, 'Format: +998XXXXXXXXX (jami 13 ta belgi)'),
-  password: z.string().min(6, 'Parol kamida 6 ta belgi bo‘lsin'),
+  password: z.string().min(8, 'Parol kamida 8 ta belgi bo‘lsin'),
 })
 type FormValues = z.infer<typeof schema>
 

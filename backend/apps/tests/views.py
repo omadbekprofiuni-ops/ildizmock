@@ -1,5 +1,5 @@
 from rest_framework import mixins, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -8,7 +8,9 @@ from .serializers import TestDetailSerializer, TestListSerializer
 
 
 class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    """Public read access — guests can browse tests."""
+
+    permission_classes = [AllowAny]
     queryset = Test.objects.filter(is_published=True)
 
     def get_serializer_class(self):
@@ -19,15 +21,18 @@ class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
     def get_queryset(self):
         qs = super().get_queryset()
         module = self.request.query_params.get('module')
+        difficulty = self.request.query_params.get('difficulty')
         if module:
             qs = qs.filter(module=module)
+        if difficulty:
+            qs = qs.filter(difficulty=difficulty)
         return qs
 
 
 class TestCountsView(APIView):
     """Public counts of published tests by module — used on HomePage cards."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         return Response({

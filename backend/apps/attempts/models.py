@@ -16,6 +16,7 @@ class Attempt(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='attempts',
+                             null=True, blank=True,
                              on_delete=models.CASCADE)
     test = models.ForeignKey(Test, related_name='attempts', on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')

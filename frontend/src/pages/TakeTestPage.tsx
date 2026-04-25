@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
+import { guestAttempts } from '@/lib/guest-attempts'
 
 type Passage = {
   id: number
@@ -295,7 +296,10 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
 
   const submitMutation = useMutation({
     mutationFn: async () => api.post(`/attempts/${attempt.id}/submit/`),
-    onSuccess: () => navigate(`/result/${attempt.id}`, { replace: true }),
+    onSuccess: () => {
+      try { guestAttempts.update(attempt.id, { status: 'graded' }) } catch { /* not a guest record */ }
+      navigate(`/result/${attempt.id}`, { replace: true })
+    },
     onError: () => toast.error('Topshirishda xatolik'),
   })
 

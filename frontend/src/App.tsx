@@ -15,7 +15,6 @@ import AdminTestsPage from './pages/admin/AdminTestsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
-import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -39,20 +38,19 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          {/* Public — guest can browse */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
+          <Route path="/tests/:module" element={<TestListPage />} />
+          <Route path="/take/:attemptId" element={<TakeTestPage />} />
+          <Route path="/result/:attemptId" element={<ResultPage />} />
 
-          {/* Speaking coming-soon — public-ish (auth required to keep flow) */}
-          <Route path="/tests/speaking" element={<ProtectedRoute><SpeakingComingSoonPage /></ProtectedRoute>} />
-
-          {/* Student */}
-          <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          {/* Auth-required */}
           <Route path="/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/tests/:module" element={<ProtectedRoute><TestListPage /></ProtectedRoute>} />
-          <Route path="/take/:attemptId" element={<ProtectedRoute><TakeTestPage /></ProtectedRoute>} />
-          <Route path="/result/:attemptId" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/my-writings" element={<ProtectedRoute><MyWritingsPage /></ProtectedRoute>} />
           <Route path="/writing/sent" element={<ProtectedRoute><WritingSentPage /></ProtectedRoute>} />

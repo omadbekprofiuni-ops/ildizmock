@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, History } from 'lucide-react'
+import { ArrowLeft, History, UserPlus } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { api } from '@/lib/api'
+import { useAuth } from '@/stores/auth'
 
 type ResultResponse = {
   id: string
@@ -22,6 +23,7 @@ type ResultResponse = {
 
 export default function ResultPage() {
   const { attemptId } = useParams<{ attemptId: string }>()
+  const user = useAuth((s) => s.user)
 
   const query = useQuery({
     queryKey: ['result', attemptId],
@@ -135,6 +137,26 @@ export default function ResultPage() {
       </header>
 
       <main className="container max-w-3xl space-y-6 py-12">
+        {!user && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+            <div className="flex items-start gap-3">
+              <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+              <div className="flex-1">
+                <p className="font-medium text-amber-900">
+                  Natijani saqlash va tarixingizni ko‘rish uchun ro‘yxatdan o‘ting →
+                </p>
+                <p className="mt-1 text-amber-800">
+                  Hozir bu natija sizning hisobingizga bog‘lanmagan.
+                </p>
+              </div>
+              <Link to="/register">
+                <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
+                  Ro‘yxatdan o‘tish
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
         <div className="text-center">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
             Band Score

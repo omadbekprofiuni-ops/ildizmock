@@ -651,29 +651,30 @@ class Command(BaseCommand):
             'Bakery Earnings Chart',
         ]).delete()
 
-        self._make_reading_test('The Concept of Intelligence', 20, 'medium',
-                                READING_1_PASSAGE, READING_1_QUESTIONS,
-                                'Academic Reading — Passage 1, 10 questions.')
-        self._make_reading_test('The Lost Art of Letter Writing', 20, 'medium',
-                                READING_2_PASSAGE, READING_2_QUESTIONS,
-                                'Academic Reading — paragraph matching + T/F/NG + completion.')
-        self._make_reading_test('Climate Change and Migration', 20, 'hard',
-                                READING_3_PASSAGE, READING_3_QUESTIONS,
-                                'Academic Reading — MCQ + summary completion.')
-        self._make_reading_test('The Origins of Coffee', 20, 'medium',
+        # 4 reading: beginner / intermediate / advanced / expert
+        self._make_reading_test('The Origins of Coffee', 20, 'beginner',
                                 READING_4_PASSAGE, READING_4_QUESTIONS,
                                 'Academic Reading — heading matching + T/F/NG + MCQ.')
+        self._make_reading_test('The Concept of Intelligence', 20, 'intermediate',
+                                READING_1_PASSAGE, READING_1_QUESTIONS,
+                                'Academic Reading — Passage 1, 10 questions.')
+        self._make_reading_test('The Lost Art of Letter Writing', 20, 'intermediate',
+                                READING_2_PASSAGE, READING_2_QUESTIONS,
+                                'Academic Reading — paragraph matching + T/F/NG + completion.')
+        self._make_reading_test('Climate Change and Migration', 20, 'advanced',
+                                READING_3_PASSAGE, READING_3_QUESTIONS,
+                                'Academic Reading — MCQ + summary completion.')
 
-        self._make_listening_test('South City Cycling Club', 10, 'easy',
+        self._make_listening_test('South City Cycling Club', 10, 'beginner',
                                   LISTENING_1_TRANSCRIPT, LISTENING_1_QUESTIONS,
                                   'Listening Section 1 — form completion.')
-        self._make_listening_test('Hotel Booking Inquiry', 10, 'easy',
+        self._make_listening_test('Hotel Booking Inquiry', 10, 'beginner',
                                   LISTENING_2_TRANSCRIPT, LISTENING_2_QUESTIONS,
                                   'Listening Section 1 — note completion + map.')
-        self._make_listening_test('University Library Tour', 10, 'medium',
+        self._make_listening_test('University Library Tour', 10, 'intermediate',
                                   LISTENING_3_TRANSCRIPT, LISTENING_3_QUESTIONS,
                                   'Listening Section 2 — labelling + MCQ.')
-        self._make_listening_test('Job Interview at TechCorp', 10, 'medium',
+        self._make_listening_test('Job Interview at TechCorp', 10, 'advanced',
                                   LISTENING_4_TRANSCRIPT, LISTENING_4_QUESTIONS,
                                   'Listening Section 3 — fill blanks + MCQ.')
 
@@ -681,7 +682,7 @@ class Command(BaseCommand):
         writing = Test.objects.create(
             name='Bakery Earnings Chart',
             module='writing', test_type='academic',
-            difficulty='medium', duration_minutes=20,
+            difficulty='intermediate', duration_minutes=20,
             description='Academic Writing Task 1 — describe a line chart in at least 150 words.',
             is_published=True,
         )

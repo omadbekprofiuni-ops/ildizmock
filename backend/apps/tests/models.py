@@ -12,7 +12,12 @@ class Test(models.Model):
         ('speaking', 'Speaking'),
     ]
     TYPE_CHOICES = [('academic', 'Academic'), ('general', 'General Training')]
-    DIFFICULTY_CHOICES = [('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')]
+    DIFFICULTY_CHOICES = [
+        ('beginner', 'Boshlang‘ich (4.5–5.5)'),
+        ('intermediate', 'O‘rta (5.5–6.5)'),
+        ('advanced', 'Yuqori (6.5–7.5)'),
+        ('expert', 'Mahoratli (7.5+)'),
+    ]
     ACCESS_CHOICES = [('free', 'Free'), ('standard', 'Standard'), ('premium', 'Premium')]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
