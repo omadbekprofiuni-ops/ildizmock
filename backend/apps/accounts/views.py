@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import LoginSerializer, UserSerializer
 
 
 def _set_cookies(response, access, refresh=None):
@@ -34,16 +34,23 @@ def _clear_cookies(response):
     return response
 
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
+class ChangePasswordView(APIView):
+    """POST /auth/change-password — body {old_password, new_password}."""
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        response = Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-        return _set_cookies(response, str(refresh.access_token), str(refresh))
+        from rest_framework.permissions import IsAuthenticated
+        if not request.user.is_authenticated:
+            return Response({'detail': 'Sign in required'}, status=401)
+        old = request.data.get('old_password') or ''
+        new = request.data.get('new_password') or ''
+        if not request.user.check_password(old):
+            return Response({'detail': 'Wrong current password'}, status=400)
+        if len(new) < 6:
+            return Response({'detail': 'Password too short (min 6)'}, status=400)
+        request.user.set_password(new)
+        request.user.must_change_password = False
+        request.user.save(update_fields=['password', 'must_change_password'])
+        return Response({'detail': 'Password changed'})
 
 
 class LoginView(APIView):

@@ -9,13 +9,9 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
-const PHONE_RE = /^\+998\d{9}$/
 const schema = z.object({
-  phone: z
-    .string()
-    .min(13, 'Username is required (min 2 chars)')
-    .regex(PHONE_RE, 'Use lowercase letters and digits only'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  username: z.string().min(2, 'Username is required'),
+  password: z.string().min(4, 'Password is required'),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -27,27 +23,26 @@ export default function LoginPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { phone: '', password: '' },
+    defaultValues: { username: '', password: '' },
   })
 
   if (user) return <Navigate to="/home" replace />
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await login(values.phone, values.password)
+      await login(values.username, values.password)
       toast.success('Signed in')
-      // Role-based redirect
+
       const me = useAuth.getState().user
-      const role = me?.role
-      if (role === 'superadmin' || role === 'super_admin') {
-        navigate('/super')
-      } else if (role === 'org_admin' || role === 'admin') {
-        navigate('/admin')
-      } else if (role === 'teacher') {
-        navigate('/teacher')
-      } else {
-        navigate('/home')
+      if (me?.must_change_password) {
+        navigate('/change-password?required=true')
+        return
       }
+      const role = me?.role
+      if (role === 'superadmin') navigate('/super')
+      else if (role === 'org_admin') navigate('/admin')
+      else if (role === 'teacher') navigate('/teacher')
+      else navigate('/home')
     } catch (err) {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
       const msg =
@@ -61,45 +56,42 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-[#0A0A0A] p-12 text-white md:flex">
-        <div className="text-2xl font-bold">
-          ILDIZ<span className="font-normal">mock</span>
+        <div className="text-2xl font-bold tracking-tight">
+          ILDIZ<span className="font-normal text-white/80">mock</span>
         </div>
-        <div className="space-y-6">
-          <h1 className="text-5xl font-extrabold leading-[1.05] md:text-6xl">
-            Real IELTS<br />sinov muhiti
+        <div className="space-y-8">
+          <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
+            Real IELTS<br />exam<br />environment
           </h1>
-          <p className="max-w-md text-xl leading-relaxed text-white/70">
-            Computer-delivered test interfeysi. Avtomatik baholash.
-            O‘zbek tilida yo‘riqnoma.
+          <p className="max-w-md text-lg leading-relaxed text-white/60">
+            Computer-delivered test interface. Automatic scoring.
+            Practice with real IELTS rules and timing.
           </p>
         </div>
-        <div className="text-sm text-white/40">
-          © 2026 ILDIZmock · Tashkent, Uzbekistan
+        <div className="text-xs text-white/40">
+          © 2026 ILDIZmock · Made in Tashkent, Uzbekistan
         </div>
       </aside>
 
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-6">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Kirish</h2>
-            <p className="text-sm text-muted-foreground">
-              Usernameingiz bilan hisobingizga kiring
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight">Sign In</h2>
+            <p className="text-sm text-muted-foreground">Sign in with your username</p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder="+998901234567"
-                autoComplete="tel"
-                {...form.register('phone')}
+                id="username"
+                placeholder="e.g. jasmina"
+                autoComplete="username"
+                {...form.register('username')}
               />
-              {form.formState.errors.phone && (
+              {form.formState.errors.username && (
                 <p className="text-sm text-destructive">
-                  {form.formState.errors.phone.message}
+                  {form.formState.errors.username.message}
                 </p>
               )}
             </div>

@@ -29,7 +29,7 @@ export function UserMenu() {
 
   if (!user) return null
 
-  const initial = (user.first_name || user.phone)[0]?.toUpperCase() || '?'
+  const initial = (user.first_name || user.username || '?')[0]?.toUpperCase() || '?'
   const isAdmin = user.role === 'admin' || user.role === 'super_admin'
   const isTeacher = user.role === 'teacher'
 

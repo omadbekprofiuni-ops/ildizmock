@@ -1,64 +1,49 @@
 import re
 
-from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from .models import User
 
+USERNAME_RE = re.compile(r'^[a-z0-9_]{2,50}$')
 PHONE_RE = re.compile(r'^\+998\d{9}$')
 
 
+def _validate_username_format(value: str) -> str:
+    """Lowercase letters, digits, underscore. 2–50 chars."""
+    if not USERNAME_RE.match((value or '').lower()):
+        raise serializers.ValidationError(
+            'Username must be 2–50 lowercase letters, digits, or underscore.'
+        )
+    return value.lower()
+
+
 def _validate_phone_format(value: str) -> str:
+    """Optional phone field validator."""
     if not PHONE_RE.match(value or ''):
         raise serializers.ValidationError(
-            'Telefon raqam +998 bilan boshlanib, 9 ta raqam bo‘lishi kerak '
-            '(jami 13 ta belgi).'
+            'Phone must start with +998 and contain 9 digits (13 total).'
         )
     return value
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True, min_length=8,
-        error_messages={'min_length': 'Parol kamida 8 ta belgi bo‘lishi kerak.'},
-    )
-
-    class Meta:
-        model = User
-        fields = ['phone', 'password', 'first_name', 'last_name']
-        # Disable DRF's default UniqueValidator (English message); we run
-        # our own duplicate check in validate_phone with an Uzbek message.
-        extra_kwargs = {'phone': {'validators': []}}
-
-    def validate_phone(self, value):
-        _validate_phone_format(value)
-        if User.objects.filter(phone=value).exists():
-            raise serializers.ValidationError(
-                'Bu telefon raqam allaqachon ro‘yxatdan o‘tgan.'
-            )
-        return value
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
-
-
 class LoginSerializer(serializers.Serializer):
-    phone = serializers.CharField()
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
-    def validate_phone(self, value):
-        return _validate_phone_format(value)
-
     def validate(self, attrs):
-        user = authenticate(phone=attrs['phone'], password=attrs['password'])
-        if not user:
-            raise serializers.ValidationError({'detail': 'Telefon yoki parol noto‘g‘ri'})
+        username = (attrs.get('username') or '').lower().strip()
+        password = attrs.get('password') or ''
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({'detail': 'Wrong username or password'})
+
+        if not user.check_password(password):
+            raise serializers.ValidationError({'detail': 'Wrong username or password'})
         if not user.is_active:
-            raise serializers.ValidationError({'detail': 'Foydalanuvchi faol emas'})
+            raise serializers.ValidationError({'detail': 'Account is blocked'})
+
         attrs['user'] = user
         return attrs
 
@@ -66,6 +51,7 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'phone', 'first_name', 'last_name', 'role',
-                  'target_band', 'language', 'created_at']
-        read_only_fields = ['id', 'role', 'created_at']
+        fields = ['id', 'username', 'phone', 'first_name', 'last_name', 'role',
+                  'target_band', 'language', 'must_change_password', 'created_at']
+        read_only_fields = ['id', 'username', 'role', 'created_at',
+                            'must_change_password']

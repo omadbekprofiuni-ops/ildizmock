@@ -68,7 +68,7 @@ export default function ProfileePage() {
               <ReadOnly label="Ism" value={user.first_name} />
               <ReadOnly label="Familiya" value={user.last_name} />
             </div>
-            <ReadOnly label="Username" value={user.phone} />
+            <ReadOnly label="Username" value={user.username} />
             <ReadOnly label="Rol" value={user.role} />
             <p className="text-xs text-[var(--muted)]">
               Ism, familiya va telefonni o‘zgartirish uchun adminga murojaat qiling.
