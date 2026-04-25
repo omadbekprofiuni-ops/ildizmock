@@ -59,8 +59,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='ieltsation'),
-        'USER': config('POSTGRES_USER', default='ieltsation'),
+        'NAME': config('POSTGRES_DB', default='ildizmock'),
+        'USER': config('POSTGRES_USER', default='ildizmock'),
         'PASSWORD': config('POSTGRES_PASSWORD', default='dev123'),
         'HOST': config('POSTGRES_HOST', default='localhost'),
         'PORT': config('POSTGRES_PORT', default='5432'),

@@ -12,7 +12,7 @@ export function Navbar() {
     <header className="border-b border-[var(--border)] bg-white">
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="text-xl font-bold tracking-tight">
-          IELTSation
+          ILDIZmock
         </Link>
         {user ? (
           <div className="flex items-center gap-2">

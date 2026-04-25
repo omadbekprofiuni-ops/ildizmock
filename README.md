@@ -1,4 +1,4 @@
-# IELTSation
+# ILDIZmock
 
 Uzbekistan's first IELTS computer-delivered mock test platform.
 Django 5 REST API + React 18 SPA, PostgreSQL 16 installed natively on WSL.
@@ -8,17 +8,17 @@ Django 5 REST API + React 18 SPA, PostgreSQL 16 installed natively on WSL.
 - Ubuntu/WSL with `postgresql`, `postgresql-contrib`, `libpq-dev`,
   `python3-venv`, `python3-dev`, `build-essential`, `nodejs`, `npm`
   installed via `apt`.
-- Postgres role `ieltsation` with password `dev123` and database
-  `ieltsation` (see below).
+- Postgres role `ildizmock` with password `dev123` and database
+  `ildizmock` (see below).
 
 ## One-time setup
 
 ```bash
 # PostgreSQL (enabled as a systemd service, autostarts on WSL boot)
 sudo service postgresql start
-sudo -u postgres psql -c "CREATE USER ieltsation WITH PASSWORD 'dev123';"
-sudo -u postgres psql -c "CREATE DATABASE ieltsation OWNER ieltsation;"
-sudo -u postgres psql -c "ALTER USER ieltsation CREATEDB;"
+sudo -u postgres psql -c "CREATE USER ildizmock WITH PASSWORD 'dev123';"
+sudo -u postgres psql -c "CREATE DATABASE ildizmock OWNER ildizmock;"
+sudo -u postgres psql -c "ALTER USER ildizmock CREATEDB;"
 ```
 
 ## Backend

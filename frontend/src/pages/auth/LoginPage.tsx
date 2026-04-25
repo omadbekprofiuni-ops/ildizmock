@@ -60,17 +60,22 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <aside className="hidden flex-col justify-between bg-gradient-to-br from-slate-900 to-slate-700 p-10 text-white md:flex">
-        <h1 className="text-3xl font-bold">IELTSation</h1>
-        <div>
-          <p className="text-2xl font-semibold leading-tight">
-            O‘zbekistonning birinchi IELTS kompyuter-delivered mock platformasi
-          </p>
-          <p className="mt-3 text-slate-300">
-            Haqiqiy testdagi kabi interfeys. Avtomatik band hisobi.
+      <aside className="hidden flex-col justify-between bg-[#0A0A0A] p-12 text-white md:flex">
+        <div className="text-2xl font-bold">
+          ILDIZ<span className="font-normal">mock</span>
+        </div>
+        <div className="space-y-6">
+          <h1 className="text-5xl font-extrabold leading-[1.05] md:text-6xl">
+            Real IELTS<br />sinov muhiti
+          </h1>
+          <p className="max-w-md text-xl leading-relaxed text-white/70">
+            Computer-delivered test interfeysi. Avtomatik baholash.
+            O‘zbek tilida yo‘riqnoma.
           </p>
         </div>
-        <p className="text-sm text-slate-400">© 2026 IELTSation</p>
+        <div className="text-sm text-white/40">
+          © 2026 ILDIZmock · Tashkent, Uzbekistan
+        </div>
       </aside>
 
       <main className="flex items-center justify-center p-6">

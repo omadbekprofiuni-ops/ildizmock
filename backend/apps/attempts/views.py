@@ -20,10 +20,20 @@ from .serializers import (
 
 
 def _can_access_attempt(request, attempt):
-    """Anonymous attempt (user is None) → anyone with the UUID; otherwise the owner."""
-    if attempt.user_id is None:
-        return True
-    return request.user.is_authenticated and attempt.user_id == request.user.id
+    """Owner check.
+
+    - Authenticated user: must match attempt.user.
+    - Anonymous attempt (user is None): X-Guest-Token header must match
+      attempt.guest_token. If no token saved on attempt — anyone with UUID
+      (legacy / SuperAdmin debug).
+    """
+    if attempt.user_id is not None:
+        return request.user.is_authenticated and attempt.user_id == request.user.id
+    # Anonymous attempt
+    if attempt.guest_token is None:
+        return True  # legacy attempts without a token are open
+    sent = request.headers.get('X-Guest-Token')
+    return str(attempt.guest_token) == (sent or '')
 
 
 class StartAttemptView(APIView):
@@ -42,9 +52,16 @@ class StartAttemptView(APIView):
                 {'detail': 'Bu test uchun ro‘yxatdan o‘tish kerak.'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+        import uuid as _uuid
         owner = request.user if request.user.is_authenticated else None
-        attempt = Attempt.objects.create(user=owner, test=test)
-        return Response(AttemptStartSerializer(attempt).data, status=status.HTTP_201_CREATED)
+        guest_token = None if owner else _uuid.uuid4()
+        attempt = Attempt.objects.create(
+            user=owner, test=test, guest_token=guest_token,
+        )
+        data = AttemptStartSerializer(attempt).data
+        if guest_token:
+            data['guest_token'] = str(guest_token)
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class AttemptViewSet(

@@ -25,7 +25,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
       <aside className="fixed inset-y-0 left-0 flex w-60 flex-col border-r border-slate-800 bg-slate-900 text-slate-100">
         <div className="flex h-14 items-center border-b border-slate-800 px-5">
           <Link to="/teacher" className="text-lg font-bold tracking-tight">
-            IELTSation
+            ILDIZmock
           </Link>
           <span className="ml-2 rounded bg-emerald-500 px-1.5 py-0.5 text-xs font-semibold text-slate-900">
             TEACHER

@@ -32,7 +32,7 @@ export default function HomePage() {
   const user = useAuth((s) => s.user)
   const [guestList, setGuestList] = useState<GuestAttemptRecord[]>([])
   useEffect(() => {
-    document.title = 'IELTSation — Bosh sahifa'
+    document.title = 'ILDIZmock — Bosh sahifa'
     if (!user) setGuestList(guestAttempts.list())
   }, [user])
 
@@ -166,7 +166,7 @@ export default function HomePage() {
 
         {/* Features */}
         <section className="mt-16 border-t border-[var(--border)] py-12 text-center">
-          <h2 className="mb-6 text-2xl font-semibold">Nima bu IELTSation?</h2>
+          <h2 className="mb-6 text-2xl font-semibold">Nima bu ILDIZmock?</h2>
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="text-sm">
               <span className="text-emerald-600">✓</span>{' '}

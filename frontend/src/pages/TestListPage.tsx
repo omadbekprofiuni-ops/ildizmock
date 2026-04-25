@@ -50,7 +50,7 @@ export default function TestListPage() {
   const isValid = !!moduleParam && (VALID_MODULES as readonly string[]).includes(moduleParam)
 
   useEffect(() => {
-    if (isValid) document.title = `IELTSation — ${MODULE_TITLES[moduleParam as ModuleId]} testlari`
+    if (isValid) document.title = `ILDIZmock — ${MODULE_TITLES[moduleParam as ModuleId]} testlari`
   }, [isValid, moduleParam])
 
   // Auth gate for writing
@@ -65,13 +65,17 @@ export default function TestListPage() {
 
   const startAttempt = useMutation({
     mutationFn: async (test: TestItem) => {
-      const res = await api.post<{ id: string }>(`/tests/${test.id}/attempts`)
-      return { attemptId: res.data.id, test }
+      const res = await api.post<{ id: string; guest_token?: string }>(
+        `/tests/${test.id}/attempts`,
+      )
+      return { attemptId: res.data.id, guestToken: res.data.guest_token, test }
     },
-    onSuccess: ({ attemptId, test }) => {
-      // Guest user: save anonymous attempt to localStorage so they can
-      // come back via HomePage "anonim natijalar" list.
+    onSuccess: ({ attemptId, guestToken, test }) => {
+      // Guest user: save anonymous attempt + token to localStorage
       if (!user) {
+        if (guestToken) {
+          localStorage.setItem('ildizmock:guest-token', guestToken)
+        }
         guestAttempts.add({
           id: attemptId,
           test_id: test.id,

@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    document.title = 'IELTSation — Profil'
+    document.title = 'ILDIZmock — Profil'
     if (user) {
       setTarget(user.target_band ?? '')
       setLang(user.language ?? 'uz')

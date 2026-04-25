@@ -1,9 +1,9 @@
-# IELTSation — Texnik Spesifikatsiya
+# ILDIZmock — Texnik Spesifikatsiya
 
 > **Maqsad:** Uzbekistondagi birinchi IELTS kompyuterda topshiriladigan mock test platformasini qurish.
 > **Ishlab chiquvchi:** Jasmina (Django + Flutter bilan tajriba)
 > **Ishlab chiqish vositasi:** Claude Code (Cursor Agent)
-> **Prototip:** `ieltsation-prototype.html` — dizayn va UX uchun reference
+> **Prototip:** `ildizmock-prototype.html` — dizayn va UX uchun reference
 
 ---
 
@@ -45,10 +45,10 @@
 ### 2.2 Monorepo struktura
 
 ```
-ieltsation/
+ildizmock/
 ├── backend/              # Django project
 │   ├── manage.py
-│   ├── ieltsation/       # settings
+│   ├── ildizmock/       # settings
 │   ├── apps/
 │   │   ├── accounts/     # users, auth
 │   │   ├── tests/        # IELTS tests, questions
@@ -256,7 +256,7 @@ class Payment(Model):
 
 ## 5. API Endpoints (REST)
 
-**Base URL:** `https://api.ieltstation.uz/v1/`
+**Base URL:** `https://api.ildizmock.uz/v1/`
 
 ### 5.1 Auth
 
@@ -441,10 +441,10 @@ Writing interface:
 ```
 ┌─────────────────────────────────────────┐
 │  Nginx (443)                            │
-│  ├─ ieltstation.uz          → React     │
-│  ├─ api.ieltstation.uz      → Gunicorn  │
-│  ├─ media.ieltstation.uz    → static    │
-│  └─ admin.ieltstation.uz    → React     │
+│  ├─ ildizmock.uz          → React     │
+│  ├─ api.ildizmock.uz      → Gunicorn  │
+│  ├─ media.ildizmock.uz    → static    │
+│  └─ admin.ildizmock.uz    → React     │
 └─────────────────────────────────────────┘
            │
            ├─ Gunicorn (Django) — Supervisor
@@ -459,7 +459,7 @@ Writing interface:
 ```env
 # backend/.env
 DJANGO_SECRET_KEY=...
-DATABASE_URL=postgresql://ieltsation:password@localhost:5432/ieltsation
+DATABASE_URL=postgresql://ildizmock:password@localhost:5432/ildizmock
 REDIS_URL=redis://localhost:6379/0
 ANTHROPIC_API_KEY=...
 OPENAI_API_KEY=...          # for Whisper
@@ -469,8 +469,8 @@ CLICK_SECRET_KEY=...
 PAYME_MERCHANT_ID=...
 PAYME_SECRET_KEY=...
 TELEGRAM_BOT_TOKEN=...
-ALLOWED_HOSTS=ieltstation.uz,api.ieltstation.uz
-CORS_ALLOWED_ORIGINS=https://ieltstation.uz
+ALLOWED_HOSTS=ildizmock.uz,api.ildizmock.uz
+CORS_ALLOWED_ORIGINS=https://ildizmock.uz
 ```
 
 ### 9.3 Nginx config skeleton
@@ -478,25 +478,25 @@ CORS_ALLOWED_ORIGINS=https://ieltstation.uz
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name ieltstation.uz;
-    root /var/www/ieltsation/frontend/dist;
+    server_name ildizmock.uz;
+    root /var/www/ildizmock/frontend/dist;
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
     location /media/ {
-        alias /var/www/ieltsation/backend/media/;
+        alias /var/www/ildizmock/backend/media/;
         expires 30d;
     }
 }
 
 server {
     listen 443 ssl http2;
-    server_name api.ieltstation.uz;
+    server_name api.ildizmock.uz;
 
     location / {
-        proxy_pass http://unix:/run/ieltsation-gunicorn.sock;
+        proxy_pass http://unix:/run/ildizmock-gunicorn.sock;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -529,7 +529,7 @@ server {
 
 ```
 CONTEXT:
-Men IELTSation nomli IELTS mock test platformasini quraman. To'liq texnik spec `SPEC.md` faylida (yuqoridagi hujjat). Prototip dizayni `ieltsation-prototype.html` faylida (reference uchun).
+Men ILDIZmock nomli IELTS mock test platformasini quraman. To'liq texnik spec `SPEC.md` faylida (yuqoridagi hujjat). Prototip dizayni `ildizmock-prototype.html` faylida (reference uchun).
 
 Tech stack: Django 5 + DRF (backend) + React 18 + Vite + TypeScript + TailwindCSS (frontend). PostgreSQL. Deploy Contabo VPS (Nginx + Gunicorn + Supervisor).
 
@@ -537,10 +537,10 @@ TASK — Phase 0: Loyiha scaffolding
 
 Quyidagilarni qilib ber:
 
-1. Monorepo strukturasini yarat: `ieltsation/backend/` va `ieltsation/frontend/`
+1. Monorepo strukturasini yarat: `ildizmock/backend/` va `ildizmock/frontend/`
 
 2. BACKEND setup:
-   - Django 5.x project `ieltsation` nomi bilan
+   - Django 5.x project `ildizmock` nomi bilan
    - Apps yarat: accounts, tests, attempts, content, ai_feedback, payments, analytics
    - DRF o'rnat va sozla (authentication: JWT via simplejwt, httpOnly cookie)
    - PostgreSQL connection (DATABASE_URL env variable)
@@ -641,7 +641,7 @@ Testlar yoz. Fixture yarat — spec dagi "South City Cycling Club" va "The Conce
 ```
 Task 3: Frontend auth pages
 
-pages/auth/LoginPage.tsx, RegisterPage.tsx — prototypedagi dizaynda (ieltsation-prototype.html # /login sahifasi reference).
+pages/auth/LoginPage.tsx, RegisterPage.tsx — prototypedagi dizaynda (ildizmock-prototype.html # /login sahifasi reference).
 
 - React Hook Form + Zod validation
 - Telegram Login Widget (script-based)
@@ -766,12 +766,12 @@ GitHub Actions .github/workflows/deploy.yml (optional):
 - On push to main: SSH to Contabo, run deploy.sh
 
 Env setup:
-- /var/www/ieltsation/
+- /var/www/ildizmock/
 - systemd service (optional, supervisor OK)
 - Let's Encrypt certbot
 - Log rotation
 
-Domain sozlash: ieltstation.uz (yoki yangi sotib olgan domen).
+Domain sozlash: ildizmock.uz (yoki yangi sotib olgan domen).
 ```
 
 ---

@@ -4,7 +4,7 @@
  * va HomePage'da "Mening anonim natijalarim" ko'rsatish uchun.
  */
 
-const KEY = 'ieltsation:guest-attempts'
+const KEY = 'ildizmock:guest-attempts'
 
 export type GuestAttemptRecord = {
   id: string

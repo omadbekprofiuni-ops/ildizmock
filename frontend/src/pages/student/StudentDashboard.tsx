@@ -42,7 +42,7 @@ function formatDate(iso: string) {
 
 export default function StudentDashboard() {
   const user = useAuth((s) => s.user)
-  useEffect(() => { document.title = 'IELTSation — Mening kabinetim' }, [])
+  useEffect(() => { document.title = 'ILDIZmock — Mening kabinetim' }, [])
 
   const q = useQuery({
     queryKey: ['my-dashboard'],
@@ -59,7 +59,7 @@ export default function StudentDashboard() {
       <header className="border-b border-[var(--border)] bg-white">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/home" className="text-xl font-bold tracking-tight">
-            IELTSation
+            ILDIZmock
           </Link>
           <UserMenu />
         </div>

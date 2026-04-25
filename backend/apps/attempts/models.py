@@ -25,6 +25,9 @@ class Attempt(models.Model):
         on_delete=models.CASCADE,
     )
     test = models.ForeignKey(Test, related_name='attempts', on_delete=models.CASCADE)
+    # Guest (anonymous) attempt token — only stored when user is None.
+    # Frontend keeps it in localStorage and sends as X-Guest-Token header.
+    guest_token = models.UUIDField(null=True, blank=True, default=None)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
     started_at = models.DateTimeField(auto_now_add=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
