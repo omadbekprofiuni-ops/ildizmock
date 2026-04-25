@@ -11,6 +11,7 @@ import {
 
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
+import { TestStartDialog } from '@/components/TestStartDialog'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,6 +24,7 @@ import {
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 import { guestAttempts } from '@/lib/guest-attempts'
+import { ieltsRules } from '@/lib/ielts-rules'
 
 type Passage = {
   id: number
@@ -302,6 +304,45 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     },
     onError: () => toast.error('Topshirishda xatolik'),
   })
+
+  // ===== IELTS rules enforcement =====
+  useEffect(() => {
+    let exitCount = 0
+    const removeContextMenu = ieltsRules.blockContextMenu()
+    const removeDevTools = ieltsRules.blockDevTools()
+    const removeReload = ieltsRules.blockReload('Test rejectga uchraydi. Davom ettirasizmi?')
+    const removeCopyPaste = ieltsRules.blockCopyPaste(document)
+
+    const removeTabHide = ieltsRules.onTabHide(() => {
+      exitCount += 1
+      if (exitCount === 1) {
+        toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
+      } else if (exitCount === 2) {
+        toast.warning('⚠️ Ikkinchi ogohlantirish. Yana chiqsangiz test avto-submit bo‘ladi.')
+      } else if (exitCount >= 3 && !submitMutation.isPending) {
+        toast.error('Test avto-submit qilindi (cheating).')
+        submitMutation.mutate()
+      }
+    })
+
+    const removeFsChange = ieltsRules.onFullscreenChange(() => {
+      if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
+        toast.warning('Test fullscreen rejimida bo‘lishi kerak.')
+        setTimeout(() => ieltsRules.enterFullscreen(), 100)
+      }
+    })
+
+    return () => {
+      removeContextMenu()
+      removeDevTools()
+      removeReload()
+      removeCopyPaste()
+      removeTabHide()
+      removeFsChange()
+      ieltsRules.exitFullscreen()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!dirtyRef.current) return
@@ -608,10 +649,38 @@ export default function TakeTestPage() {
   if (attemptQuery.data.status !== 'in_progress') {
     return <Navigate to={`/result/${attemptId}`} replace />
   }
-  if (attemptQuery.data.test.module === 'writing') {
-    return <WriteAttemptView attempt={attemptQuery.data} />
+  return <TestGate attempt={attemptQuery.data} />
+}
+
+// ====== Pre-test rules dialog gate ======
+
+function TestGate({ attempt }: { attempt: Attempt }) {
+  const [started, setStarted] = useState(false)
+  const navigate = useNavigate()
+
+  if (!started) {
+    return (
+      <>
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <p className="text-sm text-slate-500">Boshlash uchun qoidalarni qabul qiling…</p>
+        </div>
+        <TestStartDialog
+          open
+          module={attempt.test.module}
+          onConfirm={async () => {
+            await ieltsRules.enterFullscreen()
+            setStarted(true)
+          }}
+          onCancel={() => navigate(-1)}
+        />
+      </>
+    )
   }
-  return <LiveAttemptView attempt={attemptQuery.data} />
+
+  if (attempt.test.module === 'writing') {
+    return <WriteAttemptView attempt={attempt} />
+  }
+  return <LiveAttemptView attempt={attempt} />
 }
 
 // ====== WRITING ATTEMPT ======
@@ -650,6 +719,43 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
       toast.error(detail || 'Topshirishda xatolik')
     },
   })
+
+  // ===== IELTS rules enforcement (writing) =====
+  useEffect(() => {
+    let exitCount = 0
+    const removeContextMenu = ieltsRules.blockContextMenu()
+    const removeDevTools = ieltsRules.blockDevTools()
+    const removeReload = ieltsRules.blockReload()
+    // For writing: don't block paste in textarea (students need to type freely),
+    // but block on document level for copy of prompt
+    const removeTabHide = ieltsRules.onTabHide(() => {
+      exitCount += 1
+      if (exitCount === 1) {
+        toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
+      } else if (exitCount === 2) {
+        toast.warning('⚠️ Ikkinchi ogohlantirish. Yana chiqsangiz test avto-submit bo‘ladi.')
+      } else if (exitCount >= 3 && !submitMutation.isPending) {
+        toast.error('Test avto-submit qilindi (cheating).')
+        submitMutation.mutate()
+      }
+    })
+    const removeFsChange = ieltsRules.onFullscreenChange(() => {
+      if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
+        toast.warning('Test fullscreen rejimida bo‘lishi kerak.')
+        setTimeout(() => ieltsRules.enterFullscreen(), 100)
+      }
+    })
+
+    return () => {
+      removeContextMenu()
+      removeDevTools()
+      removeReload()
+      removeTabHide()
+      removeFsChange()
+      ieltsRules.exitFullscreen()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!dirtyRef.current) return
