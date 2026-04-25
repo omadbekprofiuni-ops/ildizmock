@@ -18,6 +18,7 @@ urlpatterns = [
          AdminAssignTeacherView.as_view()),
     path('api/v1/', include('apps.tests.urls')),
     path('api/v1/', include('apps.attempts.urls')),
+    path('api/v1/', include('apps.organizations.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,205 @@
+from datetime import timedelta
+
+from django.contrib.auth import get_user_model
+from django.db.models import Avg, Count, Sum
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.attempts.models import Attempt
+
+from .models import Organization, Payment, Plan
+from .permissions import IsSuperAdmin
+from .serializers import (
+    OrganizationCreateSerializer,
+    OrganizationDetailSerializer,
+    OrganizationListSerializer,
+    PaymentSerializer,
+    PlanSerializer,
+    PublicOrgSerializer,
+)
+
+User = get_user_model()
+
+
+# =====================================================================
+# SUPERADMIN
+# =====================================================================
+
+class SuperAdminStatsView(APIView):
+    permission_classes = [IsSuperAdmin]
+
+    def get(self, request):
+        orgs = Organization.objects.all()
+        active = orgs.filter(status='active').count()
+        trial = orgs.filter(status='trial').count()
+        expired = orgs.filter(status='expired').count()
+        blocked = orgs.filter(status='blocked').count()
+
+        revenue = Payment.objects.filter(status='paid').aggregate(
+            total=Sum('amount_usd'),
+        )['total'] or 0
+
+        # Bu oy
+        month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        attempts_this_month = Attempt.objects.filter(
+            started_at__gte=month_start,
+        ).count()
+
+        recent_payments = Payment.objects.filter(status='paid').select_related(
+            'organization', 'plan',
+        ).order_by('-paid_at')[:5]
+
+        recent_students = User.objects.filter(role='student').select_related(
+            'organization',
+        ).order_by('-created_at')[:5]
+
+        # Tarif tugayotganlar (7 kundan kam qolgan)
+        soon_expiring = orgs.filter(
+            status='active',
+            plan_expires_at__lte=timezone.now() + timedelta(days=7),
+            plan_expires_at__gte=timezone.now(),
+        ).order_by('plan_expires_at')[:5]
+
+        return Response({
+            'orgs_total': orgs.count(),
+            'orgs_by_status': {
+                'active': active, 'trial': trial,
+                'expired': expired, 'blocked': blocked,
+            },
+            'students_total': User.objects.filter(role='student').count(),
+            'attempts_this_month': attempts_this_month,
+            'revenue_total_usd': float(revenue),
+            'recent_payments': PaymentSerializer(recent_payments, many=True).data,
+            'recent_students': [{
+                'phone': u.phone,
+                'name': f'{u.first_name} {u.last_name}'.strip() or u.phone,
+                'org_name': u.organization.name if u.organization else None,
+                'org_slug': u.organization.slug if u.organization else None,
+                'created_at': u.created_at.isoformat(),
+            } for u in recent_students],
+            'soon_expiring': [{
+                'id': o.id, 'name': o.name, 'slug': o.slug,
+                'days_remaining': o.days_remaining,
+                'plan_name': o.plan.name,
+            } for o in soon_expiring],
+        })
+
+
+class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsSuperAdmin]
+    queryset = Organization.objects.select_related('plan').all()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return OrganizationCreateSerializer
+        if self.action in ('retrieve',):
+            return OrganizationDetailSerializer
+        return OrganizationListSerializer
+
+    def create(self, request, *args, **kwargs):
+        ser = OrganizationCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+
+        plan = data['plan']
+
+        # 1. Org create
+        org = Organization.objects.create(
+            name=data['name'], slug=data['slug'],
+            primary_color=data.get('primary_color', '#DC2626'),
+            contact_phone=data.get('contact_phone', ''),
+            contact_email=data.get('contact_email', ''),
+            address=data.get('address', ''),
+            plan=plan, status='active',
+            plan_starts_at=timezone.now(),
+            plan_expires_at=timezone.now() + timedelta(days=plan.duration_days),
+        )
+
+        # 2. Org admin user
+        admin = User.objects.create_user(
+            phone=data['admin_phone'],
+            password=data['admin_password'],
+            first_name=data['admin_first_name'],
+            last_name=data.get('admin_last_name', '') or '',
+            role='org_admin', organization=org, is_active=True,
+        )
+
+        # 3. Initial payment (status=paid, marked by current superadmin)
+        Payment.objects.create(
+            organization=org, plan=plan,
+            amount_usd=plan.price_usd, status='paid',
+            marked_paid_by=request.user, paid_at=timezone.now(),
+            notes='Org creation initial payment',
+        )
+
+        out = OrganizationDetailSerializer(org).data
+        out['admin'] = {
+            'phone': admin.phone, 'name': f'{admin.first_name} {admin.last_name}'.strip(),
+        }
+        return Response(out, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def renew(self, request, pk=None):
+        """Tarifni yangilash (qo'lda to'lov belgilash)."""
+        org = self.get_object()
+        plan_id = request.data.get('plan_id') or org.plan_id
+        plan = get_object_or_404(Plan, pk=plan_id)
+        notes = request.data.get('notes', '')
+
+        Payment.objects.create(
+            organization=org, plan=plan,
+            amount_usd=plan.price_usd, status='paid',
+            marked_paid_by=request.user, paid_at=timezone.now(),
+            notes=notes or 'Renewed by superadmin',
+        )
+        org.plan = plan
+        org.plan_starts_at = timezone.now()
+        org.plan_expires_at = timezone.now() + timedelta(days=plan.duration_days)
+        org.status = 'active'
+        org.save()
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['post'])
+    def block(self, request, pk=None):
+        org = self.get_object()
+        org.status = 'blocked' if org.status != 'blocked' else 'active'
+        org.save(update_fields=['status'])
+        return Response(OrganizationDetailSerializer(org).data)
+
+
+class SuperAdminPlanViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsSuperAdmin]
+    queryset = Plan.objects.all()
+    serializer_class = PlanSerializer
+
+
+class SuperAdminPaymentViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsSuperAdmin]
+    queryset = Payment.objects.select_related('organization', 'plan').all()
+    serializer_class = PaymentSerializer
+
+
+# =====================================================================
+# PUBLIC
+# =====================================================================
+
+class PublicOrganizationView(RetrieveAPIView):
+    """Markaz brand info — talaba register sahifasi uchun."""
+
+    queryset = Organization.objects.filter(status__in=['active', 'trial'])
+    lookup_field = 'slug'
+    serializer_class = PublicOrgSerializer
+    permission_classes = [AllowAny]
+
+
+class PublicPlanListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response(PlanSerializer(Plan.objects.all(), many=True).data)

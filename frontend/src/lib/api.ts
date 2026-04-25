@@ -5,6 +5,18 @@ export const api = axios.create({
   withCredentials: true,
 })
 
+// SuperAdmin context switch — har request ga X-Org-Context header qo'shadi
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const orgId = localStorage.getItem('orgContext')
+    if (orgId) {
+      config.headers = config.headers ?? {}
+      config.headers['X-Org-Context'] = orgId
+    }
+  }
+  return config
+})
+
 let isRefreshing = false
 let pendingQueue: Array<{ resolve: () => void; reject: (err: unknown) => void }> = []
 

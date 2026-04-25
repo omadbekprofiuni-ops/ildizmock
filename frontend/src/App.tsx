@@ -4,10 +4,13 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from '@/components/AdminRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { SuperAdminRoute } from '@/components/SuperAdminRoute'
 import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
 import AdminStudentsPage from './pages/admin/AdminStudentsPage'
 import AdminTeachersPage from './pages/admin/AdminTeachersPage'
 import AdminTestEditPage from './pages/admin/AdminTestEditPage'
@@ -60,7 +63,11 @@ export default function App() {
           <Route path="/teacher/grade/:id" element={<TeacherRoute><TeacherGradePage /></TeacherRoute>} />
           <Route path="/teacher/students" element={<TeacherRoute><TeacherStudentsPage /></TeacherRoute>} />
 
-          {/* Admin */}
+          {/* SuperAdmin (ILDIZMock platforma) */}
+          <Route path="/super" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
+          <Route path="/super/organizations" element={<SuperAdminRoute><SuperAdminOrgsPage /></SuperAdminRoute>} />
+
+          {/* Admin (legacy, org_admin huquqi bilan) */}
           <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
           <Route path="/admin/tests" element={<AdminRoute><AdminTestsPage /></AdminRoute>} />
           <Route path="/admin/tests/new" element={<AdminRoute><AdminTestEditPage /></AdminRoute>} />

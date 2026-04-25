@@ -7,7 +7,9 @@ export type User = {
   phone: string
   first_name: string
   last_name: string
-  role: 'student' | 'teacher' | 'admin' | 'super_admin'
+  role: 'student' | 'teacher' | 'org_admin' | 'superadmin'
+    // legacy values still come through from older sessions
+    | 'admin' | 'super_admin'
   target_band: string | null
   language: 'uz' | 'ru' | 'en'
   created_at: string
