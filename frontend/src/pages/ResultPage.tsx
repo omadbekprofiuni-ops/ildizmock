@@ -1,14 +1,35 @@
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, History, UserPlus } from 'lucide-react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Check, History, RotateCcw, UserPlus, X } from 'lucide-react'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
 
+type AnswerRow = {
+  question: number
+  question_order: number
+  question_number: number
+  question_text: string
+  question_prompt: string
+  question_type: string
+  user_answer: unknown
+  is_correct: boolean
+  correct_answer: unknown
+}
+
+type ResultTest = {
+  id: string
+  name: string
+  is_practice_enabled?: boolean
+  practice_time_limit?: number | null
+}
+
 type ResultResponse = {
   id: string
+  test: ResultTest | null
   test_name: string
   module: 'listening' | 'reading' | 'writing' | 'speaking'
   status: string
@@ -18,11 +39,12 @@ type ResultResponse = {
   band_score: string | null
   essay_text: string
   word_count: number | null
-  answers: { question: number; user_answer: unknown; is_correct: boolean }[]
+  answers: AnswerRow[]
 }
 
 export default function ResultPage() {
   const { attemptId } = useParams<{ attemptId: string }>()
+  const navigate = useNavigate()
   const user = useAuth((s) => s.user)
 
   const query = useQuery({
@@ -30,6 +52,17 @@ export default function ResultPage() {
     queryFn: async () =>
       (await api.get<ResultResponse>(`/attempts/${attemptId}/result/`)).data,
     enabled: !!attemptId,
+  })
+
+  const retry = useMutation({
+    mutationFn: async () => {
+      const testId = query.data?.test?.id
+      if (!testId) throw new Error('test id missing')
+      const res = await api.post<{ id: string }>(`/tests/${testId}/attempts`)
+      return res.data.id
+    },
+    onSuccess: (newId) => navigate(`/take/${newId}`),
+    onError: () => toast.error('Qayta urinishni boshlab bo‘lmadi'),
   })
 
   if (!attemptId) return <Navigate to="/" replace />
@@ -123,6 +156,13 @@ export default function ResultPage() {
     (a) => !a.is_correct && a.user_answer == null,
   ).length
 
+  const isPractice = r.test?.is_practice_enabled === true
+  const sortedAnswers = [...r.answers].sort(
+    (a, b) =>
+      (a.question_number || a.question_order || 0) -
+      (b.question_number || b.question_order || 0),
+  )
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <header className="border-b border-[var(--border)] bg-white">
@@ -157,6 +197,17 @@ export default function ResultPage() {
             </div>
           </div>
         )}
+
+        {isPractice && (
+          <div className="rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <p className="font-semibold">Practice mode</p>
+            <p className="mt-0.5">
+              Quyida har savol uchun darhol javoblar ko‘rsatildi. Cheklov
+              yo‘q — istagancha qayta urinib ko‘rishingiz mumkin.
+            </p>
+          </div>
+        )}
+
         <div className="text-center">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
             Band Score
@@ -176,11 +227,76 @@ export default function ResultPage() {
           <StatBox label="Accuracy" value={`${percentage}%`} tone="text" />
         </div>
 
+        {sortedAnswers.length > 0 && (
+          <Card>
+            <CardContent className="space-y-3 p-6">
+              <CardTitle className="mb-1 text-base">Savollar bo‘yicha tahlil</CardTitle>
+              <ol className="space-y-3">
+                {sortedAnswers.map((a) => (
+                  <li
+                    key={a.question}
+                    className={`flex gap-3 rounded-md border-l-4 p-3 ${
+                      a.is_correct
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-rose-500 bg-rose-50'
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
+                        a.is_correct ? 'bg-emerald-500' : 'bg-rose-500'
+                      }`}
+                    >
+                      {a.is_correct ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">
+                        {a.question_number || a.question_order}
+                        {'. '}
+                        {a.question_prompt || a.question_text || `Question ${a.question}`}
+                      </p>
+                      <div className="mt-1 space-y-0.5 text-sm">
+                        <p>
+                          <span className="text-slate-500">Sizning javobingiz: </span>
+                          <span
+                            className={
+                              a.is_correct
+                                ? 'font-semibold text-emerald-700'
+                                : 'text-rose-700'
+                            }
+                          >
+                            {formatAnswer(a.user_answer)}
+                          </span>
+                        </p>
+                        {!a.is_correct && (
+                          <p>
+                            <span className="text-slate-500">To‘g‘ri javob: </span>
+                            <span className="font-semibold text-emerald-700">
+                              {formatAnswer(a.correct_answer)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-wrap justify-center gap-3 pt-4">
-          <Link to={`/take/${r.id}?review=1`}>
-            <Button className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-              Review
+          {user && r.test?.id && (
+            <Button
+              onClick={() => retry.mutate()}
+              disabled={retry.isPending}
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              {retry.isPending ? 'Yaratilmoqda…' : 'Qayta urinish'}
             </Button>
+          )}
+          <Link to={`/take/${r.id}?review=1`}>
+            <Button variant="outline">Review</Button>
           </Link>
           <Link to={`/tests/${r.module}`}>
             <Button variant="outline">Other tests</Button>
@@ -194,6 +310,21 @@ export default function ResultPage() {
       </main>
     </div>
   )
+}
+
+function formatAnswer(value: unknown): string {
+  if (value === null || value === undefined) return '(javob berilmagan)'
+  if (typeof value === 'string') return value || '(javob berilmagan)'
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return value.map(formatAnswer).join(', ')
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return String(value)
+    }
+  }
+  return String(value)
 }
 
 type StatTone = 'success' | 'error' | 'muted' | 'text'

@@ -45,10 +45,19 @@ class AttemptDetailSerializer(serializers.ModelSerializer):
 
 class _AnswerResultSerializer(serializers.ModelSerializer):
     correct_answer = serializers.SerializerMethodField()
+    question_text = serializers.CharField(source='question.text', read_only=True)
+    question_prompt = serializers.CharField(source='question.prompt', read_only=True)
+    question_type = serializers.CharField(source='question.question_type', read_only=True)
+    question_order = serializers.IntegerField(source='question.order', read_only=True)
+    question_number = serializers.IntegerField(source='question.question_number', read_only=True)
 
     class Meta:
         model = Answer
-        fields = ['question', 'user_answer', 'is_correct', 'points_earned', 'correct_answer']
+        fields = [
+            'question', 'question_order', 'question_number', 'question_text',
+            'question_prompt', 'question_type',
+            'user_answer', 'is_correct', 'points_earned', 'correct_answer',
+        ]
 
     def get_correct_answer(self, obj):
         return obj.question.correct_answer

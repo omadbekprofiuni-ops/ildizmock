@@ -68,6 +68,16 @@ class Test(models.Model):
         help_text='Asl global test (agar bu klon bo‘lsa)',
     )
 
+    # ETAP 6 — Practice Mode
+    is_practice_enabled = models.BooleanField(
+        default=False,
+        help_text='Talabalar mustaqil mashq qilish uchun bu testni ko‘rsatishimi?',
+    )
+    practice_time_limit = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Practice rejimi vaqt limiti (daqiqada). Bo‘sh — limit yo‘q.',
+    )
+
     class Meta:
         ordering = ['-created_at']
 

@@ -27,7 +27,8 @@ class TestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Test
         fields = ['id', 'name', 'module', 'test_type', 'difficulty',
-                  'duration_minutes', 'description', 'access_level', 'question_count']
+                  'duration_minutes', 'description', 'access_level',
+                  'question_count', 'is_practice_enabled', 'practice_time_limit']
 
     def get_question_count(self, obj):
         return Question.objects.filter(passage__test=obj).count()
@@ -39,4 +40,5 @@ class TestDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Test
         fields = ['id', 'name', 'module', 'test_type', 'difficulty',
-                  'duration_minutes', 'description', 'access_level', 'passages']
+                  'duration_minutes', 'description', 'access_level', 'passages',
+                  'is_practice_enabled', 'practice_time_limit']

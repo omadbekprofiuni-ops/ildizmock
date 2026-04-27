@@ -22,10 +22,13 @@ class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
         qs = super().get_queryset().filter(organization__isnull=True)
         module = self.request.query_params.get('module')
         difficulty = self.request.query_params.get('difficulty')
+        practice = self.request.query_params.get('practice')
         if module:
             qs = qs.filter(module=module)
         if difficulty:
             qs = qs.filter(difficulty=difficulty)
+        if practice in ('1', 'true', 'yes'):
+            qs = qs.filter(is_practice_enabled=True)
         return qs
 
 

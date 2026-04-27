@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, FilePen, GraduationCap, History, Target, TrendingUp, User } from 'lucide-react'
+import { ArrowRight, Dumbbell, FilePen, GraduationCap, History, Target, TrendingUp, User } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -139,6 +139,12 @@ export default function StudentDashboard() {
           <h2 className="mb-3 text-xl font-semibold">Quick actions</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <ActionCard to="/home" label="New test" Icon={ArrowRight} />
+            <ActionCard
+              to="/practice"
+              label="Practice"
+              Icon={Dumbbell}
+              hint="Mustaqil mashq"
+            />
             <ActionCard
               to="/student/mock"
               label="Mock results"
