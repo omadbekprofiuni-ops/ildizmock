@@ -18,6 +18,7 @@ super_router.register(r'payments', SuperAdminPaymentViewSet, basename='super-pay
 
 urlpatterns = [
     path('superadmin/stats/', SuperAdminStatsView.as_view()),
+    path('super/stats/', SuperAdminStatsView.as_view()),
     path('superadmin/', include(super_router.urls)),
     # Alias used by ETAP-1 prompt
     path('super/', include(super_router.urls)),

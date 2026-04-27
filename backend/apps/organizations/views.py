@@ -67,6 +67,27 @@ class SuperAdminStatsView(APIView):
             plan_expires_at__gte=timezone.now(),
         ).order_by('plan_expires_at')[:5]
 
+        # Modul bo'yicha attempts va o'rtacha band
+        from apps.attempts.models import Attempt as _Attempt
+        from apps.tests.models import Test
+        from apps.mock.models import MockSession, MockParticipant
+
+        graded_attempts = _Attempt.objects.filter(status='graded')
+        by_module = {}
+        for module in ('listening', 'reading', 'writing', 'speaking'):
+            mqs = graded_attempts.filter(test__module=module)
+            avg = mqs.aggregate(a=Avg('band_score'))['a']
+            by_module[module] = {
+                'attempts': mqs.count(),
+                'avg_band': round(float(avg), 2) if avg else None,
+            }
+
+        # Mock testlar bo'yicha
+        mock_completed = MockParticipant.objects.filter(
+            overall_band_score__isnull=False,
+        )
+        avg_mock_overall = mock_completed.aggregate(a=Avg('overall_band_score'))['a']
+
         return Response({
             'orgs_total': orgs.count(),
             'orgs_by_status': {
@@ -74,7 +95,16 @@ class SuperAdminStatsView(APIView):
                 'expired': expired, 'blocked': blocked,
             },
             'students_total': User.objects.filter(role='student').count(),
+            'teachers_total': User.objects.filter(role='teacher').count(),
+            'tests_total': Test.objects.count(),
+            'tests_global': Test.objects.filter(organization__isnull=True).count(),
+            'mock_sessions_total': MockSession.objects.count(),
+            'mock_sessions_finished': MockSession.objects.filter(status='finished').count(),
+            'mock_completed_count': mock_completed.count(),
+            'mock_avg_overall': round(float(avg_mock_overall), 2) if avg_mock_overall else None,
             'attempts_this_month': attempts_this_month,
+            'attempts_total': _Attempt.objects.count(),
+            'attempts_by_module': by_module,
             'revenue_total_usd': float(revenue),
             'recent_payments': PaymentSerializer(recent_payments, many=True).data,
             'recent_students': [{
@@ -244,10 +274,19 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         return Response({'message': f'Password reset for {admin.username}'})
 
 
-class SuperAdminPlanViewSet(viewsets.ReadOnlyModelViewSet):
+class SuperAdminPlanViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdmin]
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        plan = self.get_object()
+        if plan.organizations.exists():
+            return Response(
+                {'detail': 'Bu plan markazlarga biriktirilgan, o‘chirib bo‘lmaydi.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 class SuperAdminPaymentViewSet(viewsets.ReadOnlyModelViewSet):

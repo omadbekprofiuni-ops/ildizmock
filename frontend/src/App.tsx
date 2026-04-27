@@ -26,11 +26,13 @@ import MockSessionPage from './pages/mock/MockSessionPage'
 import SuperTestsListPage from './pages/super/SuperTestsListPage'
 import TestWizardPage from './pages/super/TestWizardPage'
 import CenterDetailPage from './pages/superadmin/CenterDetailPage'
+import SuperAdminAudioPage from './pages/superadmin/SuperAdminAudioPage'
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
-import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
 import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
+import SuperAdminSettingsPage from './pages/superadmin/SuperAdminSettingsPage'
+import SuperAdminStatsPage from './pages/superadmin/SuperAdminStatsPage'
 import AdminStudentsPage from './pages/admin/AdminStudentsPage'
 import AdminTeachersPage from './pages/admin/AdminTeachersPage'
 import AdminTestEditPage from './pages/admin/AdminTestEditPage'
@@ -159,10 +161,7 @@ export default function App() {
             path="/super/audio"
             element={
               <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Audio files"
-                  subtitle="Listening audio library"
-                />
+                <SuperAdminAudioPage />
               </SuperAdminRoute>
             }
           />
@@ -170,10 +169,7 @@ export default function App() {
             path="/super/stats"
             element={
               <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Statistics"
-                  subtitle="Platform-wide analytics"
-                />
+                <SuperAdminStatsPage />
               </SuperAdminRoute>
             }
           />
@@ -181,10 +177,7 @@ export default function App() {
             path="/super/settings"
             element={
               <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Settings"
-                  subtitle="Platform configuration"
-                />
+                <SuperAdminSettingsPage />
               </SuperAdminRoute>
             }
           />
