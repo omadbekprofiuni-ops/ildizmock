@@ -6,54 +6,58 @@
 
 @layer base {
   :root {
-    /* Brand palette — sodda, ildizmock.com uslubida */
-    --bg: #FFFFFF;
-    --text: #0A0A0A;
-    --muted: #6B7280;
-    --border: #E5E7EB;
-    --accent: #DC2626;       /* IELTS red */
-    --accent-dark: #991B1B;
+    /* Brand palette — modern admin (indigo accent + slate neutrals) */
+    --bg: #F8FAFC;            /* slate-50 page background */
+    --surface: #FFFFFF;       /* card surface */
+    --text: #0F172A;          /* slate-900 */
+    --muted: #64748B;         /* slate-500 */
+    --border: #E2E8F0;        /* slate-200 */
+    --accent: #4F46E5;        /* indigo-600 */
+    --accent-dark: #4338CA;   /* indigo-700 */
+    --accent-soft: #EEF2FF;   /* indigo-50 — selected nav, soft chips */
     --success: #16A34A;
     --error: #EF4444;
 
-    /* shadcn HSL tokens (theme components rely on these) */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 4%;
+    /* shadcn HSL tokens */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted-token: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent-token: 220 14% 96%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 239 84% 60%;            /* indigo-600 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;          /* slate-100 */
+    --secondary-foreground: 222 47% 11%;
+    --muted-token: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent-token: 226 100% 97%;      /* indigo-50 */
+    --accent-foreground: 239 84% 50%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border-token: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 0 0% 4%;
-    --radius: 0.5rem;
+    --border-token: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 239 84% 60%;
+    --radius: 0.75rem;
   }
 
-  /* Map shadcn class lookups (e.g. `bg-muted`, `border-border`) to our tokens */
+  /* Map shadcn class lookups (e.g. `bg-muted`, `border-border`) */
   :root {
     --muted: var(--muted-token);
     --accent: var(--accent-token);
     --border: var(--border-token);
   }
 
-  /* Restore brand-flavoured short variables for direct CSS use */
+  /* Brand-flavoured short variables for direct CSS use (override loop above) */
   :root {
-    --bg: #FFFFFF;
-    --text: #0A0A0A;
-    --muted: #6B7280;
-    --border: #E5E7EB;
-    --accent: #DC2626;
-    --accent-dark: #991B1B;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #E2E8F0;
+    --accent: #4F46E5;
+    --accent-dark: #4338CA;
+    --accent-soft: #EEF2FF;
     --success: #16A34A;
     --error: #EF4444;
   }

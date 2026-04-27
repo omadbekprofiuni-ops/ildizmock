@@ -350,25 +350,62 @@ export default function AdminTestEditPage({
     saveMutation.mutate(payload)
   }
 
+  const moduleAccents: Record<TestDraft['module'], { ring: string; tint: string; text: string; chip: string }> = {
+    listening: { ring: 'border-indigo-100', tint: 'bg-indigo-50', text: 'text-indigo-700', chip: 'bg-indigo-100 text-indigo-700' },
+    reading:   { ring: 'border-emerald-100', tint: 'bg-emerald-50', text: 'text-emerald-700', chip: 'bg-emerald-100 text-emerald-700' },
+    writing:   { ring: 'border-orange-100', tint: 'bg-orange-50', text: 'text-orange-700', chip: 'bg-orange-100 text-orange-700' },
+    speaking:  { ring: 'border-purple-100', tint: 'bg-purple-50', text: 'text-purple-700', chip: 'bg-purple-100 text-purple-700' },
+  }
+  const accent = moduleAccents[draft.module]
+
   return (
     <Layout>
-      <header className="flex items-center justify-between border-b bg-white px-8 py-5">
-        <div className="flex items-center gap-3">
-          <Link to={basePath}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isNew ? 'New test' : 'Edit test'}
-          </h1>
+      <div className="mx-auto max-w-5xl p-6 lg:p-10">
+        {/* Breadcrumb */}
+        <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
+          <Link to={basePath} className="hover:text-indigo-600">Testlar</Link>
+          <span>/</span>
+          <span className="text-slate-900">{isNew ? 'Yangi' : 'Tahrirlash'}</span>
         </div>
-        <Button onClick={onSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? 'Saving…' : 'Save'}
-        </Button>
-      </header>
 
-      <div className="space-y-6 p-8">
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              {isNew ? 'Yangi test' : draft.name || 'Test tahriri'}
+            </h1>
+            <p className="mt-1 text-slate-500">
+              {draft.module === 'listening' && 'IELTS Listening — qism va savollarni qo‘shing'}
+              {draft.module === 'reading'   && 'IELTS Reading — passage va savollarni qo‘shing'}
+              {draft.module === 'writing'   && 'IELTS Writing — Task 1 va Task 2 sharti'}
+              {draft.module === 'speaking'  && 'IELTS Speaking — savollarni tayyorlang'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to={basePath}>
+              <Button variant="outline" className="rounded-xl">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
+              </Button>
+            </Link>
+            <Button
+              onClick={onSave}
+              disabled={saveMutation.isPending}
+              className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+            >
+              {saveMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Module hint chip */}
+        <div className="mb-6 inline-flex items-center gap-2">
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${accent.chip}`}>
+            {draft.module}
+          </span>
+          <span className="text-xs text-slate-500">{draft.duration_minutes} daqiqa</span>
+        </div>
+
+      <div className="space-y-6">
         <Card>
           <CardContent className="space-y-4 p-6">
             <h2 className="text-lg font-semibold">Basic info</h2>
@@ -548,9 +585,18 @@ export default function AdminTestEditPage({
           </Card>
         ))}
 
-        <Button variant="outline" onClick={addPassage}>
-          <Plus className="mr-2 h-4 w-4" /> Add passage
+        <Button
+          variant="outline"
+          onClick={addPassage}
+          className="w-full rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/40 py-6 font-medium text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {draft.module === 'listening' && "Yangi Qism (Part) qo'shish"}
+          {draft.module === 'reading'   && "Yangi Passage qo'shish"}
+          {draft.module === 'writing'   && "Yangi Task qo'shish"}
+          {draft.module === 'speaking'  && "Yangi qism qo'shish"}
         </Button>
+      </div>
       </div>
     </Layout>
   )
