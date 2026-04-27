@@ -118,6 +118,12 @@ class MockParticipant(models.Model):
     browser_session_id = models.CharField(
         max_length=64, unique=True, default=generate_browser_session_id,
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        related_name='mock_participations',
+        on_delete=models.SET_NULL,
+        help_text='Login qilingan talaba bo\'lsa unga link',
+    )
 
     listening_answers = models.JSONField(default=dict, blank=True)
     reading_answers = models.JSONField(default=dict, blank=True)

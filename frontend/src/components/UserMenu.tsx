@@ -1,6 +1,7 @@
 import {
   ChevronDown,
   FilePen,
+  GraduationCap,
   History,
   LayoutDashboard,
   LogOut,
@@ -86,6 +87,7 @@ export function UserMenu() {
             <Item to="/teacher" Icon={Users}>Teacher panel</Item>
           )}
           <Item to="/dashboard" Icon={LayoutDashboard}>My Dashboard</Item>
+          <Item to="/student/mock" Icon={GraduationCap}>Mock results</Item>
           <Item to="/my-writings" Icon={FilePen}>My Writings</Item>
           <Item to="/history" Icon={History}>History</Item>
           <Item to="/profile" Icon={User}>Profile</Item>

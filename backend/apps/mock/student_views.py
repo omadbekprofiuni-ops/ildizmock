@@ -49,8 +49,9 @@ def join_view(request, access_code):
         return Response({'detail': 'Bu ism bilan kimdir allaqachon qo‘shilgan.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
+    user = request.user if request.user.is_authenticated else None
     participant = MockParticipant.objects.create(
-        session=session, full_name=full_name,
+        session=session, full_name=full_name, user=user,
     )
     return Response({
         'browser_session_id': participant.browser_session_id,

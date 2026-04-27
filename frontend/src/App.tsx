@@ -42,6 +42,8 @@ import OrgLandingPage from './pages/OrgLandingPage'
 import OrgRegisterPage from './pages/OrgRegisterPage'
 import ResultPage from './pages/ResultPage'
 import SpeakingComingSoonPage from './pages/SpeakingComingSoonPage'
+import MockResultDetailPage from './pages/student/MockResultDetailPage'
+import StudentMockResultsPage from './pages/student/MockResultsPage'
 import ProfilePage from './pages/student/ProfilePage'
 import StudentDashboard from './pages/student/StudentDashboard'
 import TakeTestPage from './pages/TakeTestPage'
@@ -82,6 +84,8 @@ export default function App() {
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/my-writings" element={<ProtectedRoute><MyWritingsPage /></ProtectedRoute>} />
           <Route path="/writing/sent" element={<ProtectedRoute><WritingSentPage /></ProtectedRoute>} />
+          <Route path="/student/mock" element={<ProtectedRoute><StudentMockResultsPage /></ProtectedRoute>} />
+          <Route path="/student/mock/:id" element={<ProtectedRoute><MockResultDetailPage /></ProtectedRoute>} />
 
           {/* Teacher */}
           <Route path="/teacher" element={<TeacherRoute><TeacherQueuePage /></TeacherRoute>} />

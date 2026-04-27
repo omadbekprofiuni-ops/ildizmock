@@ -6,7 +6,7 @@ Centre-admin URL'lari `apps/center/urls.py` ga qo'shilgan.
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import student_views
+from . import me_views, student_views
 from .teacher_views import TeacherMockViewSet
 
 teacher_router = DefaultRouter()
@@ -14,6 +14,17 @@ teacher_router.register('mock', TeacherMockViewSet, basename='teacher-mock')
 
 urlpatterns = [
     path('teacher/', include(teacher_router.urls)),
+
+    # Login qilingan talaba — o'z mock natijalari
+    path('student/mock/results/', me_views.my_mock_results, name='my-mock-results'),
+    path(
+        'student/mock/results/<int:participant_id>/',
+        me_views.my_mock_detail, name='my-mock-detail',
+    ),
+    path(
+        'student/mock/results/<int:participant_id>/certificate/',
+        me_views.my_mock_certificate, name='my-mock-certificate',
+    ),
     path(
         'mock/join/<str:access_code>/',
         student_views.join_view,
