@@ -91,6 +91,40 @@ class Organization(models.Model):
         super().save(*args, **kwargs)
 
 
+class OrganizationMembership(models.Model):
+    """User ↔ Organization aloqasi (rol bilan).
+
+    ETAP 2: User.organization (FK) bilan birga ishlaydi (parallel struktura).
+    Existing data: post-migrate signal/data migration orqali avtomatik
+    to'ldiriladi User.organization va User.role asosida.
+    """
+
+    ROLE_CHOICES = [
+        ('owner', 'Owner'),
+        ('admin', 'Admin'),
+        ('teacher', 'Teacher'),
+        ('student', 'Student'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='org_memberships',
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE,
+        related_name='memberships',
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'organization', 'role')]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} @ {self.organization.slug} ({self.role})'
+
+
 class Payment(models.Model):
     """To'lov tarixi (qo'lda belgilanadi superadmin tomonidan)."""
 

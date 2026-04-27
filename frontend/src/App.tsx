@@ -9,6 +9,14 @@ import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
+import { RequireCenterAdmin } from '@/components/guards/RequireCenterAdmin'
+import CenterAdminLayout from './layouts/CenterAdminLayout'
+import CenterDashboard from './pages/center/CenterDashboard'
+import CenterStudentsPage from './pages/center/StudentsPage'
+import CenterTeachersPage from './pages/center/TeachersPage'
+import CenterTestsPage from './pages/center/TestsPage'
+import SuperTestsListPage from './pages/super/SuperTestsListPage'
+import TestWizardPage from './pages/super/TestWizardPage'
 import CenterDetailPage from './pages/superadmin/CenterDetailPage'
 import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
@@ -74,7 +82,23 @@ export default function App() {
             path="/super/tests"
             element={
               <SuperAdminRoute>
-                <AdminTestsPage Layout={SuperAdminLayout} basePath="/super/tests" />
+                <SuperTestsListPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/tests/wizard"
+            element={
+              <SuperAdminRoute>
+                <TestWizardPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/tests/wizard/:id"
+            element={
+              <SuperAdminRoute>
+                <TestWizardPage />
               </SuperAdminRoute>
             }
           />
@@ -147,8 +171,19 @@ export default function App() {
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
+          {/* Center admin (slug-based) — ETAP 2 */}
+          <Route path="/:slug/admin" element={<RequireCenterAdmin />}>
+            <Route element={<CenterAdminLayout />}>
+              <Route index element={<CenterDashboard />} />
+              <Route path="students" element={<CenterStudentsPage />} />
+              <Route path="teachers" element={<CenterTeachersPage />} />
+              <Route path="tests" element={<CenterTestsPage />} />
+            </Route>
+          </Route>
+
           {/* Org-branded — must come AFTER all static routes */}
           <Route path="/:slug/register" element={<OrgRegisterPage />} />
+          <Route path="/:slug/login" element={<LoginPage />} />
           <Route path="/:slug" element={<OrgLandingPage />} />
 
           <Route path="*" element={<NotFoundPage />} />

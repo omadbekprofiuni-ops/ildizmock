@@ -3,6 +3,8 @@ Django==5.1.15
 django-cors-headers==4.9.0
 djangorestframework==3.17.1
 djangorestframework_simplejwt==5.5.1
+mutagen>=1.47
+Pillow>=10.0
 psycopg==3.3.3
 psycopg-binary==3.3.3
 PyJWT==2.12.1

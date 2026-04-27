@@ -42,3 +42,48 @@ class IsTeacherInOrg(BasePermission):
         if not request.user.is_authenticated:
             return False
         return request.user.role in ('teacher', 'org_admin', 'superadmin')
+
+
+class IsCenterAdmin(BasePermission):
+    """Markaz admini (URL dagi <slug:org_slug> kontekstida)."""
+
+    message = 'Siz bu markaz admini emassiz.'
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.user.role == 'superadmin':
+            return True
+
+        slug = view.kwargs.get('org_slug') or request.query_params.get('org')
+        if not slug:
+            return False
+
+        from .models import OrganizationMembership
+        return OrganizationMembership.objects.filter(
+            user=request.user,
+            organization__slug=slug,
+            role__in=['admin', 'owner'],
+            organization__status='active',
+        ).exists()
+
+
+class IsCenterMember(BasePermission):
+    """Markazning istalgan a'zosi (admin/teacher/student)."""
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.user.role == 'superadmin':
+            return True
+
+        slug = view.kwargs.get('org_slug') or request.query_params.get('org')
+        if not slug:
+            return False
+
+        from .models import OrganizationMembership
+        return OrganizationMembership.objects.filter(
+            user=request.user,
+            organization__slug=slug,
+            organization__status='active',
+        ).exists()
