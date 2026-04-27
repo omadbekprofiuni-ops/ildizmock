@@ -131,6 +131,23 @@ export default function SuperAdminBillingPage() {
     onError: () => toast.error('Yangilashda xatolik'),
   })
 
+  const updatePricing = useMutation({
+    mutationFn: async ({
+      orgId, tier_1, tier_2, tier_3,
+    }: { orgId: number; tier_1: number; tier_2: number; tier_3: number }) =>
+      (await api.patch(`/super/billing/organizations/${orgId}/pricing/`, {
+        price_per_session_tier_1: tier_1,
+        price_per_session_tier_2: tier_2,
+        price_per_session_tier_3: tier_3,
+      })).data,
+    onSuccess: () => {
+      toast.success('Narxlar saqlandi')
+      qc.invalidateQueries({ queryKey: ['super-billing-org', selectedOrgId] })
+      qc.invalidateQueries({ queryKey: ['super-billing-overview'] })
+    },
+    onError: () => toast.error('Narxlarni saqlashda xatolik'),
+  })
+
   const totals = overview.data?.totals
   const orgs = overview.data?.organizations ?? []
 
@@ -298,23 +315,14 @@ export default function SuperAdminBillingPage() {
 
               {orgDetail.data && (
                 <>
-                  <div>
-                    <h3 className="mb-2 text-sm font-semibold">Pricing tiers</h3>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <PricingCell
-                        label="0–100 sessiya"
-                        value={orgDetail.data.pricing.tier_1}
-                      />
-                      <PricingCell
-                        label="101–500"
-                        value={orgDetail.data.pricing.tier_2}
-                      />
-                      <PricingCell
-                        label="501+"
-                        value={orgDetail.data.pricing.tier_3}
-                      />
-                    </div>
-                  </div>
+                  <PricingEditor
+                    orgId={selectedOrgId}
+                    initial={orgDetail.data.pricing}
+                    onSave={(values) =>
+                      updatePricing.mutate({ orgId: selectedOrgId, ...values })
+                    }
+                    saving={updatePricing.isPending}
+                  />
 
                   <div>
                     <h3 className="mb-2 text-sm font-semibold">Hisob-kitob davrlari</h3>
@@ -439,13 +447,105 @@ function Stat({
   )
 }
 
-function PricingCell({ label, value }: { label: string; value: number }) {
+function PricingEditor({
+  orgId, initial, onSave, saving,
+}: {
+  orgId: number
+  initial: { tier_1: number; tier_2: number; tier_3: number }
+  onSave: (values: { tier_1: number; tier_2: number; tier_3: number }) => void
+  saving: boolean
+}) {
+  const [tier1, setTier1] = useState<string>(String(initial.tier_1))
+  const [tier2, setTier2] = useState<string>(String(initial.tier_2))
+  const [tier3, setTier3] = useState<string>(String(initial.tier_3))
+
+  // Reset local form state when switching organizations
+  useEffect(() => {
+    setTier1(String(initial.tier_1))
+    setTier2(String(initial.tier_2))
+    setTier3(String(initial.tier_3))
+  }, [orgId, initial.tier_1, initial.tier_2, initial.tier_3])
+
+  const parse = (v: string) => {
+    const n = Number(v.replace(/\s+/g, ''))
+    return Number.isFinite(n) && n >= 0 ? n : null
+  }
+  const t1 = parse(tier1)
+  const t2 = parse(tier2)
+  const t3 = parse(tier3)
+  const valid = t1 !== null && t2 !== null && t3 !== null
+  const dirty =
+    t1 !== initial.tier_1 || t2 !== initial.tier_2 || t3 !== initial.tier_3
+
   return (
-    <div className="rounded-md border p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 font-mono text-sm font-semibold text-slate-900">
-        {fmtMoney(value)}
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Pricing tiers</h3>
+        <p className="text-xs text-slate-500">
+          Bitta sessiya narxi (so‘mda). Avtomatik tier session soniga qarab tanlanadi.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <PricingInput label="0–100 sessiya" value={tier1} onChange={setTier1} valid={t1 !== null} />
+        <PricingInput label="101–500 sessiya" value={tier2} onChange={setTier2} valid={t2 !== null} />
+        <PricingInput label="501+ sessiya" value={tier3} onChange={setTier3} valid={t3 !== null} />
+      </div>
+      <div className="mt-3 flex items-center justify-end gap-2">
+        {dirty && (
+          <button
+            type="button"
+            className="text-xs text-slate-500 hover:underline"
+            onClick={() => {
+              setTier1(String(initial.tier_1))
+              setTier2(String(initial.tier_2))
+              setTier3(String(initial.tier_3))
+            }}
+          >
+            Bekor qilish
+          </button>
+        )}
+        <Button
+          size="sm"
+          disabled={!valid || !dirty || saving}
+          onClick={() => {
+            if (!valid) return
+            onSave({ tier_1: t1!, tier_2: t2!, tier_3: t3! })
+          }}
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              Saqlanmoqda…
+            </>
+          ) : (
+            'Narxlarni saqlash'
+          )}
+        </Button>
       </div>
     </div>
+  )
+}
+
+function PricingInput({
+  label, value, onChange, valid,
+}: {
+  label: string; value: string; onChange: (v: string) => void; valid: boolean
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs text-slate-500">{label}</span>
+      <div className="mt-1 flex items-center rounded-md border bg-white focus-within:border-slate-900">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full bg-transparent px-3 py-2 font-mono text-sm focus:outline-none ${
+            valid ? 'text-slate-900' : 'text-rose-600'
+          }`}
+        />
+        <span className="px-2 text-xs text-slate-500">so‘m</span>
+      </div>
+    </label>
   )
 }
