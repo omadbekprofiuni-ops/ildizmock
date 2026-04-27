@@ -49,9 +49,15 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    org_slug = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'username', 'phone', 'first_name', 'last_name', 'role',
-                  'target_band', 'language', 'must_change_password', 'created_at']
+                  'target_band', 'language', 'must_change_password', 'created_at',
+                  'org_slug']
         read_only_fields = ['id', 'username', 'role', 'created_at',
-                            'must_change_password']
+                            'must_change_password', 'org_slug']
+
+    def get_org_slug(self, obj):
+        return obj.organization.slug if obj.organization_id else None

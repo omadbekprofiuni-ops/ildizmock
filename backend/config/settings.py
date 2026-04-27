@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'apps.tests',
     'apps.attempts',
     'apps.center',
+    'apps.mock',
 ]
 
 MIDDLEWARE = [
@@ -83,6 +84,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# File upload limits (50 MB) — listening MP3 uchun
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52_428_800  # 50 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52_428_800
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

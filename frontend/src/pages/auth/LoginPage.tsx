@@ -39,8 +39,10 @@ export default function LoginPage() {
         return
       }
       const role = me?.role
-      if (role === 'superadmin') navigate('/super')
-      else if (role === 'org_admin') navigate('/admin')
+      if (role === 'superadmin' || role === 'super_admin') navigate('/super')
+      else if (role === 'org_admin' || role === 'admin') {
+        navigate(me?.org_slug ? `/${me.org_slug}/admin` : '/admin')
+      }
       else if (role === 'teacher') navigate('/teacher')
       else navigate('/home')
     } catch (err) {

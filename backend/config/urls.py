@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/v1/', include('apps.tests.urls')),
     path('api/v1/', include('apps.attempts.urls')),
     path('api/v1/', include('apps.organizations.urls')),
+    path('api/v1/', include('apps.mock.urls')),
     path('api/v1/center/<slug:org_slug>/', include('apps.center.urls')),
 ]
 

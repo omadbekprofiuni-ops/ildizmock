@@ -12,12 +12,23 @@ from .models import ListeningPart, Passage, Question, Test, WritingTask
 
 
 class WizardQuestionSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
         fields = [
             'id', 'question_number', 'question_type',
             'prompt', 'options', 'correct_answer', 'alt_answers', 'points',
+            'image', 'image_url',
         ]
+        extra_kwargs = {'image': {'write_only': True, 'required': False}}
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
     def validate(self, attrs):
         # prompt bo'sh bo'lsa, eski text dan to'ldiramiz (saqlash uchun)
@@ -37,6 +48,7 @@ class WizardQuestionSerializer(serializers.ModelSerializer):
 class ListeningPartSerializer(serializers.ModelSerializer):
     questions = WizardQuestionSerializer(many=True, read_only=True)
     audio_url = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ListeningPart
@@ -44,16 +56,25 @@ class ListeningPartSerializer(serializers.ModelSerializer):
             'id', 'part_number',
             'audio_url', 'audio_duration_seconds', 'audio_bitrate_kbps',
             'audio_size_bytes',
-            'transcript', 'instructions', 'questions',
+            'image_url', 'transcript', 'instructions', 'questions',
         ]
         read_only_fields = [
             'audio_url', 'audio_duration_seconds',
-            'audio_bitrate_kbps', 'audio_size_bytes',
+            'audio_bitrate_kbps', 'audio_size_bytes', 'image_url',
         ]
 
     def get_audio_url(self, obj):
         if obj.audio_file:
-            return obj.audio_file.url
+            request = self.context.get('request')
+            url = obj.audio_file.url
+            return request.build_absolute_uri(url) if request else url
+        return None
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            return request.build_absolute_uri(url) if request else url
         return None
 
 
@@ -63,13 +84,21 @@ class WizardPassageSerializer(serializers.ModelSerializer):
     section_number = serializers.IntegerField(source='part_number')
     body_text = serializers.CharField(source='content')
     questions = WizardQuestionSerializer(many=True, read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Passage
         fields = [
             'id', 'section_number', 'title', 'subtitle',
-            'body_text', 'instructions', 'questions',
+            'body_text', 'instructions', 'image_url', 'questions',
         ]
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            url = obj.image.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
 
 class WritingTaskSerializer(serializers.ModelSerializer):

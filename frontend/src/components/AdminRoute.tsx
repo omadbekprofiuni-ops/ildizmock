@@ -15,7 +15,11 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     )
   }
   if (!user) return <Navigate to="/login" replace />
-  const isAdmin = user.role === 'admin' || user.role === 'super_admin'
+  const isAdmin =
+    user.role === 'org_admin' ||
+    user.role === 'superadmin' ||
+    user.role === 'admin' ||
+    user.role === 'super_admin'
   if (!isAdmin) return <Navigate to="/" replace />
   return <>{children}</>
 }

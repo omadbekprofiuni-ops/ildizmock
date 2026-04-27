@@ -15,6 +15,12 @@ import CenterDashboard from './pages/center/CenterDashboard'
 import CenterStudentsPage from './pages/center/StudentsPage'
 import CenterTeachersPage from './pages/center/TeachersPage'
 import CenterTestsPage from './pages/center/TestsPage'
+import TestPreviewPage from './pages/center/TestPreviewPage'
+import MockControlPage from './pages/center/mock/MockControlPage'
+import MockResultsPage from './pages/center/mock/MockResultsPage'
+import MockSessionsPage from './pages/center/mock/MockSessionsPage'
+import MockJoinPage from './pages/mock/MockJoinPage'
+import MockSessionPage from './pages/mock/MockSessionPage'
 import SuperTestsListPage from './pages/super/SuperTestsListPage'
 import TestWizardPage from './pages/super/TestWizardPage'
 import CenterDetailPage from './pages/superadmin/CenterDetailPage'
@@ -61,6 +67,10 @@ export default function App() {
           <Route path="/tests/:module" element={<TestListPage />} />
           <Route path="/take/:attemptId" element={<TakeTestPage />} />
           <Route path="/result/:attemptId" element={<ResultPage />} />
+
+          {/* Mock session — public student routes */}
+          <Route path="/mock/join/:code" element={<MockJoinPage />} />
+          <Route path="/mock/session/:bsid" element={<MockSessionPage />} />
 
           {/* Auth-required */}
           <Route path="/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
@@ -178,6 +188,10 @@ export default function App() {
               <Route path="students" element={<CenterStudentsPage />} />
               <Route path="teachers" element={<CenterTeachersPage />} />
               <Route path="tests" element={<CenterTestsPage />} />
+              <Route path="tests/:testId/preview" element={<TestPreviewPage />} />
+              <Route path="mock" element={<MockSessionsPage />} />
+              <Route path="mock/:sessionId" element={<MockControlPage />} />
+              <Route path="mock/:sessionId/results" element={<MockResultsPage />} />
             </Route>
           </Route>
 

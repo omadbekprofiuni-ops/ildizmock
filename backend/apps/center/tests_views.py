@@ -77,6 +77,115 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             item['already_cloned'] = item['id'] in {str(x) for x in cloned_ids} or item['id'] in cloned_ids
         return Response(data)
 
+    @action(detail=True, methods=['get'])
+    def preview(self, request, pk=None, org_slug=None):
+        """Admin uchun to'liq preview — correct_answer'lar bilan."""
+        test = self.get_object()
+        ser = SuperTestDetailSerializer(test, context={'request': request})
+        return Response(ser.data)
+
+    @action(detail=True, methods=['post'])
+    def clone(self, request, pk=None, org_slug=None):
+        """Markazning o'z testidan nusxa olish."""
+        org = self.get_organization()
+        source = self.get_object()
+        new_name = (request.data.get('name') or '').strip() or f'Copy of {source.name}'
+
+        with transaction.atomic():
+            clone = Test.objects.create(
+                name=new_name,
+                module=source.module,
+                difficulty=source.difficulty,
+                test_type=source.test_type,
+                description=source.description,
+                category=source.category,
+                duration_minutes=source.duration_minutes,
+                organization=org,
+                is_global=False,
+                cloned_from=source.cloned_from,
+                created_by=request.user,
+                status='draft',
+                is_published=False,
+            )
+
+            for src_part in source.listening_parts.all():
+                new_part = ListeningPart.objects.create(
+                    test=clone,
+                    part_number=src_part.part_number,
+                    audio_file=src_part.audio_file,
+                    audio_duration_seconds=src_part.audio_duration_seconds,
+                    audio_bitrate_kbps=src_part.audio_bitrate_kbps,
+                    audio_size_bytes=src_part.audio_size_bytes,
+                    image=src_part.image,
+                    transcript=src_part.transcript,
+                    instructions=src_part.instructions,
+                )
+                for src_q in src_part.questions.all():
+                    Question.objects.create(
+                        listening_part=new_part,
+                        order=src_q.order,
+                        question_number=src_q.question_number,
+                        question_type=src_q.question_type,
+                        text=src_q.text,
+                        prompt=src_q.prompt,
+                        options=src_q.options,
+                        correct_answer=src_q.correct_answer,
+                        acceptable_answers=src_q.acceptable_answers,
+                        alt_answers=src_q.alt_answers,
+                        group_id=src_q.group_id,
+                        instruction=src_q.instruction,
+                        points=src_q.points,
+                        image=src_q.image,
+                    )
+
+            for src_p in source.passages.all():
+                new_p = Passage.objects.create(
+                    test=clone,
+                    part_number=src_p.part_number,
+                    title=src_p.title,
+                    subtitle=src_p.subtitle,
+                    content=src_p.content,
+                    instructions=src_p.instructions,
+                    audio_file=src_p.audio_file,
+                    audio_duration_seconds=src_p.audio_duration_seconds,
+                    image=src_p.image,
+                    min_words=src_p.min_words,
+                    order=src_p.order,
+                )
+                for src_q in src_p.questions.all():
+                    Question.objects.create(
+                        passage=new_p,
+                        order=src_q.order,
+                        question_number=src_q.question_number,
+                        question_type=src_q.question_type,
+                        text=src_q.text,
+                        prompt=src_q.prompt,
+                        options=src_q.options,
+                        correct_answer=src_q.correct_answer,
+                        acceptable_answers=src_q.acceptable_answers,
+                        alt_answers=src_q.alt_answers,
+                        group_id=src_q.group_id,
+                        instruction=src_q.instruction,
+                        points=src_q.points,
+                        image=src_q.image,
+                    )
+
+            for src_t in source.writing_tasks.all():
+                WritingTask.objects.create(
+                    test=clone,
+                    task_number=src_t.task_number,
+                    prompt=src_t.prompt,
+                    chart_image=src_t.chart_image,
+                    min_words=src_t.min_words,
+                    suggested_minutes=src_t.suggested_minutes,
+                    requirements=src_t.requirements,
+                )
+
+        return Response(
+            SuperTestDetailSerializer(clone, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(
         detail=False, methods=['post'],
         url_path=r'clone-from-global/(?P<global_id>[^/.]+)',

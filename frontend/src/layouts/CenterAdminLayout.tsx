@@ -63,6 +63,9 @@ export default function CenterAdminLayout() {
           <NavLink to={`/${slug}/admin/tests`} className={navItemClass}>
             📚 <span>Testlar</span>
           </NavLink>
+          <NavLink to={`/${slug}/admin/mock`} className={navItemClass}>
+            🎯 <span>Mock sessiyalar</span>
+          </NavLink>
         </nav>
 
         <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-xs text-white/60">

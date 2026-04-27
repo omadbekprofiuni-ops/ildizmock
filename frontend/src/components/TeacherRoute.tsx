@@ -17,6 +17,8 @@ export function TeacherRoute({ children }: { children: ReactNode }) {
   if (!user) return <Navigate to="/login" replace />
   const ok =
     user.role === 'teacher' ||
+    user.role === 'org_admin' ||
+    user.role === 'superadmin' ||
     user.role === 'admin' ||
     user.role === 'super_admin'
   if (!ok) return <Navigate to="/home" replace />

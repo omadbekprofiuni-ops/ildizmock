@@ -30,7 +30,11 @@ export function UserMenu() {
   if (!user) return null
 
   const initial = (user.first_name || user.username || '?')[0]?.toUpperCase() || '?'
-  const isAdmin = user.role === 'admin' || user.role === 'super_admin'
+  const isAdmin =
+    user.role === 'org_admin' ||
+    user.role === 'superadmin' ||
+    user.role === 'admin' ||
+    user.role === 'super_admin'
   const isTeacher = user.role === 'teacher'
 
   const onLogout = async () => {

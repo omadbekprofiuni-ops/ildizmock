@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from apps.attempts.models import Attempt
 
-from .models import Organization, Payment, Plan
+from .models import Organization, OrganizationMembership, Payment, Plan
 from .permissions import IsSuperAdmin
 from .serializers import (
     CenterAdminCreateSerializer,
@@ -137,6 +137,9 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
             last_name=data.get('admin_last_name', '') or '',
             role='org_admin', organization=org, is_active=True,
         )
+        OrganizationMembership.objects.get_or_create(
+            user=admin, organization=org, role='admin',
+        )
 
         # 3. Initial payment (status=paid, marked by current superadmin)
         Payment.objects.create(
@@ -212,6 +215,9 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
             first_name=ser.validated_data['first_name'],
             last_name=ser.validated_data.get('last_name', '') or '',
             role='org_admin', organization=org, is_active=True,
+        )
+        OrganizationMembership.objects.get_or_create(
+            user=admin, organization=org, role='admin',
         )
         return Response({
             'id': admin.id,

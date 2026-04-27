@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
 import { api } from '@/lib/api'
 
@@ -91,6 +91,24 @@ export default function TestsPage() {
       await api.post(`/center/${slug}/tests/clone-from-global/${testId}/`)
       setMessage('✅ Test muvaffaqiyatli nusxalandi')
       loadCatalog()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } }
+      setMessage(`❌ ${err.response?.data?.detail ?? 'Xatolik yuz berdi'}`)
+    } finally {
+      setBusy(null)
+      setTimeout(() => setMessage(''), 4000)
+    }
+  }
+
+  const cloneOwnTest = async (testId: string) => {
+    if (!slug) return
+    if (!confirm('Bu testdan nusxa yaratamizmi?')) return
+    setBusy(testId)
+    setMessage('')
+    try {
+      await api.post(`/center/${slug}/tests/${testId}/clone/`)
+      setMessage('✅ Nusxa yaratildi')
+      loadMine()
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
       setMessage(`❌ ${err.response?.data?.detail ?? 'Xatolik yuz berdi'}`)
@@ -230,7 +248,22 @@ export default function TestsPage() {
                         </button>
                       )
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/${slug}/admin/tests/${t.id}/preview`}
+                          className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                        >
+                          👁 Preview
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={busy === t.id}
+                          onClick={() => cloneOwnTest(t.id)}
+                          className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                        >
+                          {busy === t.id ? '…' : '📋 Clone'}
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

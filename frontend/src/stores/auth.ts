@@ -14,6 +14,7 @@ export type User = {
   language: 'uz' | 'ru' | 'en'
   must_change_password: boolean
   created_at: string
+  org_slug: string | null
 }
 
 type AuthState = {

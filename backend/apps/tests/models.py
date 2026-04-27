@@ -3,6 +3,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from .validators import validate_audio_file
+
 
 class Test(models.Model):
     MODULE_CHOICES = [
@@ -82,6 +84,10 @@ class Passage(models.Model):
     instructions = models.TextField(blank=True, default='')
     audio_file = models.FileField(null=True, blank=True, upload_to='audio/')
     audio_duration_seconds = models.IntegerField(null=True, blank=True)
+    image = models.ImageField(
+        upload_to='passage_images/%Y/%m/', blank=True, null=True,
+        help_text='Passage uchun rasm/diagram (ixtiyoriy)',
+    )
     # For writing module: minimum required word count per task
     min_words = models.IntegerField(null=True, blank=True)
     order = models.IntegerField(default=0)
@@ -132,6 +138,10 @@ class Question(models.Model):
     group_id = models.IntegerField(default=0)
     instruction = models.TextField(blank=True)
     points = models.IntegerField(default=1)
+    image = models.ImageField(
+        upload_to='question_images/%Y/%m/', blank=True, null=True,
+        help_text='Savol uchun rasm (map, diagram, chart) — ixtiyoriy',
+    )
 
     class Meta:
         ordering = ['order']
@@ -148,11 +158,18 @@ class ListeningPart(models.Model):
     )
     part_number = models.PositiveSmallIntegerField(help_text='1, 2, 3 yoki 4')
 
-    audio_file = models.FileField(upload_to='listening_audio/', null=True, blank=True)
+    audio_file = models.FileField(
+        upload_to='listening_audio/%Y/%m/', null=True, blank=True,
+        validators=[validate_audio_file],
+    )
     audio_duration_seconds = models.PositiveIntegerField(default=0)
     audio_bitrate_kbps = models.PositiveIntegerField(default=0)
     audio_size_bytes = models.PositiveIntegerField(default=0)
 
+    image = models.ImageField(
+        upload_to='listening_images/%Y/%m/', blank=True, null=True,
+        help_text='Bo‘lim uchun rasm (ixtiyoriy)',
+    )
     transcript = models.TextField(blank=True, default='')
     instructions = models.TextField(
         blank=True, default='', help_text='Bo‘lim ko‘rsatmasi',
