@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/v1/', include('apps.organizations.urls')),
     path('api/v1/', include('apps.mock.urls')),
     path('api/v1/center/<slug:org_slug>/', include('apps.center.urls')),
+    path('api/v1/super/billing/', include('apps.billing.urls')),
 ]
 
 if settings.DEBUG:

@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'apps.attempts',
     'apps.center',
     'apps.mock',
+    'apps.billing',
 ]
 
 MIDDLEWARE = [

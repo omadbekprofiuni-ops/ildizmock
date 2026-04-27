@@ -25,6 +25,7 @@ import MockSessionPage from './pages/mock/MockSessionPage'
 import SuperTestsListPage from './pages/super/SuperTestsListPage'
 import TestWizardPage from './pages/super/TestWizardPage'
 import CenterDetailPage from './pages/superadmin/CenterDetailPage'
+import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
 import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
@@ -149,10 +150,7 @@ export default function App() {
             path="/super/payments"
             element={
               <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Payments"
-                  subtitle="Subscription and billing history across all centers"
-                />
+                <SuperAdminBillingPage />
               </SuperAdminRoute>
             }
           />
