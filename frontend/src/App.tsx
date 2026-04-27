@@ -11,6 +11,7 @@ import { useAuth } from '@/stores/auth'
 
 import { RequireCenterAdmin } from '@/components/guards/RequireCenterAdmin'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
+import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import CenterStudentsPage from './pages/center/StudentsPage'
 import CenterTeachersPage from './pages/center/TeachersPage'
@@ -208,6 +209,7 @@ export default function App() {
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />
               <Route path="mock/:sessionId/results" element={<MockResultsPage />} />
+              <Route path="analytics" element={<CenterAnalyticsPage />} />
             </Route>
           </Route>
 

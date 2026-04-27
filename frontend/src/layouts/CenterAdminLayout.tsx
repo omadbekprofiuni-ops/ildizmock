@@ -41,12 +41,28 @@ export default function CenterAdminLayout() {
     <div className="flex min-h-screen bg-slate-50">
       <aside className="sticky top-0 flex h-screen w-64 flex-col bg-slate-900 p-6 text-white">
         <Link to={`/${slug}/admin`} className="mb-8 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 font-bold">
-            ✕
-          </div>
+          {org?.logo ? (
+            <img
+              src={org.logo}
+              alt={org.name}
+              className="h-9 w-9 rounded-full bg-white object-contain p-1"
+            />
+          ) : (
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full font-bold"
+              style={{ background: org?.primary_color || '#f97316' }}
+            >
+              {(org?.name || slug || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="font-semibold">ILDIZmock</div>
-            <div className="text-xs text-orange-400">{org?.name ?? slug}</div>
+            <div
+              className="text-xs"
+              style={{ color: org?.primary_color || '#fb923c' }}
+            >
+              {org?.name ?? slug}
+            </div>
           </div>
         </Link>
 
@@ -65,6 +81,9 @@ export default function CenterAdminLayout() {
           </NavLink>
           <NavLink to={`/${slug}/admin/mock`} className={navItemClass}>
             🎯 <span>Mock sessiyalar</span>
+          </NavLink>
+          <NavLink to={`/${slug}/admin/analytics`} className={navItemClass}>
+            📊 <span>Analytics</span>
           </NavLink>
         </nav>
 
