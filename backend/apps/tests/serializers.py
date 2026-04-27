@@ -14,11 +14,25 @@ class QuestionPublicSerializer(serializers.ModelSerializer):
 
 class PassagePublicSerializer(serializers.ModelSerializer):
     questions = QuestionPublicSerializer(many=True, read_only=True)
+    audio_file = serializers.SerializerMethodField()
 
     class Meta:
         model = Passage
         fields = ['id', 'part_number', 'title', 'content', 'audio_file',
                   'audio_duration_seconds', 'min_words', 'order', 'questions']
+
+    def get_audio_file(self, obj):
+        if not obj.audio_file:
+            return None
+        try:
+            url = obj.audio_file.url
+        except (ValueError, AttributeError):
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(url)
+        # Dev fallback: assume Django on localhost:8000 if no request context
+        return url if url.startswith('http') else f'http://localhost:8000{url}'
 
 
 class TestListSerializer(serializers.ModelSerializer):

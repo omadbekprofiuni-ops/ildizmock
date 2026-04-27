@@ -16,13 +16,31 @@ class AdminQuestionSerializer(serializers.ModelSerializer):
 
 class AdminPassageSerializer(serializers.ModelSerializer):
     questions = AdminQuestionSerializer(many=True, read_only=True)
+    audio_file = serializers.SerializerMethodField()
+    audio_file_path = serializers.SerializerMethodField()
 
     class Meta:
         model = Passage
         fields = [
             'id', 'test', 'part_number', 'title', 'content', 'audio_file',
+            'audio_file_path',
             'audio_duration_seconds', 'min_words', 'order', 'questions',
         ]
+
+    def get_audio_file(self, obj):
+        if not obj.audio_file:
+            return None
+        try:
+            url = obj.audio_file.url
+        except (ValueError, AttributeError):
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url if url.startswith('http') else f'http://localhost:8000{url}'
+
+    def get_audio_file_path(self, obj):
+        return obj.audio_file.name if obj.audio_file else None
 
 
 class _NestedQuestionSerializer(serializers.ModelSerializer):
@@ -104,7 +122,29 @@ class AdminTestSerializer(serializers.ModelSerializer):
             audio_path = p_data.pop('audio_file_path', None)
             passage = Passage.objects.create(test=test, **p_data)
             if audio_path:
-                passage.audio_file.name = audio_path
+                passage.audio_file.name = _normalize_audio_path(audio_path)
                 passage.save(update_fields=['audio_file'])
             for q_data in questions_data:
                 Question.objects.create(passage=passage, **q_data)
+
+
+def _normalize_audio_path(value: str) -> str:
+    """Always store the relative storage path (e.g. ``audio/abc.mp3``).
+
+    Frontend ba'zan to'liq URL yuborib qo'yadi (eski data, draft, edit). Bu
+    ``MEDIA_URL`` bilan birikmaydigan keraksiz prefiksni olib tashlaydi.
+    """
+    if not value:
+        return value
+    s = str(value).strip()
+    # http(s)://host/...
+    if '://' in s:
+        s = s.split('://', 1)[1]
+        s = s.split('/', 1)[1] if '/' in s else ''
+        s = '/' + s
+    # Strip leading /media/ prefix
+    if s.startswith('/media/'):
+        s = s[len('/media/'):]
+    elif s.startswith('media/'):
+        s = s[len('media/'):]
+    return s.lstrip('/')

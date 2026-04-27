@@ -92,6 +92,21 @@ const blankTest = (): TestDraft => ({
   passages: [blankPassage(1)],
 })
 
+function deriveAudioPath(value: string | null | undefined): string | null {
+  if (!value) return null
+  let s = String(value).trim()
+  // http(s)://host/path → /path
+  const proto = s.indexOf('://')
+  if (proto !== -1) {
+    const after = s.slice(proto + 3)
+    const slash = after.indexOf('/')
+    s = slash === -1 ? '' : after.slice(slash)
+  }
+  // Strip /media/ or media/
+  s = s.replace(/^\/?media\//, '')
+  return s || null
+}
+
 function normaliseOnChangeType(q: QDraft, newType: QType): QDraft {
   if (newType === 'mcq') return { ...q, question_type: 'mcq', options: ['', '', '', ''], correct_answer: '' }
   if (newType === 'tfng') return { ...q, question_type: 'tfng', options: ['True', 'False', 'Not Given'], correct_answer: '' }
@@ -132,10 +147,13 @@ function draftFromServer(data: {
       order: p.order,
       min_words: (p as { min_words?: number | null }).min_words ?? null,
       audio_file: (p as { audio_file?: string | null }).audio_file ?? null,
+      // Backend now exposes audio_file_path (relative storage path) explicitly.
+      // Fall back to deriving it from audio_file URL only if missing.
       audio_file_path:
-        (p as { audio_file?: string | null }).audio_file
-          ? String((p as { audio_file?: string | null }).audio_file).replace(/^\/media\//, '')
-          : null,
+        (p as { audio_file_path?: string | null }).audio_file_path
+        ?? deriveAudioPath(
+          (p as { audio_file?: string | null }).audio_file ?? null,
+        ),
       questions: p.questions.map((q, i) => ({
         order: q.order ?? i + 1,
         question_type: q.question_type,
