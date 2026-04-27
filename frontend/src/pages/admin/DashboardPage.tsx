@@ -18,7 +18,7 @@ type DashboardData = {
   recent_attempts: {
     id: string
     user_name: string
-    user_phone: string
+    user_username: string
     test_name: string
     module: string
     status: string
@@ -30,7 +30,7 @@ type DashboardData = {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
+  return new Date(iso).toLocaleString('en-GB', {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -46,44 +46,44 @@ export default function DashboardPage() {
       <header className="border-b bg-white px-8 py-5">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Platforma umumiy ko‘rsatkichlari
+          Overall platform metrics
         </p>
       </header>
       <div className="space-y-6 p-8">
         {query.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {query.isError && (
           <p className="text-destructive">
-            Statisticsni yuklab bo‘lmadi. (Admin huquqi borligiga ishonchingiz komilmi?)
+            Failed to load statistics. (Are you sure you have admin permission?)
           </p>
         )}
         {query.data && (
           <>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatCard
-                label="Foydalanuvchilar"
+                label="Users"
                 value={query.data.users}
-                hint={`${query.data.students} o‘quvchi`}
+                hint={`${query.data.students} students`}
                 Icon={Users}
                 tint="bg-blue-500"
               />
               <StatCard
-                label="Testlar"
+                label="Tests"
                 value={query.data.tests_total}
-                hint={`${query.data.tests_published} ta nashr qilingan`}
+                hint={`${query.data.tests_published} published`}
                 Icon={BookOpen}
                 tint="bg-emerald-500"
               />
               <StatCard
-                label="Urinishlar"
+                label="Attempts"
                 value={query.data.attempts_total}
-                hint={`${query.data.attempts_graded} ta baholangan`}
+                hint={`${query.data.attempts_graded} graded`}
                 Icon={ClipboardList}
                 tint="bg-orange-500"
               />
               <StatCard
-                label="Intermediatecha band"
+                label="Average band"
                 value={query.data.avg_band?.toFixed(1) ?? '—'}
-                hint="Graded urinishlar bo‘yicha"
+                hint="Based on graded attempts"
                 Icon={TrendingUp}
                 tint="bg-purple-500"
               />
@@ -92,15 +92,15 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-0">
                 <div className="border-b px-6 py-4">
-                  <h2 className="text-lg font-semibold">So‘nggi urinishlar</h2>
+                  <h2 className="text-lg font-semibold">Recent attempts</h2>
                 </div>
                 {query.data.recent_attempts.length === 0 ? (
-                  <p className="p-6 text-sm text-muted-foreground">Hali hech narsa yo‘q.</p>
+                  <p className="p-6 text-sm text-muted-foreground">Nothing yet.</p>
                 ) : (
                   <table className="w-full text-sm">
                     <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                       <tr>
-                        <th className="px-6 py-3">Foydalanuvchi</th>
+                        <th className="px-6 py-3">User</th>
                         <th className="px-6 py-3">Test</th>
                         <th className="px-6 py-3">Module</th>
                         <th className="px-6 py-3">Date</th>

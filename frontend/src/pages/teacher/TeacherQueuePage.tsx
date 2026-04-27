@@ -12,14 +12,14 @@ type QueueItem = {
   id: number
   test_name: string
   student_name: string
-  student_phone: string
+  student_username: string
   status: string
   word_count: number
   submitted_at: string
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
+  return new Date(iso).toLocaleString('en-GB', {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -36,19 +36,19 @@ export default function TeacherQueuePage() {
       <header className="border-b bg-white px-8 py-5">
         <h1 className="text-2xl font-bold tracking-tight">Review queue</h1>
         <p className="text-sm text-muted-foreground">
-          Studentsingiz tomonidan yuborilgan inshalar
+          Essays submitted by your students
         </p>
       </header>
       <div className="p-8">
         {q.isLoading && <p className="text-muted-foreground">Loading…</p>}
-        {q.isError && <p className="text-destructive">Yuklab bo‘lmadi.</p>}
+        {q.isError && <p className="text-destructive">Failed to load.</p>}
         {q.data && q.data.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center gap-3 p-12 text-center">
               <CheckCircle2 className="h-10 w-10 text-emerald-500" />
               <p className="text-lg font-medium">No pending submissions ✓</p>
               <p className="text-sm text-muted-foreground">
-                Yangi insha kelganida bu yerda ko‘rinadi.
+                New writings will appear here when submitted.
               </p>
             </CardContent>
           </Card>
@@ -67,11 +67,11 @@ export default function TeacherQueuePage() {
                     </h3>
                     <p className="text-sm text-muted-foreground">{s.test_name}</p>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span>{s.word_count} so‘z</span>
+                      <span>{s.word_count} words</span>
                       <span>·</span>
                       <span>{formatDate(s.submitted_at)}</span>
                       <span>·</span>
-                      <span className="font-mono">{s.student_phone}</span>
+                      <span className="font-mono">{s.student_username}</span>
                     </div>
                   </div>
                   <Link to={`/teacher/grade/${s.id}`}>

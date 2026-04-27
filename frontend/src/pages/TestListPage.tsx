@@ -50,7 +50,7 @@ export default function TestListPage() {
   const isValid = !!moduleParam && (VALID_MODULES as readonly string[]).includes(moduleParam)
 
   useEffect(() => {
-    if (isValid) document.title = `ILDIZmock — ${MODULE_TITLES[moduleParam as ModuleId]} testlari`
+    if (isValid) document.title = `ILDIZmock — ${MODULE_TITLES[moduleParam as ModuleId]} Tests`
   }, [isValid, moduleParam])
 
   // Auth gate for writing
@@ -111,9 +111,9 @@ export default function TestListPage() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
             <Lock className="h-7 w-7 text-gray-700" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Writing testlari faqat ro‘yxatdan o‘tgan foydalanuvchilar uchun</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Writing Tests are only for registered users</h1>
           <p className="mt-3 text-[var(--muted)]">
-            Insheyingiz ustoz tomonidan tekshiriladi va batafsil feedback olasiz.
+            Your essay will be reviewed by a teacher with detailed feedback.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/register"><Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">Sign Up</Button></Link>
@@ -140,9 +140,9 @@ export default function TestListPage() {
           <Link to="/" className="mb-3 inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:underline">
             <ArrowLeft className="h-4 w-4" /> Home
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">{moduleTitle} testlari</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{moduleTitle} Tests</h1>
           {showLevelSelector && (
-            <p className="mt-1 text-[var(--muted)]">Qaysi darajada mashq qilmoqchisiz?</p>
+            <p className="mt-1 text-[var(--muted)]">Which level would you like to practice?</p>
           )}
         </div>
 
@@ -166,7 +166,7 @@ export default function TestListPage() {
                       <div className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">Band {lvl.range}</div>
                       <h3 className="mt-2 text-xl font-semibold">{lvl.label}</h3>
                       <p className="mt-3 flex-1 text-sm text-[var(--muted)]">{count} tests</p>
-                      <span className="mt-4 text-sm font-medium text-[var(--accent)] group-hover:underline">Tanlash →</span>
+                      <span className="mt-4 text-sm font-medium text-[var(--accent)] group-hover:underline">Choose →</span>
                     </article>
                   </Link>
                 )
@@ -174,7 +174,7 @@ export default function TestListPage() {
             </div>
             <div className="mt-6 text-center">
               <Link to={`/tests/${moduleParam}?all=1`} className="text-sm text-[var(--muted)] hover:underline">
-                ← Show all (filter siz)
+                ← Show all
               </Link>
             </div>
           </>
@@ -186,8 +186,8 @@ export default function TestListPage() {
             <div className="mb-6 flex items-center justify-between">
               <p className="text-sm text-[var(--muted)]">
                 {difficulty
-                  ? `Daraja: ${DIFFICULTY_LEVELS.find((l) => l.id === difficulty)?.label} (${filtered.length} ta)`
-                  : `Hamma testlar (${filtered.length} ta)`}
+                  ? `Level: ${DIFFICULTY_LEVELS.find((l) => l.id === difficulty)?.label} (${filtered.length} tests)`
+                  : `All tests (${filtered.length})`}
               </p>
               <Link to={`/tests/${moduleParam}`} className="text-sm text-[var(--muted)] hover:underline">
                 ← Choose level
@@ -208,14 +208,14 @@ export default function TestListPage() {
                   >
                     <h3 className="mb-2 text-lg font-semibold">{t.name}</h3>
                     <p className="mb-4 line-clamp-2 flex-1 text-sm text-[var(--muted)]">
-                      {t.description || 'Tavsif yo‘q'}
+                      {t.description || 'No description'}
                     </p>
                     <div className="mb-4 flex gap-4 text-xs text-[var(--muted)]">
                       <span className="inline-flex items-center gap-1">
-                        <FileText className="h-3.5 w-3.5" /> {t.question_count} savol
+                        <FileText className="h-3.5 w-3.5" /> {t.question_count} questions
                       </span>
                       <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" /> {t.duration_minutes} daq
+                        <Clock className="h-3.5 w-3.5" /> {t.duration_minutes} min
                       </span>
                     </div>
                     <Button

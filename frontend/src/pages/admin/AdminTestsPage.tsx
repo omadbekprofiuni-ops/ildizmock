@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Edit, Plus, Trash2 } from 'lucide-react'
+import type { ComponentType, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,13 @@ import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 import AdminLayout from './AdminLayout'
+
+type LayoutComponent = ComponentType<{ children: ReactNode }>
+
+type Props = {
+  Layout?: LayoutComponent
+  basePath?: string
+}
 
 type AdminTest = {
   id: string
@@ -23,10 +31,13 @@ type AdminTest = {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('uz-UZ')
+  return new Date(iso).toLocaleDateString('en-GB')
 }
 
-export default function AdminTestsPage() {
+export default function AdminTestsPage({
+  Layout = AdminLayout,
+  basePath = '/admin/tests',
+}: Props = {}) {
   const qc = useQueryClient()
   const list = useQuery({
     queryKey: ['admin-tests'],
@@ -38,7 +49,7 @@ export default function AdminTestsPage() {
       (await api.post(`/admin/tests/${id}/publish/`)).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
-      toast.success('Status yangilandi')
+      toast.success('Status updated')
     },
   })
 
@@ -46,21 +57,21 @@ export default function AdminTestsPage() {
     mutationFn: async (id: string) => api.delete(`/admin/tests/${id}/`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
-      toast.success('Test o‘chirildi')
+      toast.success('Test deleted')
     },
-    onError: () => toast.error('Deleteda xatolik'),
+    onError: () => toast.error('Failed to delete'),
   })
 
   return (
-    <AdminLayout>
+    <Layout>
       <header className="flex items-center justify-between border-b bg-white px-8 py-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Testlar</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Tests</h1>
           <p className="text-sm text-muted-foreground">
-            Barcha testlar ro‘yxati va boshqaruvi
+            All tests list and management
           </p>
         </div>
-        <Link to="/admin/tests/new">
+        <Link to={`${basePath}/new`}>
           <Button>
             <Plus className="mr-2 h-4 w-4" /> New test
           </Button>
@@ -69,14 +80,14 @@ export default function AdminTestsPage() {
       <div className="p-8">
         {list.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {list.isError && (
-          <p className="text-destructive">Yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Failed to load.</p>
         )}
         {list.data && list.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
-              Hali test yo‘q.{' '}
-              <Link to="/admin/tests/new" className="underline">
-                Birinchi testni yarating
+              No tests yet.{' '}
+              <Link to={`${basePath}/new`} className="underline">
+                Create your first test
               </Link>
               .
             </CardContent>
@@ -88,12 +99,12 @@ export default function AdminTestsPage() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th className="px-6 py-3">Nom</th>
+                    <th className="px-6 py-3">Name</th>
                     <th className="px-6 py-3">Module</th>
                     <th className="px-6 py-3">Duration</th>
-                    <th className="px-6 py-3">Savol</th>
-                    <th className="px-6 py-3">Urinishlar</th>
-                    <th className="px-6 py-3">Nashr</th>
+                    <th className="px-6 py-3">Questions</th>
+                    <th className="px-6 py-3">Attempts</th>
+                    <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3"></th>
                   </tr>
@@ -108,7 +119,7 @@ export default function AdminTestsPage() {
                         {t.module}
                       </td>
                       <td className="px-6 py-3 text-slate-600">
-                        {t.duration_minutes} daq
+                        {t.duration_minutes} min
                       </td>
                       <td className="px-6 py-3 text-slate-600">
                         {t.question_count}
@@ -134,7 +145,7 @@ export default function AdminTestsPage() {
                       </td>
                       <td className="px-6 py-3 text-right">
                         <div className="flex justify-end gap-1">
-                          <Link to={`/admin/tests/${t.id}/edit`}>
+                          <Link to={`${basePath}/${t.id}/edit`}>
                             <Button variant="ghost" size="sm">
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -143,7 +154,7 @@ export default function AdminTestsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              if (confirm(`"${t.name}" testini o‘chirasizmi?`)) {
+                              if (confirm(`"${t.name}" Delete this test?`)) {
                                 deleteMutation.mutate(t.id)
                               }
                             }}
@@ -160,6 +171,6 @@ export default function AdminTestsPage() {
           </Card>
         )}
       </div>
-    </AdminLayout>
+    </Layout>
   )
 }

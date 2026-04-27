@@ -11,7 +11,7 @@ export class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(err: unknown): State {
     return {
       hasError: true,
-      message: err instanceof Error ? err.message : 'Nomaʼlum xatolik',
+      message: err instanceof Error ? err.message : 'Unknown error',
     }
   }
 

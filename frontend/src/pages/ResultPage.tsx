@@ -45,7 +45,7 @@ export default function ResultPage() {
   if (query.isError || !query.data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-destructive">Resultni yuklab bo‘lmadi.</p>
+        <p className="text-destructive">could not load result.</p>
       </div>
     )
   }
@@ -67,7 +67,7 @@ export default function ResultPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" /> Home
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold">Inshang topshirildi</h1>
+            <h1 className="text-lg font-semibold">Your essay was submitted</h1>
           </div>
         </header>
         <main className="container max-w-3xl space-y-6 py-10">
@@ -76,15 +76,15 @@ export default function ResultPage() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
                 <History className="h-6 w-6 text-amber-700" />
               </div>
-              <h2 className="text-2xl font-bold">AI feedback kutilmoqda</h2>
+              <h2 className="text-2xl font-bold">AI feedback pending</h2>
               <p className="text-muted-foreground">
-                Inshangiz qabul qilindi. Avtomatik baholash{' '}
-                <strong>Phase 2</strong>’da qo‘shiladi (Claude API orqali
-                band score va to‘liq tahlil). Hozircha oddiy so‘z hisobi:
+                Inshangiz qabul qilindi. Automatic scoring{' '}
+                <strong>Phase 2</strong> will add (via the Claude API
+                band score and full analysis). For now, a simple word count:
               </p>
               <div className="mx-auto inline-flex gap-6 rounded-md border bg-slate-50 px-6 py-3 text-sm">
                 <div>
-                  <div className="text-xs text-muted-foreground">So‘z</div>
+                  <div className="text-xs text-muted-foreground">Words</div>
                   <div className="text-lg font-semibold">{r.word_count ?? 0}</div>
                 </div>
                 <div>
@@ -143,10 +143,10 @@ export default function ResultPage() {
               <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
               <div className="flex-1">
                 <p className="font-medium text-amber-900">
-                  Resultni saqlash va tarixingizni ko‘rish uchun ro‘yxatdan o‘ting →
+                  sign up to save results and see your history →
                 </p>
                 <p className="mt-1 text-amber-800">
-                  Hozir bu natija sizning hisobingizga bog‘lanmagan.
+                  Right now this result is not linked to your account.
                 </p>
               </div>
               <Link to="/register">
@@ -170,10 +170,10 @@ export default function ResultPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatBox label="To‘g‘ri" value={correct} tone="success" />
-          <StatBox label="Xato" value={wrong - unanswered} tone="error" />
-          <StatBox label="Javob yo‘q" value={unanswered} tone="muted" />
-          <StatBox label="Aniqlik" value={`${percentage}%`} tone="text" />
+          <StatBox label="Correct" value={correct} tone="success" />
+          <StatBox label="Wrong" value={wrong - unanswered} tone="error" />
+          <StatBox label="Unanswered" value={unanswered} tone="muted" />
+          <StatBox label="Accuracy" value={`${percentage}%`} tone="text" />
         </div>
 
         <div className="flex flex-wrap justify-center gap-3 pt-4">

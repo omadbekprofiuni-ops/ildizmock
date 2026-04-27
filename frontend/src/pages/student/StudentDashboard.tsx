@@ -71,9 +71,9 @@ export default function StudentDashboard() {
             Salom, {user?.first_name}!
           </h1>
           <p className="mt-1 text-[var(--muted)]">
-            {target ? `Target: ${target} band.` : 'Profile sahifasida maqsadingizni belgilang.'}{' '}
+            {target ? `Target: ${target} band.` : 'Set your target on the Profile page.'}{' '}
             {q.data?.teacher && (
-              <>Teacheringiz: <strong>{q.data.teacher.name}</strong></>
+              <>Teacher: <strong>{q.data.teacher.name}</strong></>
             )}
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function StudentDashboard() {
               Icon={FilePen}
               hint={
                 q.data
-                  ? `${q.data.writing_pending} kutilmoqda · ${q.data.writing_graded} baholangan`
+                  ? `${q.data.writing_pending} pending · ${q.data.writing_graded} graded`
                   : ''
               }
             />

@@ -9,7 +9,7 @@ type Props = { children: ReactNode }
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', Icon: LayoutDashboard, end: true },
-  { to: '/admin/tests', label: 'Testlar', Icon: FileText, end: false },
+  { to: '/admin/tests', label: 'Tests', Icon: FileText, end: false },
   { to: '/admin/teachers', label: 'Teachers', Icon: GraduationCap, end: false },
   { to: '/admin/students', label: 'Students', Icon: Users, end: false },
 ]
@@ -56,7 +56,7 @@ export default function AdminLayout({ children }: Props) {
         </nav>
         <div className="border-t border-slate-800 p-4">
           <div className="mb-3 text-xs text-slate-400">
-            Kirgan: <span className="text-slate-200">{user?.phone}</span>
+            Signed in: <span className="text-slate-200">{user?.username}</span>
           </div>
           <Button
             variant="ghost"

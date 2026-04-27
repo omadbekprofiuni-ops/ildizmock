@@ -25,27 +25,27 @@ export function TestStartDialog({ open, module, onConfirm, onCancel }: Props) {
     <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl">IELTS Test qoidalari</DialogTitle>
+          <DialogTitle className="text-xl">IELTS Test rules</DialogTitle>
           <DialogDescription>
-            Startdan oldin diqqat bilan o‘qib chiqing.
+            Read carefully before starting.
           </DialogDescription>
         </DialogHeader>
 
         <ul className="space-y-3 text-sm">
-          <Rule Icon={Clock} text="Vaqt qat'iy — tugagach test avto-submit qilinadi." />
-          <Rule Icon={Maximize2} text="Test fullscreen rejimida bo'ladi. Chiqsangiz qaytaradi." />
+          <Rule Icon={Clock} text="Time is strict — the test auto-submits when it ends." />
+          <Rule Icon={Maximize2} text="Test runs in fullscreen mode. If you exit, it will return." />
           <Rule
             Icon={ShieldX}
             text="Tab almashtirish, F12 (DevTools), copy/paste, right-click bloklangan."
           />
           <Rule
             Icon={AlertTriangle}
-            text="Tab 3 marta o'zgarsa — test cheating sifatida avto-submit qilinadi."
+            text="If the tab changes 3 times — test auto-submits as cheating."
           />
           {module === 'listening' && (
             <Rule
               Icon={Headphones}
-              text="Audio bir marta eshitiladi. Pause va replay yo'q."
+              text="Audio plays once. No pause and no replay."
             />
           )}
         </ul>
@@ -58,8 +58,8 @@ export function TestStartDialog({ open, module, onConfirm, onCancel }: Props) {
             className="mt-0.5 h-4 w-4"
           />
           <span>
-            Men qoidalarni o‘qib chiqdim va test boshlashga roziman. Test
-            boshlasam, qaytib bo‘lmaydi.
+            I have read the rules and agree to start the test. Once the test
+            Once I start, I cannot go back.
           </span>
         </label>
 

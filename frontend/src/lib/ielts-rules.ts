@@ -1,13 +1,13 @@
 /**
  * IELTS test rules enforcement.
  *
- * Universal qoidalar (har modul uchun):
- *  - Fullscreen majburiy
- *  - Tab almashtirish — 3 marta → cheating
- *  - Copy/paste/cut bloklangan
- *  - Right-click context menu bloklangan
- *  - F12, Ctrl+Shift+I/J/C, Ctrl+U bloklangan
- *  - Refresh page bloklangan (beforeunload warning)
+ * Universal rules (for every module):
+ *  - Fullscreen is required
+ *  - Tab switching — 3 times → cheating
+ *  - Copy/paste/cut blocked
+ *  - Right-click context menu blocked
+ *  - F12, Ctrl+Shift+I/J/C, Ctrl+U blocked
+ *  - Refresh page blocked (beforeunload warning)
  */
 
 export class IELTSEnforcement {
@@ -90,7 +90,7 @@ export class IELTSEnforcement {
 
   // ----- Reload (Ctrl+R / F5) block + warning -----
 
-  blockReload(message = 'Test rejectga uchraydi. Davom ettirasizmi?'): () => void {
+  blockReload(message = 'Reloading will discard your test. Continue?'): () => void {
     const beforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault()
       e.returnValue = message

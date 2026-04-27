@@ -41,7 +41,7 @@ export default function MyWritingsPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
-          <h1 className="text-lg font-semibold">Mening yozma ishlarim</h1>
+          <h1 className="text-lg font-semibold">My Writings</h1>
         </div>
       </header>
 
@@ -63,7 +63,7 @@ export default function MyWritingsPage() {
                     <div>
                       <h3 className="text-lg font-semibold">{w.test_name}</h3>
                       <p className="text-sm text-[var(--muted)]">
-                        Yuborilgan: {formatDate(w.submitted_at)} · {w.word_count} so‘z
+                        Submitted: {formatDate(w.submitted_at)} · {w.word_count} words
                       </p>
                     </div>
                     {w.status === 'pending' ? (
@@ -82,7 +82,7 @@ export default function MyWritingsPage() {
                       {w.teacher_feedback && (
                         <div className="rounded-md border bg-slate-50 p-4">
                           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Teacher izohi {w.teacher_name && `(${w.teacher_name})`}
+                            Teacher feedback {w.teacher_name && `(${w.teacher_name})`}
                           </p>
                           <p className="whitespace-pre-wrap text-sm text-slate-800">
                             {w.teacher_feedback}
@@ -91,7 +91,7 @@ export default function MyWritingsPage() {
                       )}
                       <details className="rounded-md border bg-white p-3">
                         <summary className="cursor-pointer text-sm font-medium">
-                          Yozgan inshangiz
+                          Your essay
                         </summary>
                         <p className="mt-3 whitespace-pre-wrap text-sm text-slate-800">
                           {w.essay_text}

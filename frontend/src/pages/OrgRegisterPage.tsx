@@ -14,8 +14,8 @@ import { useAuth } from '@/stores/auth'
 
 const PHONE_RE = /^\+998\d{9}$/
 const schema = z.object({
-  first_name: z.string().min(1, 'Ism kiritilmagan'),
-  last_name: z.string().min(1, 'Familiya kiritilmagan'),
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().regex(PHONE_RE, 'Format: +998XXXXXXXXX'),
   password: z.string().min(8, 'Password kamida 8 ta belgi'),
   agreed: z.boolean().refine((v) => v, 'Roziligingizni tasdiqlang'),
@@ -67,7 +67,7 @@ export default function OrgRegisterPage() {
         last_name: values.last_name,
       })
       await fetchMe()
-      toast.success(`${org.name} ga muvaffaqiyatli qo‘shildingiz`)
+      toast.success(`${org.name} — successfully joined`)
       navigate('/home')
     } catch (err) {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
@@ -87,20 +87,20 @@ export default function OrgRegisterPage() {
             style={{ background: org.primary_color }}
           />
           <p className="text-sm text-[var(--muted)]">{org.name}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Bepul ro‘yxatdan o‘ting</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">Sign up for free</h1>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Ism</Label>
+              <Label>First name</Label>
               <Input {...form.register('first_name')} />
               {form.formState.errors.first_name && (
                 <p className="text-sm text-destructive">{form.formState.errors.first_name.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label>Familiya</Label>
+              <Label>Last name</Label>
               <Input {...form.register('last_name')} />
               {form.formState.errors.last_name && (
                 <p className="text-sm text-destructive">{form.formState.errors.last_name.message}</p>

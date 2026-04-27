@@ -17,7 +17,7 @@ export function MatchingQuestion({
         disabled={readOnly}
         className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-800 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:bg-slate-50"
       >
-        <option value="">— tanlang —</option>
+        <option value="">— Choose —</option>
         {question.options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}

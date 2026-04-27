@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react'
+import type { ComponentType, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 
@@ -11,6 +12,13 @@ import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 import AdminLayout from './AdminLayout'
+
+type LayoutComponent = ComponentType<{ children: ReactNode }>
+
+type Props = {
+  Layout?: LayoutComponent
+  basePath?: string
+}
 
 type QType = 'mcq' | 'tfng' | 'fill' | 'matching'
 
@@ -41,7 +49,7 @@ type TestDraft = {
   name: string
   module: 'reading' | 'listening' | 'writing' | 'speaking'
   test_type: 'academic' | 'general'
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert'
   duration_minutes: number
   description: string
   is_published: boolean
@@ -76,7 +84,7 @@ const blankTest = (): TestDraft => ({
   name: '',
   module: 'reading',
   test_type: 'academic',
-  difficulty: 'medium',
+  difficulty: 'intermediate',
   duration_minutes: 60,
   description: '',
   is_published: false,
@@ -146,7 +154,10 @@ function draftFromServer(data: {
   }
 }
 
-export default function AdminTestEditPage() {
+export default function AdminTestEditPage({
+  Layout = AdminLayout,
+  basePath = '/admin/tests',
+}: Props = {}) {
   const { testId } = useParams<{ testId?: string }>()
   const isNew = !testId || testId === 'new'
   const navigate = useNavigate()
@@ -175,24 +186,24 @@ export default function AdminTestEditPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
-      toast.success(isNew ? 'Test yaratildi' : 'O‘zgarishlar saqlandi')
-      navigate('/admin/tests')
+      toast.success(isNew ? 'Test created' : 'Changes saved')
+      navigate(basePath)
     },
     onError: (err) => {
       const data = (err as { response?: { data?: unknown } })?.response?.data
-      toast.error('Saveda xatolik: ' + JSON.stringify(data).slice(0, 200))
+      toast.error('Failed to save: ' + JSON.stringify(data).slice(0, 200))
     },
   })
 
   if (!isNew && query.isLoading) {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="p-8 text-muted-foreground">Loading…</div>
-      </AdminLayout>
+      </Layout>
     )
   }
   if (!isNew && query.isError) {
-    return <Navigate to="/admin/tests" replace />
+    return <Navigate to={basePath} replace />
   }
 
   const updatePassage = (pi: number, patch: Partial<PDraft>) => {
@@ -299,16 +310,16 @@ export default function AdminTestEditPage() {
   }
 
   const onSave = () => {
-    if (!draft.name.trim()) return toast.error('Test nomini kiriting')
+    if (!draft.name.trim()) return toast.error('Enter a test name')
     for (const p of draft.passages) {
       if (!p.title.trim() || !p.content.trim())
-        return toast.error('Passage nom va matnini to‘ldiring')
+        return toast.error('Fill in passage name and text')
       // Writing: no questions required; min_words required
       if (draft.module === 'writing') continue
       for (const q of p.questions) {
-        if (!q.text.trim()) return toast.error('Savol matnini to‘ldiring')
+        if (!q.text.trim()) return toast.error('Fill in the question text')
         if (!q.correct_answer.trim())
-          return toast.error('Har savolga to‘g‘ri javobni belgilang')
+          return toast.error('Mark the correct answer for each question')
       }
     }
     // Strip questions from writing passages before send
@@ -322,16 +333,16 @@ export default function AdminTestEditPage() {
   }
 
   return (
-    <AdminLayout>
+    <Layout>
       <header className="flex items-center justify-between border-b bg-white px-8 py-5">
         <div className="flex items-center gap-3">
-          <Link to="/admin/tests">
+          <Link to={basePath}>
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isNew ? 'New test' : 'Testni tahrirlash'}
+            {isNew ? 'New test' : 'Edit test'}
           </h1>
         </div>
         <Button onClick={onSave} disabled={saveMutation.isPending}>
@@ -342,10 +353,10 @@ export default function AdminTestEditPage() {
       <div className="space-y-6 p-8">
         <Card>
           <CardContent className="space-y-4 p-6">
-            <h2 className="text-lg font-semibold">Asosiy ma’lumotlar</h2>
+            <h2 className="text-lg font-semibold">Basic info</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label>Test nomi</Label>
+                <Label>Test name</Label>
                 <Input
                   value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -368,7 +379,7 @@ export default function AdminTestEditPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Qiyinlik</Label>
+                <Label>Difficulty</Label>
                 <select
                   value={draft.difficulty}
                   onChange={(e) =>
@@ -376,9 +387,10 @@ export default function AdminTestEditPage() {
                   }
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
+                  <option value="beginner">Beginner (4.5–5.5)</option>
+                  <option value="intermediate">Intermediate (5.5–6.5)</option>
+                  <option value="advanced">Advanced (6.5–7.5)</option>
+                  <option value="expert">Expert (7.5+)</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -393,7 +405,7 @@ export default function AdminTestEditPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tavsif</Label>
+                <Label>Description</Label>
                 <Input
                   value={draft.description}
                   onChange={(e) => setDraft({ ...draft, description: e.target.value })}
@@ -410,7 +422,7 @@ export default function AdminTestEditPage() {
                   }
                   className="h-4 w-4"
                 />
-                <Label htmlFor="is_published">Nashr qilingan (foydalanuvchilar ko‘radi)</Label>
+                <Label htmlFor="is_published">Published (visible to users)</Label>
               </div>
             </div>
           </CardContent>
@@ -428,12 +440,12 @@ export default function AdminTestEditPage() {
                     onClick={() => removePassage(pi)}
                     className="text-rose-600 hover:text-rose-700"
                   >
-                    <Trash2 className="mr-1 h-4 w-4" /> Passageni o‘chirish
+                    <Trash2 className="mr-1 h-4 w-4" /> Delete passage
                   </Button>
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Passage nomi</Label>
+                <Label>Passage name</Label>
                 <Input
                   value={p.title}
                   onChange={(e) => updatePassage(pi, { title: e.target.value })}
@@ -441,7 +453,7 @@ export default function AdminTestEditPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {draft.module === 'writing' ? 'Task prompt' : 'Passage matni / transkript'}
+                  {draft.module === 'writing' ? 'Task prompt' : 'Passage text / transcript'}
                 </Label>
                 <textarea
                   value={p.content}
@@ -453,7 +465,7 @@ export default function AdminTestEditPage() {
 
               {draft.module === 'writing' && (
                 <div className="space-y-2">
-                  <Label>Minimal so‘z soni</Label>
+                  <Label>Minimum word count</Label>
                   <Input
                     type="number"
                     min={50}
@@ -482,7 +494,7 @@ export default function AdminTestEditPage() {
               {draft.module === 'writing' ? null : (
               <div className="mt-6 space-y-4">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                  Savollar ({p.questions.length})
+                  Questions ({p.questions.length})
                 </h3>
                 {p.questions.map((q, qi) => (
                   <QuestionBuilder
@@ -510,7 +522,7 @@ export default function AdminTestEditPage() {
                   />
                 ))}
                 <Button variant="outline" size="sm" onClick={() => addQuestion(pi)}>
-                  <Plus className="mr-2 h-4 w-4" /> Savol qo‘shish
+                  <Plus className="mr-2 h-4 w-4" /> Add question
                 </Button>
               </div>
               )}
@@ -519,10 +531,10 @@ export default function AdminTestEditPage() {
         ))}
 
         <Button variant="outline" onClick={addPassage}>
-          <Plus className="mr-2 h-4 w-4" /> Passage qo‘shish
+          <Plus className="mr-2 h-4 w-4" /> Add passage
         </Button>
       </div>
-    </AdminLayout>
+    </Layout>
   )
 }
 
@@ -561,7 +573,7 @@ function QuestionBuilder({
     <div className="rounded-md border border-slate-200 bg-slate-50/50 p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm font-semibold text-slate-700">
-          Savol #{qi + 1}
+          Question #{qi + 1}
         </span>
         <div className="flex items-center gap-3">
           <select
@@ -587,7 +599,7 @@ function QuestionBuilder({
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <Label className="text-xs">Ko‘rsatma (ixtiyoriy)</Label>
+          <Label className="text-xs">Instruction (optional)</Label>
           <Input
             value={q.instruction}
             onChange={(e) => onInstruction(e.target.value)}
@@ -595,13 +607,13 @@ function QuestionBuilder({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Savol matni</Label>
+          <Label className="text-xs">Question text</Label>
           <Input value={q.text} onChange={(e) => onText(e.target.value)} />
         </div>
 
         {q.question_type === 'mcq' && (
           <div className="space-y-2">
-            <Label className="text-xs">Variantlar (to‘g‘ri javobni belgilang)</Label>
+            <Label className="text-xs">Options (mark the correct answer)</Label>
             {q.options.map((opt, oi) => (
               <div key={oi} className="flex items-center gap-2">
                 <input
@@ -626,7 +638,7 @@ function QuestionBuilder({
 
         {q.question_type === 'tfng' && (
           <div className="space-y-2">
-            <Label className="text-xs">To‘g‘ri javob</Label>
+            <Label className="text-xs">Correct answer</Label>
             <div className="flex gap-2">
               {['True', 'False', 'Not Given'].map((v) => (
                 <button
@@ -649,11 +661,11 @@ function QuestionBuilder({
         {q.question_type === 'fill' && (
           <div className="space-y-2">
             <div className="space-y-1">
-              <Label className="text-xs">To‘g‘ri javob</Label>
+              <Label className="text-xs">Correct answer</Label>
               <Input value={q.correct_answer} onChange={(e) => onCorrect(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Qabul qilinadigan alternativalar (har biri yangi qatorda)</Label>
+              <Label className="text-xs">Accepted alternatives (one per line)</Label>
               <textarea
                 value={q.acceptable_answers.join('\n')}
                 onChange={(e) =>
@@ -668,7 +680,7 @@ function QuestionBuilder({
 
         {q.question_type === 'matching' && (
           <div className="space-y-2">
-            <Label className="text-xs">Variantlar</Label>
+            <Label className="text-xs">Options</Label>
             {q.options.map((opt, oi) => (
               <div key={oi} className="flex items-center gap-2">
                 <Input
@@ -686,16 +698,16 @@ function QuestionBuilder({
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={onAddMatchingOption}>
-              <Plus className="mr-1 h-4 w-4" /> Variant
+              <Plus className="mr-1 h-4 w-4" /> Option
             </Button>
             <div className="mt-2 space-y-1">
-              <Label className="text-xs">To‘g‘ri javob</Label>
+              <Label className="text-xs">Correct answer</Label>
               <select
                 value={q.correct_answer}
                 onChange={(e) => onCorrect(e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-white px-2 text-sm"
               >
-                <option value="">— tanlang —</option>
+                <option value="">— select —</option>
                 {q.options.filter(Boolean).map((o) => (
                   <option key={o} value={o}>
                     {o}
@@ -707,7 +719,7 @@ function QuestionBuilder({
         )}
 
         <div className="flex items-center gap-3">
-          <Label className="text-xs">Ball:</Label>
+          <Label className="text-xs">Points:</Label>
           <Input
             type="number"
             min={0}
@@ -754,9 +766,9 @@ function AudioUploadField({
         { headers: { 'Content-Type': 'multipart/form-data' } },
       )
       onUploaded(data.path, data.url)
-      toast.success('Audio yuklandi')
+      toast.success('Audio uploaded')
     } catch (err) {
-      toast.error('Yuklashda xatolik')
+      toast.error('Upload failed')
       void err
     } finally {
       setUploading(false)
@@ -766,7 +778,7 @@ function AudioUploadField({
 
   return (
     <div className="space-y-2">
-      <Label>Listening audio fayl</Label>
+      <Label>Listening audio file</Label>
       <div className="flex flex-wrap items-center gap-3">
         <input
           ref={inputRef}
@@ -783,7 +795,7 @@ function AudioUploadField({
           disabled={uploading}
         >
           <Upload className="mr-2 h-4 w-4" />
-          {uploading ? 'Loading…' : currentPath ? 'Refresh' : 'Fayl tanlash'}
+          {uploading ? 'Loading…' : currentPath ? 'Refresh' : 'Choose file'}
         </Button>
         {currentPath && (
           <>

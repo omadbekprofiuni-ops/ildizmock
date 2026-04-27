@@ -121,7 +121,7 @@ function ReviewView({ result }: { result: Result }) {
               size="sm"
               className="text-white hover:bg-emerald-800 hover:text-white"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Resultga qaytish
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Result
             </Button>
           </Link>
           <span className="rounded bg-emerald-700 px-2 py-0.5 text-xs font-medium uppercase tracking-wider">
@@ -164,7 +164,7 @@ function ReviewView({ result }: { result: Result }) {
             return (
               <div key={p.id} className="mb-10">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Part {p.part_number} — savollar
+                  Part {p.part_number} — questions
                 </h3>
                 <div className="space-y-6">
                   {p.questions.map((q, i) => {
@@ -203,12 +203,12 @@ function ReviewView({ result }: { result: Result }) {
                           ) : (
                             <XCircle className="h-4 w-4 shrink-0" />
                           )}
-                          {/* Fill savollarda user javobi input'da ko'rinadi — takroran ko'rsatmaymiz */}
+                          {/* Fill questions show user answer in input — we don't display again */}
                           {q.question_type !== 'fill' && (
                             <span>
                               Sizning javob:{' '}
                               <strong>
-                                {hasAnswer ? String(userAnswer) : '(javob yo‘q)'}
+                                {hasAnswer ? String(userAnswer) : '(no answer)'}
                               </strong>
                             </span>
                           )}
@@ -217,7 +217,7 @@ function ReviewView({ result }: { result: Result }) {
                           )}
                           {!isCorrect && (
                             <span className="ml-auto">
-                              To‘g‘ri javob: <strong>{correctAnswer}</strong>
+                              Correct answer: <strong>{correctAnswer}</strong>
                             </span>
                           )}
                         </div>
@@ -252,7 +252,7 @@ function ReviewView({ result }: { result: Result }) {
                     ? 'border-emerald-500 bg-emerald-500 text-white'
                     : 'border-rose-500 bg-rose-500 text-white'
                 }`}
-                aria-label={`Savol ${i + 1}`}
+                aria-label={`Question ${i + 1}`}
               >
                 {i + 1}
               </button>
@@ -310,7 +310,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     let exitCount = 0
     const removeContextMenu = ieltsRules.blockContextMenu()
     const removeDevTools = ieltsRules.blockDevTools()
-    const removeReload = ieltsRules.blockReload('Test rejectga uchraydi. Davom ettirasizmi?')
+    const removeReload = ieltsRules.blockReload('Reloading will discard your test. Continue?')
     const removeCopyPaste = ieltsRules.blockCopyPaste(document)
 
     const removeTabHide = ieltsRules.onTabHide(() => {
@@ -318,7 +318,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
       if (exitCount === 1) {
         toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
       } else if (exitCount === 2) {
-        toast.warning('⚠️ Ikkinchi ogohlantirish. Yana chiqsangiz test avto-submit bo‘ladi.')
+        toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
         toast.error('Test avto-submit qilindi (cheating).')
         submitMutation.mutate()
@@ -327,7 +327,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
 
     const removeFsChange = ieltsRules.onFullscreenChange(() => {
       if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
-        toast.warning('Test fullscreen rejimida bo‘lishi kerak.')
+        toast.warning('Test must be in fullscreen mode.')
         setTimeout(() => ieltsRules.enterFullscreen(), 100)
       }
     })
@@ -366,7 +366,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
 
   useEffect(() => {
     if (timeUp && !submitMutation.isPending) {
-      toast.info('Vaqt tugadi — avtomatik topshirilyapti…')
+      toast.info('Time is up — submitting automatically…')
       submitMutation.mutate()
     }
   }, [timeUp, submitMutation])
@@ -395,7 +395,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
   const saveStatus = saveMutation.isPending
     ? 'Saving…'
     : dirtyRef.current
-      ? 'O‘zgarishlar bor'
+      ? 'Unsaved changes'
       : saveMutation.isSuccess
         ? 'Saved'
         : ''
@@ -476,7 +476,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
             return (
               <div key={p.id} className="mb-10">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Part {p.part_number} — savollar
+                  Part {p.part_number} — questions
                 </h3>
                 {groups.map((group, gi) => {
                   const firstN = numberCursor + 1
@@ -552,7 +552,7 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                   }`}
-                  aria-label={`Savolga o'tish: ${i + 1}`}
+                  aria-label={`Go to question: ${i + 1}`}
                 >
                   {i + 1}
                 </button>
@@ -567,8 +567,8 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
           <DialogHeader>
             <DialogTitle>Submit the test??</DialogTitle>
             <DialogDescription>
-              {answeredCount} / {allQuestions.length} savolga javob berdingiz.
-              Topshirgandan keyin javoblarni o‘zgartirib bo‘lmaydi.
+              {answeredCount} / {allQuestions.length} questions answered.
+              Once submitted, answers cannot be changed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -625,7 +625,7 @@ export default function TakeTestPage() {
     if (resultQuery.isError || !resultQuery.data) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50">
-          <p className="text-destructive">Resultni yuklab bo‘lmadi.</p>
+          <p className="text-destructive">could not load result.</p>
         </div>
       )
     }
@@ -662,7 +662,7 @@ function TestGate({ attempt }: { attempt: Attempt }) {
     return (
       <>
         <div className="flex min-h-screen items-center justify-center bg-white">
-          <p className="text-sm text-slate-500">Start uchun qoidalarni qabul qiling…</p>
+          <p className="text-sm text-slate-500">Accept the rules to start…</p>
         </div>
         <TestStartDialog
           open
@@ -733,7 +733,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
       if (exitCount === 1) {
         toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
       } else if (exitCount === 2) {
-        toast.warning('⚠️ Ikkinchi ogohlantirish. Yana chiqsangiz test avto-submit bo‘ladi.')
+        toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
         toast.error('Test avto-submit qilindi (cheating).')
         submitMutation.mutate()
@@ -741,7 +741,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     })
     const removeFsChange = ieltsRules.onFullscreenChange(() => {
       if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
-        toast.warning('Test fullscreen rejimida bo‘lishi kerak.')
+        toast.warning('Test must be in fullscreen mode.')
         setTimeout(() => ieltsRules.enterFullscreen(), 100)
       }
     })
@@ -775,7 +775,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
 
   useEffect(() => {
     if (timeUp && !submitMutation.isPending) {
-      toast.info('Vaqt tugadi — avtomatik topshirilyapti…')
+      toast.info('Time is up — submitting automatically…')
       submitMutation.mutate()
     }
   }, [timeUp, submitMutation])
@@ -788,7 +788,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const saveStatus = saveMutation.isPending
     ? 'Saving…'
     : dirtyRef.current
-      ? 'O‘zgarishlar bor'
+      ? 'Unsaved changes'
       : saveMutation.isSuccess
         ? 'Saved'
         : ''
@@ -847,14 +847,14 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
             {task?.content}
           </div>
           <p className="mt-4 text-sm text-slate-500">
-            Kamida <strong>{minWords}</strong> ta so‘z yozing.
+            Write at least <strong>{minWords}</strong> words.
           </p>
         </section>
 
         <section className="flex w-1/2 flex-col bg-white">
           <div className="flex items-center justify-between border-b px-6 py-2 text-sm">
             <span className={reachedMin ? 'text-emerald-700' : 'text-slate-600'}>
-              {wordCount} so‘z {reachedMin ? '✓' : `(${minWords - wordCount} kerak)`}
+              {wordCount} words {reachedMin ? '✓' : `(${minWords - wordCount} more needed)`}
             </span>
             <span className="text-xs text-slate-500">Auto-save 2s</span>
           </div>
@@ -875,8 +875,8 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
           <DialogHeader>
             <DialogTitle>Submit your essay??</DialogTitle>
             <DialogDescription>
-              {wordCount} ta so‘z yozdingiz (minimum {minWords}).
-              Topshirgandan keyin o‘zgartirib bo‘lmaydi. AI baholash keyingi bosqichda.
+              You have written {wordCount} words (minimum {minWords}).
+              Once submitted, no changes allowed. AI grading is in the next phase.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

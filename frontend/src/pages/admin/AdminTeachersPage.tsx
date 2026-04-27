@@ -20,7 +20,7 @@ import AdminLayout from './AdminLayout'
 
 type Teacher = {
   id: number
-  phone: string
+  username: string
   first_name: string
   last_name: string
   is_active: boolean
@@ -32,7 +32,7 @@ export default function AdminTeachersPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
-    phone: '+998',
+    username: '',
     first_name: '',
     last_name: '',
     password: '',
@@ -49,15 +49,15 @@ export default function AdminTeachersPage() {
       (await api.post('/admin/teachers/', form)).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-teachers'] })
-      toast.success('Teacher yaratildi')
+      toast.success('Teacher created')
       setOpen(false)
-      setForm({ phone: '+998', first_name: '', last_name: '', password: '' })
+      setForm({ username: '', first_name: '', last_name: '', password: '' })
     },
     onError: (err) => {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
       const msg = data
         ? Object.entries(data).map(([k, v]) => `${k}: ${v}`).join(' · ')
-        : 'Xatolik'
+        : 'Failed'
       toast.error(msg)
     },
   })
@@ -68,7 +68,7 @@ export default function AdminTeachersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Teachers</h1>
           <p className="text-sm text-muted-foreground">
-            Teacher rolidagi foydalanuvchilar
+            Users with the teacher role
           </p>
         </div>
         <Button onClick={() => setOpen(true)}>
@@ -80,7 +80,7 @@ export default function AdminTeachersPage() {
         {list.data && list.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
-              Hali ustoz yo‘q.
+              No teachers yet.
             </CardContent>
           </Card>
         )}
@@ -90,7 +90,7 @@ export default function AdminTeachersPage() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th className="px-6 py-3">Ism</th>
+                    <th className="px-6 py-3">First name</th>
                     <th className="px-6 py-3">Username</th>
                     <th className="px-6 py-3">Students</th>
                     <th className="px-6 py-3">Active</th>
@@ -102,7 +102,7 @@ export default function AdminTeachersPage() {
                       <td className="px-6 py-3 font-medium">
                         {`${t.first_name} ${t.last_name}`.trim() || '—'}
                       </td>
-                      <td className="px-6 py-3 font-mono text-xs">{t.phone}</td>
+                      <td className="px-6 py-3 font-mono text-xs">{t.username}</td>
                       <td className="px-6 py-3">{t.student_count}</td>
                       <td className="px-6 py-3">{t.is_active ? '✓' : '—'}</td>
                     </tr>
@@ -117,19 +117,19 @@ export default function AdminTeachersPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New teacher qo‘shish</DialogTitle>
+            <DialogTitle>Add new teacher</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Ism</Label>
+                <Label>First name</Label>
                 <Input
                   value={form.first_name}
                   onChange={(e) => setForm({ ...form, first_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>Familiya</Label>
+                <Label>Last name</Label>
                 <Input
                   value={form.last_name}
                   onChange={(e) => setForm({ ...form, last_name: e.target.value })}
@@ -139,9 +139,10 @@ export default function AdminTeachersPage() {
             <div>
               <Label>Username</Label>
               <Input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="+998901234567"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                placeholder="e.g. john.smith"
+                autoComplete="off"
               />
             </div>
             <div>
@@ -158,7 +159,7 @@ export default function AdminTeachersPage() {
               Cancel
             </Button>
             <Button onClick={() => create.mutate()} disabled={create.isPending}>
-              {create.isPending ? 'Yaratilmoqda…' : 'Yaratish'}
+              {create.isPending ? 'Creating…' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

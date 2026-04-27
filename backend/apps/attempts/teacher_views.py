@@ -35,19 +35,19 @@ class IsTeacherOfStudent(permissions.BasePermission):
 class _SubmissionListSerializer(serializers.ModelSerializer):
     test_name = serializers.CharField(source='attempt.test.name', read_only=True)
     student_name = serializers.SerializerMethodField()
-    student_phone = serializers.CharField(source='attempt.user.phone', read_only=True)
+    student_username = serializers.CharField(source='attempt.user.username', read_only=True)
 
     class Meta:
         model = WritingSubmission
         fields = [
-            'id', 'test_name', 'student_name', 'student_phone',
+            'id', 'test_name', 'student_name', 'student_username',
             'status', 'word_count', 'teacher_band',
             'submitted_at', 'graded_at',
         ]
 
     def get_student_name(self, obj):
         u = obj.attempt.user
-        return f'{u.first_name} {u.last_name}'.strip() or u.phone
+        return f'{u.first_name} {u.last_name}'.strip() or u.username
 
 
 class _SubmissionDetailSerializer(_SubmissionListSerializer):
@@ -108,8 +108,8 @@ class TeacherStudentsView(APIView):
         )
         data = [{
             'id': s.id,
-            'phone': s.phone,
-            'name': f'{s.first_name} {s.last_name}'.strip() or s.phone,
+            'username': s.username,
+            'name': f'{s.first_name} {s.last_name}'.strip() or s.username,
             'attempts_count': s.attempts_count,
             'last_attempt': s.last_attempt.isoformat() if s.last_attempt else None,
             'avg_band': float(s.avg_band) if s.avg_band is not None else None,

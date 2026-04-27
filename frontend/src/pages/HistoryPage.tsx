@@ -50,7 +50,7 @@ export default function HistoryPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Home
             </Button>
           </Link>
-          <h1 className="text-lg font-semibold">Submitlar tarixi</h1>
+          <h1 className="text-lg font-semibold">Submission History</h1>
         </div>
       </header>
 
@@ -59,7 +59,7 @@ export default function HistoryPage() {
           <p className="text-muted-foreground">Loading…</p>
         )}
         {query.isError && (
-          <p className="text-destructive">Historyni yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Failed to load history.</p>
         )}
         {query.data && query.data.length === 0 && (
           <Card>
@@ -100,7 +100,7 @@ export default function HistoryPage() {
                         {graded
                           ? `${a.raw_score}/${a.total_questions}`
                           : a.status === 'in_progress'
-                            ? 'Davom etmoqda'
+                            ? 'In progress'
                             : a.status}
                       </td>
                       <td className="px-4 py-3">
@@ -116,7 +116,7 @@ export default function HistoryPage() {
                         {graded ? (
                           <Link to={`/result/${a.id}`}>
                             <Button variant="outline" size="sm">
-                              Ko‘rish
+                              View
                             </Button>
                           </Link>
                         ) : a.status === 'in_progress' ? (

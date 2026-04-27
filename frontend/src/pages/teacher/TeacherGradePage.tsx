@@ -15,7 +15,7 @@ type SubmissionDetail = {
   id: number
   test_name: string
   student_name: string
-  student_phone: string
+  student_username: string
   word_count: number
   status: 'pending' | 'graded'
   teacher_band: string | null
@@ -58,12 +58,12 @@ export default function TeacherGradePage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['teacher-queue'] })
       qc.invalidateQueries({ queryKey: ['teacher-submission', id] })
-      toast.success('Baholandi')
+      toast.success('Graded')
       navigate('/teacher')
     },
     onError: (err) => {
       const data = (err as { response?: { data?: { detail?: string } } })?.response?.data
-      toast.error(data?.detail || 'Saveda xatolik')
+      toast.error(data?.detail || 'Failed to save')
     },
   })
 
@@ -72,7 +72,7 @@ export default function TeacherGradePage() {
       <header className="flex items-center gap-3 border-b bg-white px-8 py-5">
         <Link to="/teacher">
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Navbat
+            <ArrowLeft className="mr-2 h-4 w-4" /> Queue
           </Button>
         </Link>
         <div>
@@ -80,7 +80,7 @@ export default function TeacherGradePage() {
             {q.data?.student_name ?? 'Loading…'}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {q.data?.test_name} · {q.data?.word_count ?? '—'} so‘z
+            {q.data?.test_name} · {q.data?.word_count ?? '—'} words
           </p>
         </div>
       </header>
@@ -88,7 +88,7 @@ export default function TeacherGradePage() {
       {q.isLoading && <p className="p-8 text-muted-foreground">Loading…</p>}
       {q.isError && (
         <p className="p-8 text-destructive">
-          Submitted ishni yuklab bo‘lmadi (sizning shogirdingiz emasmikan?)
+          Could not load submitted work (perhaps not your student?)
         </p>
       )}
       {q.data && (
@@ -96,7 +96,7 @@ export default function TeacherGradePage() {
           {/* Left — task */}
           <section className="rounded-lg border bg-white p-6">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Vazifa
+              Task
             </h2>
             <div className="mb-4 rounded-md bg-slate-100 p-4 text-center text-xs text-slate-500">
               [chart / image placeholder]
@@ -105,7 +105,7 @@ export default function TeacherGradePage() {
               {q.data.task_prompt}
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Minimal: {q.data.min_words ?? 150} so‘z · Vaqt: {q.data.duration_minutes} daq
+              Minimum: {q.data.min_words ?? 150} words · Time: {q.data.duration_minutes} min
             </p>
           </section>
 
@@ -113,7 +113,7 @@ export default function TeacherGradePage() {
           <section className="space-y-6">
             <div className="rounded-lg border bg-white p-6">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Studentning insheasi
+                Student's essay
               </h2>
               <div className="whitespace-pre-wrap rounded-md border bg-slate-50 p-4 text-sm leading-relaxed text-slate-800">
                 {q.data.essay_text}
@@ -151,7 +151,7 @@ export default function TeacherGradePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="feedback">Izoh</Label>
+                  <Label htmlFor="feedback">Feedback</Label>
                   <textarea
                     id="feedback"
                     value={feedback}

@@ -12,7 +12,7 @@ export default function SpeakingComingSoonPage() {
   const onSubscribe = (e: React.FormEvent) => {
     e.preventDefault()
     // Endpoint hali yo'q — Phase 2'da ulanadi
-    toast.success('Eslatma roʻyxatiga qo‘shildingiz (rejada)')
+    toast.success('Added to reminders (planned)')
     setEmail('')
   }
 
@@ -22,7 +22,7 @@ export default function SpeakingComingSoonPage() {
         <div className="container flex h-16 items-center gap-3">
           <Link to="/home">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Boshqa modullar
+              <ArrowLeft className="mr-2 h-4 w-4" /> Other modules
             </Button>
           </Link>
         </div>
@@ -33,7 +33,7 @@ export default function SpeakingComingSoonPage() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight">Speaking modul tez kunda</h1>
         <p className="mt-3 text-[var(--muted)]">
-          AI bilan suhbat va Cambridge formatida tahlil — <strong>2026 may</strong> oyida ishga tushadi.
+          AI conversation and Cambridge-format analysis — launches in <strong>May 2026</strong>.
         </p>
         <form onSubmit={onSubscribe} className="mt-8 flex gap-2">
           <Input
@@ -48,7 +48,7 @@ export default function SpeakingComingSoonPage() {
           </Button>
         </form>
         <Link to="/home" className="mt-6 inline-block text-sm text-[var(--muted)] hover:underline">
-          ← Boshqa modullar
+          ← Other modules
         </Link>
       </main>
     </div>

@@ -5,8 +5,8 @@ export const api = axios.create({
   withCredentials: true,
 })
 
-// SuperAdmin context switch — har request ga X-Org-Context header qo'shadi.
-// Guest user — har request ga X-Guest-Token header qo'shadi (anonim attempt egasi).
+// SuperAdmin context switch — adds the X-Org-Context header to each request.
+// Guest user — adds the X-Guest-Token header (owner of an anonymous attempt).
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const orgId = localStorage.getItem('orgContext')
@@ -32,8 +32,8 @@ api.interceptors.response.use(
     const original = error.config
     if (!original || original._retry) return Promise.reject(error)
 
-    // /auth/me, /auth/login, /auth/register, /auth/refresh — refresh URINMA.
-    // Guest user uchun /auth/me 401 normal, infinite loop yo'q.
+    // Don't try to refresh on /auth/me, /auth/login, /auth/register, /auth/refresh.
+    // For guest users, /auth/me 401 is normal — avoid an infinite refresh loop.
     const isAuthEndpoint =
       typeof original.url === 'string' &&
       (original.url.includes('/auth/login') ||

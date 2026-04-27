@@ -16,7 +16,7 @@ const LANGUAGES = [
   { value: 'en', label: 'English' },
 ]
 
-export default function ProfileePage() {
+export default function ProfilePage() {
   const user = useAuth((s) => s.user)
   const updateProfile = useAuth((s) => s.updateProfile)
   const [target, setTarget] = useState<string>(user?.target_band ?? '')
@@ -40,9 +40,9 @@ export default function ProfileePage() {
         target_band: target || null,
         language: lang as 'uz' | 'ru' | 'en',
       } as never)
-      toast.success('Profile saqlandi')
+      toast.success('Profile saved')
     } catch {
-      toast.error('Saveda xatolik')
+      toast.error('Failed to save')
     } finally {
       setSaving(false)
     }
@@ -54,7 +54,7 @@ export default function ProfileePage() {
         <div className="container flex h-16 items-center gap-3">
           <Link to="/dashboard">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Kabinetim
+              <ArrowLeft className="mr-2 h-4 w-4" /> Dashboard
             </Button>
           </Link>
           <h1 className="text-lg font-semibold">Profile</h1>
@@ -65,13 +65,13 @@ export default function ProfileePage() {
         <Card>
           <CardContent className="space-y-5 p-6">
             <div className="grid grid-cols-2 gap-4">
-              <ReadOnly label="Ism" value={user.first_name} />
-              <ReadOnly label="Familiya" value={user.last_name} />
+              <ReadOnly label="First name" value={user.first_name} />
+              <ReadOnly label="Last name" value={user.last_name} />
             </div>
             <ReadOnly label="Username" value={user.username} />
-            <ReadOnly label="Rol" value={user.role} />
+            <ReadOnly label="Role" value={user.role} />
             <p className="text-xs text-[var(--muted)]">
-              Ism, familiya va telefonni o‘zgartirish uchun adminga murojaat qiling.
+              Contact admin to change first name, last name or phone.
             </p>
 
             <hr />
@@ -83,7 +83,7 @@ export default function ProfileePage() {
                 onChange={(e) => setTarget(e.target.value)}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">— belgilanmagan —</option>
+                <option value="">— not set —</option>
                 {TARGETS.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -91,7 +91,7 @@ export default function ProfileePage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Til</Label>
+              <Label>Language</Label>
               <select
                 value={lang}
                 onChange={(e) => setLang(e.target.value)}

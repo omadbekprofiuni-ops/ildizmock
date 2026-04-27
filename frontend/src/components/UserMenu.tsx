@@ -79,7 +79,7 @@ export function UserMenu() {
             <Item to="/admin" Icon={LayoutDashboard}>Admin panel</Item>
           )}
           {isTeacher && (
-            <Item to="/teacher" Icon={Users}>O‘qituvchi paneli</Item>
+            <Item to="/teacher" Icon={Users}>Teacher panel</Item>
           )}
           <Item to="/dashboard" Icon={LayoutDashboard}>My Dashboard</Item>
           <Item to="/my-writings" Icon={FilePen}>My Writings</Item>

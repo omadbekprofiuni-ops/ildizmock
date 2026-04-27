@@ -54,6 +54,8 @@ class Organization(models.Model):
     plan_starts_at = models.DateTimeField(default=timezone.now)
     plan_expires_at = models.DateTimeField()
 
+    notes = models.TextField(blank=True, help_text='Internal notes (only superadmin sees)')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -78,6 +80,10 @@ class Organization(models.Model):
     @property
     def teachers_count(self) -> int:
         return self.users.filter(role='teacher').count()
+
+    @property
+    def admins_count(self) -> int:
+        return self.users.filter(role='org_admin').count()
 
     def save(self, *args, **kwargs):
         if not self.plan_expires_at:

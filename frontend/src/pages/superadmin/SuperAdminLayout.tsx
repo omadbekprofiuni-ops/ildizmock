@@ -105,7 +105,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         </nav>
         <div className="border-t border-slate-800 p-4">
           <div className="mb-3 text-xs text-slate-400">
-            Kirgan: <span className="text-slate-200">{user?.phone}</span>
+            Signed in: <span className="text-slate-200">{user?.username}</span>
           </div>
           <Button
             variant="ghost"

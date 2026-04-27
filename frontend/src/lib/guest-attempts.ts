@@ -1,7 +1,7 @@
 /**
- * Guest (anonymous) urinishlar localStorage'da saqlanadi.
- * Foydalanuvchi auth qilmasdan test topshirsa, attempt UUID'sini eslab qolish
- * va HomePage'da "Mening anonim natijalarim" ko'rsatish uchun.
+ * Guest (anonymous) attempts are persisted in localStorage so that
+ * unauthenticated users can revisit results — UUIDs of attempts are remembered
+ * and shown as "My anonymous results" on the HomePage.
  */
 
 const KEY = 'ildizmock:guest-attempts'
@@ -44,7 +44,7 @@ export const guestAttempts = {
     const idx = all.findIndex((r) => r.id === rec.id)
     if (idx >= 0) all[idx] = rec
     else all.push(rec)
-    write(all.slice(-20)) // ko'pi bilan 20
+    write(all.slice(-20)) // keep at most 20
   },
   update(id: string, patch: Partial<GuestAttemptRecord>) {
     const all = read()

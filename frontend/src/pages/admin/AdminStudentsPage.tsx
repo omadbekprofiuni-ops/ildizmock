@@ -8,7 +8,7 @@ import AdminLayout from './AdminLayout'
 
 type Student = {
   id: number
-  phone: string
+  username: string
   name: string
   created_at: string
   teacher_id: number | null
@@ -19,7 +19,7 @@ type Teacher = {
   id: number
   first_name: string
   last_name: string
-  phone: string
+  username: string
 }
 
 export default function AdminStudentsPage() {
@@ -44,7 +44,7 @@ export default function AdminStudentsPage() {
       qc.invalidateQueries({ queryKey: ['admin-students'] })
       toast.success('Saved')
     },
-    onError: () => toast.error('Saveda xatolik'),
+    onError: () => toast.error('Failed to save'),
   })
 
   return (
@@ -52,7 +52,7 @@ export default function AdminStudentsPage() {
       <header className="border-b bg-white px-8 py-5">
         <h1 className="text-2xl font-bold tracking-tight">Students</h1>
         <p className="text-sm text-muted-foreground">
-          Studentsga ustoz biriktirish
+          Assign teachers to students
         </p>
       </header>
       <div className="p-8">
@@ -60,7 +60,7 @@ export default function AdminStudentsPage() {
         {students.data && students.data.length === 0 && (
           <Card>
             <CardContent className="p-10 text-center text-muted-foreground">
-              Hali talaba yo‘q.
+              No students yet.
             </CardContent>
           </Card>
         )}
@@ -70,7 +70,7 @@ export default function AdminStudentsPage() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th className="px-6 py-3">Ism</th>
+                    <th className="px-6 py-3">First name</th>
                     <th className="px-6 py-3">Username</th>
                     <th className="px-6 py-3">Teacher</th>
                   </tr>
@@ -79,7 +79,7 @@ export default function AdminStudentsPage() {
                   {students.data.map((s) => (
                     <tr key={s.id}>
                       <td className="px-6 py-3 font-medium">{s.name}</td>
-                      <td className="px-6 py-3 font-mono text-xs">{s.phone}</td>
+                      <td className="px-6 py-3 font-mono text-xs">{s.username}</td>
                       <td className="px-6 py-3">
                         <select
                           value={s.teacher_id ?? ''}
@@ -92,10 +92,10 @@ export default function AdminStudentsPage() {
                           className="h-9 rounded-md border bg-white px-2 text-sm"
                           disabled={assign.isPending}
                         >
-                          <option value="">— biriktirilmagan —</option>
+                          <option value="">— unassigned —</option>
                           {teachers.data?.map((t) => (
                             <option key={t.id} value={t.id}>
-                              {`${t.first_name} ${t.last_name}`.trim() || t.phone}
+                              {`${t.first_name} ${t.last_name}`.trim() || t.username}
                             </option>
                           ))}
                         </select>

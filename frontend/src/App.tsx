@@ -9,7 +9,10 @@ import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
+import CenterDetailPage from './pages/superadmin/CenterDetailPage'
+import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
 import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
 import AdminStudentsPage from './pages/admin/AdminStudentsPage'
 import AdminTeachersPage from './pages/admin/AdminTeachersPage'
@@ -63,11 +66,80 @@ export default function App() {
           <Route path="/teacher/grade/:id" element={<TeacherRoute><TeacherGradePage /></TeacherRoute>} />
           <Route path="/teacher/students" element={<TeacherRoute><TeacherStudentsPage /></TeacherRoute>} />
 
-          {/* SuperAdmin (ILDIZMock platforma) */}
+          {/* SuperAdmin (ILDIZMock platform) */}
           <Route path="/super" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
           <Route path="/super/organizations" element={<SuperAdminRoute><SuperAdminOrgsPage /></SuperAdminRoute>} />
+          <Route path="/super/organizations/:id" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
+          <Route
+            path="/super/tests"
+            element={
+              <SuperAdminRoute>
+                <AdminTestsPage Layout={SuperAdminLayout} basePath="/super/tests" />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/tests/new"
+            element={
+              <SuperAdminRoute>
+                <AdminTestEditPage Layout={SuperAdminLayout} basePath="/super/tests" />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/tests/:testId/edit"
+            element={
+              <SuperAdminRoute>
+                <AdminTestEditPage Layout={SuperAdminLayout} basePath="/super/tests" />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/payments"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminComingSoonPage
+                  title="Payments"
+                  subtitle="Subscription and billing history across all centers"
+                />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/audio"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminComingSoonPage
+                  title="Audio files"
+                  subtitle="Listening audio library"
+                />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/stats"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminComingSoonPage
+                  title="Statistics"
+                  subtitle="Platform-wide analytics"
+                />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/settings"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminComingSoonPage
+                  title="Settings"
+                  subtitle="Platform configuration"
+                />
+              </SuperAdminRoute>
+            }
+          />
 
-          {/* Admin (legacy, org_admin huquqi bilan) */}
+          {/* Admin (legacy, with org_admin permissions) */}
           <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
           <Route path="/admin/tests" element={<AdminRoute><AdminTestsPage /></AdminRoute>} />
           <Route path="/admin/tests/new" element={<AdminRoute><AdminTestEditPage /></AdminRoute>} />

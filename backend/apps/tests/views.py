@@ -19,7 +19,7 @@ class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
         return TestListSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().filter(organization__isnull=True)
         module = self.request.query_params.get('module')
         difficulty = self.request.query_params.get('difficulty')
         if module:
@@ -36,6 +36,8 @@ class TestCountsView(APIView):
 
     def get(self, request):
         return Response({
-            module: Test.objects.filter(is_published=True, module=module).count()
+            module: Test.objects.filter(
+                is_published=True, module=module, organization__isnull=True,
+            ).count()
             for module, _ in Test.MODULE_CHOICES
         })

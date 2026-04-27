@@ -17,7 +17,7 @@ export function QuestionRenderer(props: QuestionProps) {
     default:
       return (
         <p className="text-sm text-muted-foreground">
-          Question type “{props.question.question_type}” hali qo‘llanmaydi.
+          Question type “{props.question.question_type}” is not yet supported.
         </p>
       )
   }

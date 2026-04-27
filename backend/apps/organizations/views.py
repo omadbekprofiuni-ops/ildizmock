@@ -16,6 +16,7 @@ from apps.attempts.models import Attempt
 from .models import Organization, Payment, Plan
 from .permissions import IsSuperAdmin
 from .serializers import (
+    CenterAdminCreateSerializer,
     OrganizationCreateSerializer,
     OrganizationDetailSerializer,
     OrganizationListSerializer,
@@ -77,8 +78,8 @@ class SuperAdminStatsView(APIView):
             'revenue_total_usd': float(revenue),
             'recent_payments': PaymentSerializer(recent_payments, many=True).data,
             'recent_students': [{
-                'phone': u.phone,
-                'name': f'{u.first_name} {u.last_name}'.strip() or u.phone,
+                'username': u.username,
+                'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
                 'org_name': u.organization.name if u.organization else None,
                 'org_slug': u.organization.slug if u.organization else None,
                 'created_at': u.created_at.isoformat(),
@@ -107,7 +108,9 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         ser.is_valid(raise_exception=True)
         data = ser.validated_data
 
-        plan = data['plan']
+        plan = data.get('plan') or Plan.objects.filter(code='trial').first()
+        if plan is None:
+            return Response({'plan': 'No plan available. Create a Plan first.'}, status=400)
 
         # 1. Org create
         org = Organization.objects.create(
@@ -116,14 +119,19 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
             contact_phone=data.get('contact_phone', ''),
             contact_email=data.get('contact_email', ''),
             address=data.get('address', ''),
+            notes=data.get('notes', ''),
             plan=plan, status='active',
             plan_starts_at=timezone.now(),
             plan_expires_at=timezone.now() + timedelta(days=plan.duration_days),
         )
 
         # 2. Org admin user
+        from apps.accounts.serializers import _validate_username_format
+        admin_username = _validate_username_format(data['admin_username'])
+        if User.objects.filter(username=admin_username).exists():
+            return Response({'admin_username': 'Username already taken.'}, status=400)
         admin = User.objects.create_user(
-            phone=data['admin_phone'],
+            username=admin_username,
             password=data['admin_password'],
             first_name=data['admin_first_name'],
             last_name=data.get('admin_last_name', '') or '',
@@ -140,7 +148,8 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
 
         out = OrganizationDetailSerializer(org).data
         out['admin'] = {
-            'phone': admin.phone, 'name': f'{admin.first_name} {admin.last_name}'.strip(),
+            'username': admin.username,
+            'name': f'{admin.first_name} {admin.last_name}'.strip(),
         }
         return Response(out, status=status.HTTP_201_CREATED)
 
@@ -171,6 +180,62 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         org.status = 'blocked' if org.status != 'blocked' else 'active'
         org.save(update_fields=['status'])
         return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['get'])
+    def admins(self, request, pk=None):
+        """List org_admin users for this center."""
+        org = self.get_object()
+        admins = org.users.filter(role='org_admin').order_by('-id')
+        return Response([{
+            'id': a.id,
+            'username': a.username,
+            'first_name': a.first_name,
+            'last_name': a.last_name,
+            'is_active': a.is_active,
+            'last_login': a.last_login,
+            'created_at': a.created_at,
+        } for a in admins])
+
+    @action(detail=True, methods=['post'])
+    def add_admin(self, request, pk=None):
+        """Add an additional admin to an existing center."""
+        from apps.accounts.serializers import _validate_username_format
+        org = self.get_object()
+        ser = CenterAdminCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        username = _validate_username_format(ser.validated_data['username'])
+        if User.objects.filter(username=username).exists():
+            return Response({'username': 'Username already taken.'}, status=400)
+        admin = User.objects.create_user(
+            username=username,
+            password=ser.validated_data['password'],
+            first_name=ser.validated_data['first_name'],
+            last_name=ser.validated_data.get('last_name', '') or '',
+            role='org_admin', organization=org, is_active=True,
+        )
+        return Response({
+            'id': admin.id,
+            'username': admin.username,
+            'first_name': admin.first_name,
+            'last_name': admin.last_name,
+            'message': f'Admin "{admin.username}" added to "{org.name}"',
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='reset_admin_password')
+    def reset_admin_password(self, request, pk=None):
+        """Reset password for one of this center's admins."""
+        org = self.get_object()
+        admin_id = request.data.get('admin_id')
+        new_password = request.data.get('new_password') or ''
+        if len(new_password) < 4:
+            return Response({'new_password': 'Password too short (min 4).'}, status=400)
+        try:
+            admin = User.objects.get(id=admin_id, organization=org, role='org_admin')
+        except User.DoesNotExist:
+            return Response({'admin_id': 'Admin not found in this center.'}, status=404)
+        admin.set_password(new_password)
+        admin.save(update_fields=['password'])
+        return Response({'message': f'Password reset for {admin.username}'})
 
 
 class SuperAdminPlanViewSet(viewsets.ReadOnlyModelViewSet):

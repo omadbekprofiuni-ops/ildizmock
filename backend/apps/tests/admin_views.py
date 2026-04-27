@@ -32,8 +32,8 @@ class AdminDashboardView(APIView):
         recent_attempts = [
             {
                 'id': str(a.id),
-                'user_phone': a.user.phone,
-                'user_name': f'{a.user.first_name} {a.user.last_name}'.strip() or a.user.phone,
+                'user_username': a.user.username,
+                'user_name': f'{a.user.first_name} {a.user.last_name}'.strip() or a.user.username,
                 'test_name': a.test.name,
                 'module': a.test.module,
                 'status': a.status,

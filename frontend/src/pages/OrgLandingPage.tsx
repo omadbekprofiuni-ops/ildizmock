@@ -3,7 +3,6 @@ import { BookOpen, Headphones, Mic, PenTool } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
-import { Footer } from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
@@ -17,10 +16,10 @@ type Org = {
 }
 
 const MODULES = [
-  { id: 'listening', title: 'Listening', meta: '30 daq · 4 qism · 40 savol', Icon: Headphones },
-  { id: 'reading', title: 'Reading', meta: '60 daq · 3 qism · 40 savol', Icon: BookOpen },
-  { id: 'writing', title: 'Writing', meta: '60 daq · 2 task', Icon: PenTool },
-  { id: 'speaking', title: 'Speaking', meta: '11–14 daq · 3 qism', Icon: Mic, comingSoon: true },
+  { id: 'listening', title: 'Listening', meta: '30 daq · 4 parts · 40 questions', Icon: Headphones },
+  { id: 'reading', title: 'Reading', meta: '60 daq · 3 parts · 40 questions', Icon: BookOpen },
+  { id: 'writing', title: 'Writing', meta: '60 daq · 2 tasks', Icon: PenTool },
+  { id: 'speaking', title: 'Speaking', meta: '11–14 daq · 3 parts', Icon: Mic, comingSoon: true },
 ]
 
 export default function OrgLandingPage() {
@@ -63,28 +62,29 @@ export default function OrgLandingPage() {
       <header className="border-b border-[var(--border)] bg-white">
         <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
+            <span className="text-lg font-bold tracking-tight">ILDIZmock</span>
+            <span className="text-slate-300">×</span>
             {org.logo ? (
-              <img src={org.logo} alt={org.name} className="h-8 w-8 rounded" />
+              <img src={org.logo} alt={org.name} className="h-8" />
             ) : (
-              <span
-                className="inline-block h-8 w-8 rounded"
-                style={{ background: org.primary_color }}
-              />
+              <span className="font-semibold" style={{ color: org.primary_color }}>
+                {org.name}
+              </span>
             )}
-            <span className="font-bold tracking-tight">{org.name}</span>
           </div>
           <div className="flex items-center gap-2">
             {user ? (
-              <Link to="/home"><Button variant="outline" size="sm">Kabinetim</Button></Link>
+              <Link to="/home"><Button variant="outline" size="sm">Dashboard</Button></Link>
             ) : (
-              <>
-                <Link to="/login"><Button variant="ghost" size="sm">Kirish</Button></Link>
-                <Link to={`/${slug}/register`}>
-                  <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent)]">
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
+              <Link to={`/login?center=${slug}`}>
+                <Button
+                  size="sm"
+                  className="text-white hover:opacity-90"
+                  style={{ backgroundColor: org.primary_color }}
+                >
+                  Sign In
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -93,16 +93,21 @@ export default function OrgLandingPage() {
       <main className="container mx-auto max-w-6xl flex-1 px-4 py-12">
         <section className="py-12 text-center md:py-20">
           <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
-            {org.name} — IELTS Mock testlari
+            Welcome to {org.name}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-[var(--muted)] md:text-lg">
-            Computer-delivered test interfeysi · 4 ta modul · Avtomatik baholash
+            Practice IELTS in real exam format. Sign in with the credentials provided
+            by your center administrator.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {!user && (
-              <Link to={`/${slug}/register`}>
-                <Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent)]">
-                  Ro‘yxatdan o‘ting
+              <Link to={`/login?center=${slug}`}>
+                <Button
+                  size="lg"
+                  className="text-white hover:opacity-90"
+                  style={{ backgroundColor: org.primary_color }}
+                >
+                  Sign In to Practice
                 </Button>
               </Link>
             )}
@@ -126,7 +131,11 @@ export default function OrgLandingPage() {
           ))}
         </section>
       </main>
-      <Footer />
+      <footer className="border-t border-[var(--border)] bg-white">
+        <div className="container mx-auto max-w-6xl px-4 py-6 text-center text-sm text-[var(--muted)]">
+          © 2026 {org.name} · Powered by ILDIZmock
+        </div>
+      </footer>
     </div>
   )
 }

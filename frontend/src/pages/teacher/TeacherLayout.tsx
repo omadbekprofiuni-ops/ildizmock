@@ -7,7 +7,7 @@ import { useAuth } from '@/stores/auth'
 
 const NAV = [
   { to: '/teacher', label: 'Home', Icon: Inbox, end: true },
-  { to: '/teacher/students', label: 'Studentsim', Icon: Users, end: false },
+  { to: '/teacher/students', label: 'Students', Icon: Users, end: false },
 ]
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {
@@ -51,7 +51,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         </nav>
         <div className="border-t border-slate-800 p-4">
           <div className="mb-3 text-xs text-slate-400">
-            Kirgan: <span className="text-slate-200">{user?.phone}</span>
+            Signed in: <span className="text-slate-200">{user?.username}</span>
           </div>
           <Button
             variant="ghost"

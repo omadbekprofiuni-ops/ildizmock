@@ -12,9 +12,9 @@ export default function WritingSentPage() {
         </div>
         <h1 className="text-2xl font-bold">Your essay has been submitted ✓</h1>
         <p className="text-[var(--muted)]">
-          Teacheringiz tekshirib chiqadi (1–2 kun ichida).
+          Your teacher will review it (within 1–2 days).
           <br />
-          Resultni <strong>"Mening yozma ishlarim"</strong> bo‘limida ko‘rasiz.
+          You will see the result in the <strong>"My Writings"</strong> section.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <Link to="/home">
@@ -22,7 +22,7 @@ export default function WritingSentPage() {
           </Link>
           <Link to="/my-writings">
             <Button className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-              Mening ishlarim
+              My writings
             </Button>
           </Link>
         </div>
