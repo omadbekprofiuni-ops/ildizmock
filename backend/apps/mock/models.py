@@ -147,6 +147,76 @@ class MockParticipant(models.Model):
 
     joined_at = models.DateTimeField(auto_now_add=True)
 
+    # ===== ETAP 4: Writing kriteriyalari =====
+    SCORE_KW = dict(max_digits=3, decimal_places=1, null=True, blank=True)
+
+    writing_task1_task_achievement = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 1: Task Achievement (0–9)',
+    )
+    writing_task1_coherence = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 1: Coherence and Cohesion (0–9)',
+    )
+    writing_task1_lexical = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 1: Lexical Resource (0–9)',
+    )
+    writing_task1_grammar = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 1: Grammatical Range and Accuracy (0–9)',
+    )
+    writing_task2_task_response = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 2: Task Response (0–9)',
+    )
+    writing_task2_coherence = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 2: Coherence and Cohesion (0–9)',
+    )
+    writing_task2_lexical = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 2: Lexical Resource (0–9)',
+    )
+    writing_task2_grammar = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Task 2: Grammatical Range and Accuracy (0–9)',
+    )
+
+    writing_feedback = models.TextField(blank=True, default='')
+    speaking_feedback = models.TextField(blank=True, default='')
+
+    WRITING_STATUS_CHOICES = [
+        ('pending', 'Kutilmoqda'),
+        ('grading', 'Baholanyapti'),
+        ('graded', 'Baholangan'),
+    ]
+    SPEAKING_STATUS_CHOICES = [
+        ('pending', 'Kutilmoqda'),
+        ('graded', 'Baholangan'),
+    ]
+    writing_status = models.CharField(
+        max_length=20, choices=WRITING_STATUS_CHOICES, default='pending',
+    )
+    speaking_status = models.CharField(
+        max_length=20, choices=SPEAKING_STATUS_CHOICES, default='pending',
+    )
+    writing_graded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='mock_writing_gradings',
+    )
+    writing_graded_at = models.DateTimeField(null=True, blank=True)
+    speaking_graded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='mock_speaking_gradings',
+    )
+    speaking_graded_at = models.DateTimeField(null=True, blank=True)
+
+    overall_band_score = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='IELTS Overall: (L+R+W+S)/4, 0.5 stepda yaxlitlanadi',
+    )
+
     class Meta:
         db_table = 'mock_participants'
         unique_together = [('session', 'full_name')]
@@ -154,6 +224,56 @@ class MockParticipant(models.Model):
 
     def __str__(self):
         return f'{self.full_name} @ {self.session.access_code}'
+
+    # ===== Helper methods =====
+
+    @staticmethod
+    def _avg(scores):
+        valid = [float(s) for s in scores if s is not None]
+        return sum(valid) / len(valid) if valid else None
+
+    def calculate_writing_score(self):
+        """Writing band score = Task1*0.33 + Task2*0.67 (mavjud bo'lsa)."""
+        from decimal import Decimal
+        t1 = self._avg([
+            self.writing_task1_task_achievement,
+            self.writing_task1_coherence,
+            self.writing_task1_lexical,
+            self.writing_task1_grammar,
+        ])
+        t2 = self._avg([
+            self.writing_task2_task_response,
+            self.writing_task2_coherence,
+            self.writing_task2_lexical,
+            self.writing_task2_grammar,
+        ])
+        if t1 is not None and t2 is not None:
+            score = round(t1 * 0.33 + t2 * 0.67, 1)
+            self.writing_score = Decimal(str(score))
+        elif t1 is not None or t2 is not None:
+            score = round(t1 if t1 is not None else t2, 1)
+            self.writing_score = Decimal(str(score))
+        else:
+            self.writing_score = None
+        return self.writing_score
+
+    def calculate_overall_band_score(self):
+        """Overall = (L+R+W+S)/4, 0.5 stepda yaxlitlanadi (IELTS rule)."""
+        from decimal import Decimal
+        scores = [
+            self.listening_score,
+            self.reading_score,
+            self.writing_score,
+            self.speaking_score,
+        ]
+        valid = [float(s) for s in scores if s is not None]
+        if len(valid) == 4:
+            avg = sum(valid) / 4
+            rounded = round(avg * 2) / 2
+            self.overall_band_score = Decimal(str(rounded))
+        else:
+            self.overall_band_score = None
+        return self.overall_band_score
 
 
 class MockStateLog(models.Model):

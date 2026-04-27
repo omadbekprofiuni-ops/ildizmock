@@ -10,6 +10,9 @@ interface Participant {
   reading_score: string | null
   writing_score: string | null
   speaking_score: string | null
+  overall_band_score: string | null
+  writing_status: string
+  speaking_status: string
 }
 
 interface SessionDetail {
@@ -18,21 +21,6 @@ interface SessionDetail {
   date: string
   status: string
   participants: Participant[]
-}
-
-const numeric = (v: string | null) => (v == null ? null : Number(v))
-
-const overall = (p: Participant): string => {
-  const parts = [
-    numeric(p.listening_score),
-    numeric(p.reading_score),
-    numeric(p.writing_score),
-    numeric(p.speaking_score),
-  ].filter((v): v is number => v != null)
-  if (!parts.length) return '—'
-  const avg = parts.reduce((a, b) => a + b, 0) / parts.length
-  // Round to nearest 0.5
-  return (Math.round(avg * 2) / 2).toFixed(1)
 }
 
 export default function MockResultsPage() {
@@ -128,7 +116,7 @@ export default function MockResultsPage() {
                     />
                   </td>
                   <td className="p-4 text-center font-mono font-bold text-slate-900">
-                    {overall(p)}
+                    {p.overall_band_score ?? '—'}
                   </td>
                 </tr>
               ))

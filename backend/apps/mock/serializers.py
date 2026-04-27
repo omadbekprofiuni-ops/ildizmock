@@ -51,7 +51,8 @@ class MockParticipantListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'full_name', 'joined_at',
             'listening_score', 'reading_score', 'writing_score',
-            'speaking_score',
+            'speaking_score', 'overall_band_score',
+            'writing_status', 'speaking_status',
             'listening_submitted_at', 'reading_submitted_at', 'writing_submitted_at',
         ]
 

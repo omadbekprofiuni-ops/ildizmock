@@ -48,6 +48,10 @@ import TakeTestPage from './pages/TakeTestPage'
 import TeacherGradePage from './pages/teacher/TeacherGradePage'
 import TeacherQueuePage from './pages/teacher/TeacherQueuePage'
 import TeacherStudentsPage from './pages/teacher/TeacherStudentsPage'
+import MockSpeakingGradePage from './pages/teacher/mock/MockSpeakingGradePage'
+import MockSpeakingQueuePage from './pages/teacher/mock/MockSpeakingQueuePage'
+import MockWritingGradePage from './pages/teacher/mock/MockWritingGradePage'
+import MockWritingQueuePage from './pages/teacher/mock/MockWritingQueuePage'
 import TestListPage from './pages/TestListPage'
 import WritingSentPage from './pages/WritingSentPage'
 
@@ -83,6 +87,10 @@ export default function App() {
           <Route path="/teacher" element={<TeacherRoute><TeacherQueuePage /></TeacherRoute>} />
           <Route path="/teacher/grade/:id" element={<TeacherRoute><TeacherGradePage /></TeacherRoute>} />
           <Route path="/teacher/students" element={<TeacherRoute><TeacherStudentsPage /></TeacherRoute>} />
+          <Route path="/teacher/mock/writing" element={<TeacherRoute><MockWritingQueuePage /></TeacherRoute>} />
+          <Route path="/teacher/mock/writing/:id" element={<TeacherRoute><MockWritingGradePage /></TeacherRoute>} />
+          <Route path="/teacher/mock/speaking" element={<TeacherRoute><MockSpeakingQueuePage /></TeacherRoute>} />
+          <Route path="/teacher/mock/speaking/:id" element={<TeacherRoute><MockSpeakingGradePage /></TeacherRoute>} />
 
           {/* SuperAdmin (ILDIZMock platform) */}
           <Route path="/super" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />

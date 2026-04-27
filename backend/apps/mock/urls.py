@@ -1,13 +1,19 @@
-"""Mock app — student-facing public URLs.
+"""Mock app — student va teacher URL'lari.
 
-Centre-admin URLs `apps/center/urls.py` ga qo'shilgan.
+Centre-admin URL'lari `apps/center/urls.py` ga qo'shilgan.
 """
 
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from . import student_views
+from .teacher_views import TeacherMockViewSet
+
+teacher_router = DefaultRouter()
+teacher_router.register('mock', TeacherMockViewSet, basename='teacher-mock')
 
 urlpatterns = [
+    path('teacher/', include(teacher_router.urls)),
     path(
         'mock/join/<str:access_code>/',
         student_views.join_view,

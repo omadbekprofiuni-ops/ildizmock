@@ -1,4 +1,4 @@
-import { Inbox, LogOut, Users } from 'lucide-react'
+import { Inbox, LogOut, Mic, PenLine, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 
@@ -8,6 +8,8 @@ import { useAuth } from '@/stores/auth'
 const NAV = [
   { to: '/teacher', label: 'Home', Icon: Inbox, end: true },
   { to: '/teacher/students', label: 'Students', Icon: Users, end: false },
+  { to: '/teacher/mock/writing', label: 'Mock Writing', Icon: PenLine, end: false },
+  { to: '/teacher/mock/speaking', label: 'Mock Speaking', Icon: Mic, end: false },
 ]
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {

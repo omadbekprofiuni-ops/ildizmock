@@ -194,6 +194,7 @@ def submit_listening(request, browser_session_id):
     participant.listening_total = total
     participant.listening_score = band
     participant.listening_submitted_at = timezone.now()
+    participant.calculate_overall_band_score()
     participant.save()
     return Response({
         'correct': correct, 'total': total, 'band': str(band),
@@ -225,6 +226,7 @@ def submit_reading(request, browser_session_id):
     participant.reading_total = total
     participant.reading_score = band
     participant.reading_submitted_at = timezone.now()
+    participant.calculate_overall_band_score()
     participant.save()
     return Response({
         'correct': correct, 'total': total, 'band': str(band),
