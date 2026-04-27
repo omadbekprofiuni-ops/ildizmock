@@ -85,6 +85,9 @@ export default function CenterAdminLayout() {
           <NavLink to={`/${slug}/admin/analytics`} className={navItemClass}>
             📊 <span>Analytics</span>
           </NavLink>
+          <NavLink to={`/${slug}/admin/settings`} className={navItemClass}>
+            ⚙️ <span>Sozlamalar</span>
+          </NavLink>
         </nav>
 
         <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-xs text-white/60">

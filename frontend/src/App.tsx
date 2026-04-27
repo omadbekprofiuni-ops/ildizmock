@@ -13,6 +13,7 @@ import { RequireCenterAdmin } from '@/components/guards/RequireCenterAdmin'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
+import CenterSettingsPage from './pages/center/SettingsPage'
 import CenterStudentsPage from './pages/center/StudentsPage'
 import CenterTeachersPage from './pages/center/TeachersPage'
 import CenterTestsPage from './pages/center/TestsPage'
@@ -208,6 +209,7 @@ export default function App() {
               <Route path="mock/:sessionId" element={<MockControlPage />} />
               <Route path="mock/:sessionId/results" element={<MockResultsPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
+              <Route path="settings" element={<CenterSettingsPage />} />
             </Route>
           </Route>
 

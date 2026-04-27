@@ -125,13 +125,28 @@ def generate_certificate(participant) -> BytesIO:
         c.setFillColorRGB(0.07, 0.18, 0.45)
         c.drawCentredString(x + cell_w / 2, y + 0.3 * cm, _safe_score(value))
 
-    # Footer
+    # Footer — test date + markaz aloqasi
     c.setFont('Helvetica', 11)
     c.setFillColorRGB(0.35, 0.4, 0.55)
     c.drawCentredString(
-        width / 2, 3.5 * cm,
+        width / 2, 4 * cm,
         f"Test Date: {participant.session.date.strftime('%d %B %Y')}",
     )
+
+    contact_bits = []
+    address = (getattr(org, 'address', '') or '').strip()
+    phone = (getattr(org, 'contact_phone', '') or '').strip()
+    email = (getattr(org, 'contact_email', '') or '').strip()
+    if address:
+        contact_bits.append(address)
+    if phone:
+        contact_bits.append(phone)
+    if email:
+        contact_bits.append(email)
+    if contact_bits:
+        c.setFont('Helvetica', 9)
+        c.setFillColorRGB(0.45, 0.5, 0.6)
+        c.drawCentredString(width / 2, 3.2 * cm, '  ·  '.join(contact_bits))
 
     c.setFont('Helvetica-Oblique', 9)
     c.setFillColorRGB(0.5, 0.5, 0.55)
