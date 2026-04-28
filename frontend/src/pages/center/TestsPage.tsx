@@ -1,4 +1,4 @@
-import { Copy, Eye, FileText } from 'lucide-react'
+import { Copy, Eye, FileText, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -134,6 +134,11 @@ export default function TestsPage() {
       <PageHeader
         title="Testlar"
         subtitle="Markaz bazasidagi testlar va SuperAdmin tayyorlagan global katalog"
+        actions={
+          <Link to={`/${slug}/admin/tests/new`} className={btnPrimary}>
+            <Plus size={16} /> Yangi test
+          </Link>
+        }
       />
 
       {/* Pill tabs */}

@@ -23,6 +23,43 @@ from apps.tests.super_serializers import (
 )
 
 
+def _normalize_path(value: str) -> str:
+    """`http://host/media/audio/abc.mp3` ham, `/media/audio/abc.mp3` ham,
+    `audio/abc.mp3` ham qabul qilinadi va storage path'ga keltiriladi."""
+    if not value:
+        return value
+    s = str(value).strip()
+    if '://' in s:
+        s = s.split('://', 1)[1]
+        s = s.split('/', 1)[1] if '/' in s else ''
+        s = '/' + s
+    if s.startswith('/media/'):
+        s = s[len('/media/'):]
+    elif s.startswith('media/'):
+        s = s[len('media/'):]
+    return s.lstrip('/')
+
+
+def _create_question(*, passage=None, listening_part=None, q):
+    """Easy-create endpointi uchun savol yaratish helperi."""
+    return Question.objects.create(
+        passage=passage,
+        listening_part=listening_part,
+        order=int(q.get('order') or 1),
+        question_number=int(q.get('question_number') or q.get('order') or 0),
+        question_type=q.get('question_type') or 'mcq',
+        text=q.get('text', '') or '',
+        prompt=q.get('prompt') or q.get('text', '') or '',
+        options=q.get('options') or [],
+        correct_answer=q.get('correct_answer'),
+        acceptable_answers=q.get('acceptable_answers') or [],
+        alt_answers=q.get('alt_answers') or [],
+        group_id=int(q.get('group_id') or 0),
+        instruction=q.get('instruction', '') or '',
+        points=int(q.get('points') or 1),
+    )
+
+
 class CenterTestViewSet(viewsets.ModelViewSet):
     """Markaz testlari (Mening testlarim + Global katalog + Klon)."""
 
@@ -183,6 +220,117 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
         return Response(
             SuperTestDetailSerializer(clone, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=False, methods=['post'], url_path='easy-create')
+    def easy_create(self, request, org_slug=None):
+        """ETAP 10 — Google Forms uslubidagi oson test yaratish.
+
+        Bir POST'da to'liq test (passages/listening_parts/writing_tasks +
+        questions) yaratiladi. Frontend'ga JSON quyidagi ko'rinishda:
+
+        {
+          "name": "My Reading Test",
+          "module": "reading",  # listening | reading | writing
+          "test_type": "academic",
+          "difficulty": "intermediate",
+          "duration_minutes": 60,
+          "description": "...",
+          "is_published": true,
+          "passages": [
+            {
+              "part_number": 1, "title": "...", "content": "...",
+              "instructions": "...",
+              "questions": [
+                {"order": 1, "question_type": "mcq", "text": "...",
+                 "options": ["A","B","C","D"], "correct_answer": "B",
+                 "instruction": "...", "points": 1}
+              ]
+            }
+          ],
+          "listening_parts": [
+            {"part_number": 1, "audio_file_path": "audio/abc.mp3",
+             "transcript": "...", "instructions": "...",
+             "questions": [...]}
+          ],
+          "writing_tasks": [
+            {"task_number": 1, "prompt": "...", "min_words": 150,
+             "suggested_minutes": 20, "requirements": "..."}
+          ]
+        }
+        """
+        org = self.get_organization()
+        d = request.data
+
+        module = d.get('module')
+        if module not in ('listening', 'reading', 'writing', 'speaking', 'full_mock'):
+            return Response({'detail': 'Noto‘g‘ri module qiymati.'}, status=400)
+        name = (d.get('name') or '').strip()
+        if not name:
+            return Response({'name': 'Test nomini kiriting.'}, status=400)
+
+        is_published = bool(d.get('is_published', False))
+
+        with transaction.atomic():
+            test = Test.objects.create(
+                organization=org,
+                is_global=False,
+                name=name,
+                module=module,
+                test_type=d.get('test_type', 'academic'),
+                difficulty=d.get('difficulty', 'intermediate'),
+                duration_minutes=int(d.get('duration_minutes') or 60),
+                description=d.get('description', '') or '',
+                category=d.get('category', '') or '',
+                is_published=is_published,
+                status='published' if is_published else 'draft',
+                created_by=request.user,
+            )
+
+            # Passages (reading) + nested questions
+            for p_data in (d.get('passages') or []):
+                p = Passage.objects.create(
+                    test=test,
+                    part_number=int(p_data.get('part_number') or 1),
+                    title=(p_data.get('title') or '').strip(),
+                    subtitle=(p_data.get('subtitle') or '').strip(),
+                    content=p_data.get('content', '') or '',
+                    instructions=p_data.get('instructions', '') or '',
+                    min_words=p_data.get('min_words') or None,
+                    order=int(p_data.get('order') or p_data.get('part_number') or 1),
+                )
+                for q_data in (p_data.get('questions') or []):
+                    _create_question(passage=p, q=q_data)
+
+            # Listening parts + nested questions
+            for lp_data in (d.get('listening_parts') or []):
+                lp = ListeningPart.objects.create(
+                    test=test,
+                    part_number=int(lp_data.get('part_number') or 1),
+                    transcript=lp_data.get('transcript', '') or '',
+                    instructions=lp_data.get('instructions', '') or '',
+                )
+                audio_path = lp_data.get('audio_file_path')
+                if audio_path:
+                    lp.audio_file.name = _normalize_path(audio_path)
+                    lp.save(update_fields=['audio_file'])
+                for q_data in (lp_data.get('questions') or []):
+                    _create_question(listening_part=lp, q=q_data)
+
+            # Writing tasks
+            for wt_data in (d.get('writing_tasks') or []):
+                WritingTask.objects.create(
+                    test=test,
+                    task_number=int(wt_data.get('task_number') or 1),
+                    prompt=wt_data.get('prompt', '') or '',
+                    min_words=int(wt_data.get('min_words') or 150),
+                    suggested_minutes=int(wt_data.get('suggested_minutes') or 20),
+                    requirements=wt_data.get('requirements', '') or '',
+                )
+
+        return Response(
+            SuperTestDetailSerializer(test, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
         )
 

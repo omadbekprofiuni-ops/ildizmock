@@ -13,6 +13,7 @@ import { RequireCenterAdmin } from '@/components/guards/RequireCenterAdmin'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
+import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import CenterSettingsPage from './pages/center/SettingsPage'
 import CenterStudentsPage from './pages/center/StudentsPage'
 import CenterTeachersPage from './pages/center/TeachersPage'
@@ -197,6 +198,7 @@ export default function App() {
               <Route path="students" element={<CenterStudentsPage />} />
               <Route path="teachers" element={<CenterTeachersPage />} />
               <Route path="tests" element={<CenterTestsPage />} />
+              <Route path="tests/new" element={<EasyTestCreatePage />} />
               <Route path="tests/:testId/preview" element={<TestPreviewPage />} />
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />
