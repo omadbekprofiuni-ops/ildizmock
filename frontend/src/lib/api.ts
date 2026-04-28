@@ -1,7 +1,13 @@
 import axios from 'axios'
 
+// Production'da `VITE_API_URL` env variable yoki nginx orqali `/api/v1`
+// reverse-proxy qilinadi. Dev rejimida default localhost backend'ga uradi.
+const baseURL =
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim() ||
+  (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1')
+
 export const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL,
   withCredentials: true,
 })
 

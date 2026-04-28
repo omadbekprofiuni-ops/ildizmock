@@ -56,14 +56,9 @@ export default function HomePage() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to={user ? '/tests/reading' : '/login'}>
               <Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                ▶ Start free
+                {user ? '▶ Start free' : 'Kirish'}
               </Button>
             </Link>
-            {!user && (
-              <Link to="/login">
-                <Button size="lg" variant="outline">Have an account?</Button>
-              </Link>
-            )}
           </div>
         </section>
 

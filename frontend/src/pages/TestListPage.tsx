@@ -116,8 +116,11 @@ export default function TestListPage() {
             Your essay will be reviewed by a teacher with detailed feedback.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/register"><Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">Sign Up</Button></Link>
-            <Link to="/login"><Button size="lg" variant="outline">Have an account?</Button></Link>
+            <Link to="/login">
+              <Button size="lg" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
+                Kirish
+              </Button>
+            </Link>
           </div>
         </main>
         <Footer />

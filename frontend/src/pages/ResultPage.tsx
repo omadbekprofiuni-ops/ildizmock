@@ -183,15 +183,15 @@ export default function ResultPage() {
               <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
               <div className="flex-1">
                 <p className="font-medium text-amber-900">
-                  sign up to save results and see your history →
+                  Sign in to save results and see your history →
                 </p>
                 <p className="mt-1 text-amber-800">
                   Right now this result is not linked to your account.
                 </p>
               </div>
-              <Link to="/register">
+              <Link to="/login">
                 <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                  Sign Up
+                  Kirish
                 </Button>
               </Link>
             </div>

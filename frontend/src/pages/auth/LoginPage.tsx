@@ -46,11 +46,31 @@ export default function LoginPage() {
       else if (role === 'teacher') navigate('/teacher')
       else navigate('/home')
     } catch (err) {
-      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
+      const e = err as {
+        response?: { status?: number; data?: Record<string, unknown> }
+        code?: string
+        message?: string
+      }
+      const data = e?.response?.data
+      const status = e?.response?.status
+
+      // Tarmoq xatosi (server bilan ulana olmadik) — alohida xabar
+      if (!e?.response && (e?.code === 'ERR_NETWORK' || /Network/i.test(e?.message || ''))) {
+        toast.error("Server bilan ulanib bo'lmadi. Internet aloqasini tekshiring.")
+        return
+      }
+
+      // 5xx — server xatosi
+      if (status && status >= 500) {
+        toast.error('Serverda kutilmagan xatolik. Markaz administratoriga murojaat qiling.')
+        return
+      }
+
+      // 4xx — backend yuborgan aniq sababni ko'rsatamiz
       const msg =
         (data && typeof data === 'object' && (data.detail as string | undefined)) ||
         (data && Object.values(data).flat().join(' ')) ||
-        'Wrong username or password'
+        "Login yoki parol noto'g'ri"
       toast.error(String(msg))
     }
   }

@@ -49,7 +49,6 @@ import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
-import OrgRegisterPage from './pages/OrgRegisterPage'
 import ResultPage from './pages/ResultPage'
 import SpeakingComingSoonPage from './pages/SpeakingComingSoonPage'
 import MockResultDetailPage from './pages/student/MockResultDetailPage'
@@ -217,7 +216,6 @@ export default function App() {
           </Route>
 
           {/* Org-branded — must come AFTER all static routes */}
-          <Route path="/:slug/register" element={<OrgRegisterPage />} />
           <Route path="/:slug/login" element={<LoginPage />} />
           <Route path="/:slug" element={<OrgLandingPage />} />
 
