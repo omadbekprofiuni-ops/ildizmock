@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarPlus, Plus } from 'lucide-react'
+import { ArrowRight, CalendarPlus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -122,12 +122,30 @@ export default function MockSessionsPage() {
                       </Chip>
                     </td>
                     <td className={adminTable.td + ' text-right'}>
-                      <Link
-                        to={`/${slug}/admin/mock/${s.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
-                      >
-                        Boshqarish <ArrowRight size={14} />
-                      </Link>
+                      <div className="inline-flex items-center gap-2">
+                        {(s.status === 'finished' ||
+                          s.status === 'cancelled' ||
+                          s.status === 'waiting') && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm(`"${s.name}" sessiyasini doimiy o'chirasizmi? Talabalar javoblari ham o'chiriladi.`)) return
+                              await api.delete(`/center/${slug}/mock/${s.id}/`)
+                              load()
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                            title="Sessiyani doimiy o'chirish"
+                          >
+                            <Trash2 size={12} /> O'chirish
+                          </button>
+                        )}
+                        <Link
+                          to={`/${slug}/admin/mock/${s.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
+                        >
+                          Boshqarish <ArrowRight size={14} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

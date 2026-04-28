@@ -187,6 +187,20 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         )
         return Response(MockSessionDetailSerializer(session).data)
 
+    def destroy(self, request, *args, **kwargs):
+        """Mock sessiyani doimiy o'chirish (cascade: barcha participants/answers).
+
+        Faqat finished yoki cancelled sessiyalar uchun ruxsat etiladi —
+        faol sessiyalarni avval bekor qilish kerak.
+        """
+        session = self.get_object()
+        if session.status not in ('finished', 'cancelled', 'waiting'):
+            return Response(
+                {'detail': "Faol sessiyani avval bekor qiling, keyin o'chirish mumkin."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def reopen(self, request, pk=None, org_slug=None):
         """Tugagan / bekor qilingan sessiyani 24 soat ichida qayta ochish."""

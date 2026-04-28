@@ -21,6 +21,7 @@ interface Teacher {
   username: string
   first_name: string
   last_name: string
+  phone?: string | null
   is_active: boolean
   students_count: number
   created_at: string
@@ -38,6 +39,7 @@ export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
+  const [editing, setEditing] = useState<Teacher | null>(null)
   const [credentials, setCredentials] = useState<Credentials | null>(null)
   const [filter, setFilter] = useState('')
 
@@ -158,6 +160,13 @@ export default function TeachersPage() {
                         <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
+                            onClick={() => setEditing(t)}
+                            className={btnGhost}
+                          >
+                            Tahrirlash
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => resetPassword(t.id)}
                             className={btnGhost}
                           >
@@ -198,7 +207,104 @@ export default function TeachersPage() {
       {credentials && (
         <CredentialsModal credentials={credentials} onClose={() => setCredentials(null)} />
       )}
+
+      {editing && slug && (
+        <EditTeacherModal
+          slug={slug}
+          teacher={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null)
+            load()
+          }}
+        />
+      )}
     </PageShell>
+  )
+}
+
+function EditTeacherModal({
+  slug,
+  teacher,
+  onClose,
+  onSaved,
+}: {
+  slug: string
+  teacher: Teacher
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [form, setForm] = useState({
+    first_name: teacher.first_name ?? '',
+    last_name: teacher.last_name ?? '',
+    phone: teacher.phone ?? '',
+  })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const submit = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      await api.patch(`/center/${slug}/teachers/${teacher.id}/`, {
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        phone: form.phone.trim() || null,
+      })
+      onSaved()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, unknown> } }
+      const data = err.response?.data
+      setError(
+        (data?.detail as string | undefined) ||
+          JSON.stringify(data || {}).slice(0, 200) ||
+          'Xatolik',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+          O‘qituvchini tahrirlash
+        </h2>
+        <div className="space-y-3">
+          <FormInput
+            label="Ism"
+            value={form.first_name}
+            onChange={(v) => setForm({ ...form, first_name: v })}
+          />
+          <FormInput
+            label="Familiya"
+            value={form.last_name}
+            onChange={(v) => setForm({ ...form, last_name: v })}
+          />
+          <FormInput
+            label="Telefon"
+            value={form.phone}
+            onChange={(v) => setForm({ ...form, phone: v })}
+            placeholder="+998901234567"
+          />
+        </div>
+        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
+            Bekor
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={saving}
+            className={btnPrimary + ' flex-1 justify-center'}
+          >
+            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

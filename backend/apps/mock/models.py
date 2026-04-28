@@ -148,6 +148,24 @@ class MockParticipant(models.Model):
         max_digits=3, decimal_places=1, null=True, blank=True,
     )
 
+    # ETAP — Speaking kriteriyalari (4 ta IELTS criteria)
+    speaking_fluency = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Fluency and Coherence (0–9)',
+    )
+    speaking_lexical = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Lexical Resource (0–9)',
+    )
+    speaking_grammar = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Grammatical Range and Accuracy (0–9)',
+    )
+    speaking_pronunciation = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Pronunciation (0–9)',
+    )
+
     listening_submitted_at = models.DateTimeField(null=True, blank=True)
     reading_submitted_at = models.DateTimeField(null=True, blank=True)
     writing_submitted_at = models.DateTimeField(null=True, blank=True)

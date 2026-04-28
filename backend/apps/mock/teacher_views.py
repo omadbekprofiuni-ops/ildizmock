@@ -29,6 +29,13 @@ WRITING_FIELDS = [
     'writing_task2_grammar',
 ]
 
+SPEAKING_FIELDS = [
+    'speaking_fluency',
+    'speaking_lexical',
+    'speaking_grammar',
+    'speaking_pronunciation',
+]
+
 
 def _scope(user):
     """Teacher faqat o'z markazidagi natijalarni ko'radi."""
@@ -65,6 +72,10 @@ def _participant_payload(p: MockParticipant) -> dict:
         'criteria': {
             f: str(getattr(p, f)) if getattr(p, f) is not None else None
             for f in WRITING_FIELDS
+        },
+        'speaking_criteria': {
+            f: str(getattr(p, f)) if getattr(p, f) is not None else None
+            for f in SPEAKING_FIELDS
         },
     }
 
@@ -210,20 +221,46 @@ class TeacherMockViewSet(viewsets.ViewSet):
     )
     def speaking_grade(self, request, participant_id=None):
         p = get_object_or_404(_scope(request.user), pk=participant_id)
-        v = request.data.get('score')
-        if v is None or v == '':
-            return Response({'detail': 'Score majburiy.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            num = Decimal(str(v))
-        except (InvalidOperation, TypeError):
-            return Response({'detail': 'Score raqam bo‘lishi kerak.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if num < 0 or num > 9:
-            return Response({'detail': 'Score 0–9 oralig‘ida bo‘lishi kerak.'},
-                            status=status.HTTP_400_BAD_REQUEST)
 
-        p.speaking_score = num
+        # ETAP 13: 4 ta kriteriyani majburiy qabul qilamiz va o'rtachasini
+        # speaking_score sifatida saqlaymiz. Backwards-compat: agar faqat
+        # `score` yuborilsa, eski versiya kabi qabul qilamiz.
+        criteria_values = []
+        for f in SPEAKING_FIELDS:
+            v = request.data.get(f)
+            if v is None or v == '':
+                criteria_values = []
+                break
+            try:
+                num = Decimal(str(v))
+            except (InvalidOperation, TypeError):
+                return Response({'detail': f'{f} raqam bo‘lishi kerak.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if num < 0 or num > 9:
+                return Response({'detail': f'{f} 0–9 oralig‘ida bo‘lsin.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            criteria_values.append((f, num))
+
+        if criteria_values:
+            for f, num in criteria_values:
+                setattr(p, f, num)
+            avg = sum(num for _, num in criteria_values) / len(criteria_values)
+            p.speaking_score = round(avg, 1)
+        else:
+            v = request.data.get('score')
+            if v is None or v == '':
+                return Response({'detail': 'Kriteriyalar yoki score majburiy.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                num = Decimal(str(v))
+            except (InvalidOperation, TypeError):
+                return Response({'detail': 'Score raqam bo‘lishi kerak.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if num < 0 or num > 9:
+                return Response({'detail': 'Score 0–9 oralig‘ida bo‘lishi kerak.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            p.speaking_score = num
+
         p.speaking_feedback = request.data.get('feedback', '') or ''
         p.speaking_status = 'graded'
         p.speaking_graded_by = request.user

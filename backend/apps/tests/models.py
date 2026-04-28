@@ -78,11 +78,34 @@ class Test(models.Model):
         help_text='Practice rejimi vaqt limiti (daqiqada). Bo‘sh — limit yo‘q.',
     )
 
+    # ETAP 13 — Soft delete (arxivga olish + qayta tiklash imkoniyati)
+    is_deleted = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='deleted_tests',
+    )
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.name} ({self.module})'
+
+    def soft_delete(self, user=None):
+        from django.utils import timezone
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        if user is not None:
+            self.deleted_by = user
+        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.deleted_by = None
+        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
 
 
 class Passage(models.Model):

@@ -21,6 +21,7 @@ interface Student {
   username: string
   first_name: string
   last_name: string
+  phone?: string | null
   is_active: boolean
   target_band: string | null
   tests_taken: number
@@ -41,6 +42,7 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
+  const [editing, setEditing] = useState<Student | null>(null)
   const [credentials, setCredentials] = useState<Credentials | null>(null)
   const [filter, setFilter] = useState('')
 
@@ -167,6 +169,13 @@ export default function StudentsPage() {
                         <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
+                            onClick={() => setEditing(s)}
+                            className={btnGhost}
+                          >
+                            Tahrirlash
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => resetPassword(s.id)}
                             className={btnGhost}
                           >
@@ -208,6 +217,18 @@ export default function StudentsPage() {
         <CredentialsModal
           credentials={credentials}
           onClose={() => setCredentials(null)}
+        />
+      )}
+
+      {editing && slug && (
+        <EditStudentModal
+          slug={slug}
+          student={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null)
+            load()
+          }}
         />
       )}
     </PageShell>
@@ -307,6 +328,129 @@ function AddStudentModal({
             className={btnPrimary + ' flex-1 justify-center'}
           >
             {submitting ? 'Saqlanmoqda…' : 'Saqlash va parol olish'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EditStudentModal({
+  slug,
+  student,
+  onClose,
+  onSaved,
+}: {
+  slug: string
+  student: Student
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [form, setForm] = useState({
+    first_name: student.first_name ?? '',
+    last_name: student.last_name ?? '',
+    phone: student.phone ?? '',
+    target_band: student.target_band ?? '',
+    teacher_id: student.teacher_id ? String(student.teacher_id) : '',
+  })
+  const [teachers, setTeachers] = useState<{ id: number; first_name: string; last_name: string; username: string }[]>([])
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api
+      .get<{ id: number; first_name: string; last_name: string; username: string }[]>(
+        `/center/${slug}/teachers/`,
+      )
+      .then((r) => setTeachers(r.data))
+      .catch(() => undefined)
+  }, [slug])
+
+  const submit = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      const payload: Record<string, unknown> = {
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        phone: form.phone.trim() || null,
+        target_band: form.target_band ? parseFloat(form.target_band) : null,
+        teacher_id: form.teacher_id ? Number(form.teacher_id) : null,
+      }
+      await api.patch(`/center/${slug}/students/${student.id}/`, payload)
+      onSaved()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: Record<string, unknown> } }
+      const data = err.response?.data
+      setError(
+        (data?.detail as string | undefined) ||
+          JSON.stringify(data || {}).slice(0, 200) ||
+          'Xatolik',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+          Talabani tahrirlash
+        </h2>
+        <div className="space-y-3">
+          <Input
+            label="Ism"
+            value={form.first_name}
+            onChange={(v) => setForm({ ...form, first_name: v })}
+          />
+          <Input
+            label="Familiya"
+            value={form.last_name}
+            onChange={(v) => setForm({ ...form, last_name: v })}
+          />
+          <Input
+            label="Telefon"
+            value={form.phone}
+            onChange={(v) => setForm({ ...form, phone: v })}
+            placeholder="+998901234567"
+          />
+          <Input
+            label="Maqsad band"
+            value={form.target_band}
+            onChange={(v) => setForm({ ...form, target_band: v })}
+            placeholder="7.0"
+          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Mas’ul o‘qituvchi
+            </label>
+            <select
+              value={form.teacher_id}
+              onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            >
+              <option value="">— tanlanmagan —</option>
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.first_name} {t.last_name} (@{t.username})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
+            Bekor
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={saving}
+            className={btnPrimary + ' flex-1 justify-center'}
+          >
+            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
           </button>
         </div>
       </div>

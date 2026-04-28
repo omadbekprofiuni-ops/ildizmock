@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { api } from '@/lib/api'
@@ -15,13 +15,33 @@ interface Detail {
   speaking_score: string | null
   speaking_feedback: string
   overall_band_score: string | null
+  speaking_criteria?: {
+    speaking_fluency: string | null
+    speaking_lexical: string | null
+    speaking_grammar: string | null
+    speaking_pronunciation: string | null
+  }
 }
+
+const CRITERIA = [
+  { key: 'speaking_fluency', label: 'Fluency and Coherence' },
+  { key: 'speaking_lexical', label: 'Lexical Resource' },
+  { key: 'speaking_grammar', label: 'Grammatical Range and Accuracy' },
+  { key: 'speaking_pronunciation', label: 'Pronunciation' },
+] as const
+
+type CriteriaKey = typeof CRITERIA[number]['key']
 
 export default function MockSpeakingGradePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<Detail | null>(null)
-  const [score, setScore] = useState('')
+  const [vals, setVals] = useState<Record<CriteriaKey, string>>({
+    speaking_fluency: '',
+    speaking_lexical: '',
+    speaking_grammar: '',
+    speaking_pronunciation: '',
+  })
   const [feedback, setFeedback] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -32,20 +52,45 @@ export default function MockSpeakingGradePage() {
       .get<Detail>(`/teacher/mock/speaking/${id}/`)
       .then((r) => {
         setDetail(r.data)
-        setScore(r.data.speaking_score ?? '')
+        const c = r.data.speaking_criteria
+        if (c) {
+          setVals({
+            speaking_fluency: c.speaking_fluency ?? '',
+            speaking_lexical: c.speaking_lexical ?? '',
+            speaking_grammar: c.speaking_grammar ?? '',
+            speaking_pronunciation: c.speaking_pronunciation ?? '',
+          })
+        }
         setFeedback(r.data.speaking_feedback ?? '')
       })
       .catch(() => setError('Talaba topilmadi yoki ruxsat yo‘q.'))
   }, [id])
 
+  const avg = useMemo(() => {
+    const nums = (Object.values(vals) as string[])
+      .map((v) => parseFloat(v))
+      .filter((n) => Number.isFinite(n))
+    if (nums.length !== 4) return null
+    const a = nums.reduce((s, n) => s + n, 0) / 4
+    return Math.round(a * 2) / 2 // 0.5 step IELTS rounding (approx)
+  }, [vals])
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    // Validate: each 0–9
+    for (const c of CRITERIA) {
+      const n = parseFloat(vals[c.key])
+      if (!Number.isFinite(n) || n < 0 || n > 9) {
+        setError(`${c.label} 0–9 oralig'ida bo'lsin.`)
+        return
+      }
+    }
     setBusy(true)
     try {
       const r = await api.post<{ next_id: number | null }>(
         `/teacher/mock/speaking/${id}/grade/`,
-        { score, feedback },
+        { ...vals, feedback },
       )
       if (r.data.next_id) {
         navigate(`/teacher/mock/speaking/${r.data.next_id}`, { replace: true })
@@ -60,7 +105,7 @@ export default function MockSpeakingGradePage() {
     }
   }
 
-  if (error)
+  if (error && !detail)
     return (
       <TeacherLayout>
         <div className="p-8 text-red-600">{error}</div>
@@ -94,23 +139,36 @@ export default function MockSpeakingGradePage() {
           className="space-y-6 rounded-2xl border bg-white p-6 shadow-sm"
         >
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Speaking Band Score (0–9)
-            </label>
-            <input
-              autoFocus
-              type="number"
-              step={0.5}
-              min={0}
-              max={9}
-              required
-              value={score}
-              onChange={(e) => setScore(e.target.value)}
-              className="w-full rounded-lg border-2 border-slate-200 px-4 py-3 text-center font-mono text-3xl font-bold focus:border-blue-500 focus:outline-none"
-            />
-            <p className="mt-2 text-center text-xs text-slate-500">
-              4 ta criteria o'rtachasi: Fluency, Lexical, Grammar, Pronunciation
-            </p>
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">
+              Speaking — 4 kriteriya bo‘yicha baholash
+            </h2>
+            <div className="space-y-3">
+              {CRITERIA.map((c) => (
+                <div key={c.key} className="flex items-center gap-3">
+                  <label className="flex-1 text-sm text-slate-700">{c.label}</label>
+                  <input
+                    type="number"
+                    step={0.5}
+                    min={0}
+                    max={9}
+                    required
+                    value={vals[c.key]}
+                    onChange={(e) =>
+                      setVals((v) => ({ ...v, [c.key]: e.target.value }))
+                    }
+                    className="w-24 rounded-lg border-2 border-slate-200 px-3 py-2 text-center font-mono text-lg font-bold focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 rounded-lg bg-slate-50 px-4 py-3 text-center">
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                4 kriteriya o‘rtachasi (Speaking band)
+              </div>
+              <div className="mt-1 font-mono text-3xl font-bold text-slate-900">
+                {avg != null ? avg.toFixed(1) : '—'}
+              </div>
+            </div>
           </div>
 
           <div>

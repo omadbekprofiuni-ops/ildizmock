@@ -92,15 +92,23 @@ class TeacherQueueView(APIView):
 
 
 class TeacherStudentsView(APIView):
-    """GET /api/v1/teacher/students/ — my assigned students."""
+    """GET /api/v1/teacher/students/ — talaba ko'rsatish ikki manbadan:
+
+    1) `User.teacher = request.user` (eski: bevosita biriktirilganlar);
+    2) ETAP 11: `User.group.teacher = request.user` (guruh orqali).
+    """
 
     permission_classes = [IsTeacher]
 
     def get(self, request):
+        from django.db.models import Q
         students = (
-            User.objects.filter(teacher=request.user, role='student')
+            User.objects
+            .filter(role='student')
+            .filter(Q(teacher=request.user) | Q(group__teacher=request.user))
+            .distinct()
             .annotate(
-                attempts_count=Count('attempts'),
+                attempts_count=Count('attempts', distinct=True),
                 last_attempt=Max('attempts__started_at'),
                 avg_band=Avg('attempts__band_score'),
             )
@@ -123,13 +131,20 @@ class TeacherStudentStatsView(APIView):
     permission_classes = [IsTeacher]
 
     def get(self, request, student_id):
+        from django.db.models import Q
+
         from apps.attempts.models import Attempt
         from apps.mock.models import MockParticipant
 
         try:
-            student = User.objects.get(
-                id=student_id, teacher=request.user, role='student',
+            student = (
+                User.objects
+                .filter(id=student_id, role='student')
+                .filter(Q(teacher=request.user) | Q(group__teacher=request.user))
+                .first()
             )
+            if not student:
+                raise User.DoesNotExist
         except User.DoesNotExist:
             return Response({'detail': 'Talaba topilmadi.'}, status=404)
 

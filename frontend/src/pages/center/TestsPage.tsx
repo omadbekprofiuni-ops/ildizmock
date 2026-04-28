@@ -1,4 +1,4 @@
-import { Copy, Eye, FileText, Plus } from 'lucide-react'
+import { Archive, Copy, Eye, FileText, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -52,8 +52,9 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 
 export default function TestsPage() {
   const { slug } = useParams<{ slug: string }>()
-  const [tab, setTab] = useState<'mine' | 'catalog'>('mine')
+  const [tab, setTab] = useState<'mine' | 'catalog' | 'archived'>('mine')
   const [mine, setMine] = useState<TestRow[]>([])
+  const [archived, setArchived] = useState<TestRow[]>([])
   const [catalog, setCatalog] = useState<TestRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<{ module: string; difficulty: string }>({
@@ -72,6 +73,54 @@ export default function TestsPage() {
       .finally(() => setLoading(false))
   }
 
+  const loadArchived = () => {
+    if (!slug) return
+    setLoading(true)
+    api
+      .get<TestRow[]>(`/center/${slug}/tests/?archived=1`)
+      .then((r) => setArchived(r.data))
+      .finally(() => setLoading(false))
+  }
+
+  const archiveTest = async (id: string, name: string) => {
+    if (!slug) return
+    if (!window.confirm(`"${name}" testini arxivga o'tkazasizmi? Keyinchalik qayta tiklash mumkin.`)) return
+    setBusy(id)
+    try {
+      await api.delete(`/center/${slug}/tests/${id}/`)
+      setMessage('Test arxivga o\'tkazildi.')
+      loadMine()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const restoreTest = async (id: string) => {
+    if (!slug) return
+    setBusy(id)
+    try {
+      await api.post(`/center/${slug}/tests/${id}/restore/`)
+      setMessage('Test arxivdan qaytarildi.')
+      loadArchived()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const hardDeleteTest = async (id: string, name: string) => {
+    if (!slug) return
+    if (!window.confirm(`"${name}" doimiy o'chiriladi! Bu amalni qaytarib bo'lmaydi. Davom etamizmi?`)) return
+    if (!window.confirm("Yana bir bor: barcha savollar va urinishlar ham o'chiriladi. Tasdiqlaysizmi?")) return
+    setBusy(id)
+    try {
+      await api.delete(`/center/${slug}/tests/${id}/hard-delete/`)
+      setMessage('Test doimiy o\'chirildi.')
+      loadArchived()
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const loadCatalog = () => {
     if (!slug) return
     setLoading(true)
@@ -88,6 +137,7 @@ export default function TestsPage() {
 
   useEffect(() => {
     if (tab === 'mine') loadMine()
+    else if (tab === 'archived') loadArchived()
     else loadCatalog()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, slug, filter])
@@ -127,7 +177,8 @@ export default function TestsPage() {
     }
   }
 
-  const rows = tab === 'mine' ? mine : catalog
+  const rows =
+    tab === 'mine' ? mine : tab === 'archived' ? archived : catalog
 
   return (
     <PageShell>
@@ -148,6 +199,9 @@ export default function TestsPage() {
         </TabButton>
         <TabButton active={tab === 'catalog'} onClick={() => setTab('catalog')}>
           Global katalog
+        </TabButton>
+        <TabButton active={tab === 'archived'} onClick={() => setTab('archived')}>
+          Arxiv
         </TabButton>
       </div>
 
@@ -262,6 +316,26 @@ export default function TestsPage() {
                           {busy === t.id ? 'Klonlash…' : 'Klon qilish'}
                         </button>
                       )
+                    ) : tab === 'archived' ? (
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={busy === t.id}
+                          onClick={() => restoreTest(t.id)}
+                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                        >
+                          <RotateCcw size={14} /> Qaytarish
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy === t.id}
+                          onClick={() => hardDeleteTest(t.id, t.name)}
+                          className="inline-flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                          title="Doimiy o'chirish"
+                        >
+                          <Trash2 size={14} /> O'chirish
+                        </button>
+                      </div>
                     ) : (
                       <div className="inline-flex items-center gap-1">
                         <Link
@@ -277,6 +351,15 @@ export default function TestsPage() {
                           className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
                         >
                           <Copy size={14} /> {busy === t.id ? '…' : 'Clone'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy === t.id}
+                          onClick={() => archiveTest(t.id, t.name)}
+                          className="inline-flex items-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+                          title="Arxivga o'tkazish"
+                        >
+                          <Archive size={14} /> Arxiv
                         </button>
                       </div>
                     )}

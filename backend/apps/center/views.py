@@ -11,8 +11,10 @@ from apps.organizations.permissions import IsCenterAdmin
 from .serializers import (
     StudentCreateSerializer,
     StudentReadSerializer,
+    StudentUpdateSerializer,
     TeacherCreateSerializer,
     TeacherReadSerializer,
+    TeacherUpdateSerializer,
     generate_password,
 )
 
@@ -54,6 +56,8 @@ class CenterStudentViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return StudentCreateSerializer
+        if self.action in ('update', 'partial_update'):
+            return StudentUpdateSerializer
         return StudentReadSerializer
 
     def create(self, request, *args, **kwargs):
@@ -187,6 +191,8 @@ class CenterTeacherViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return TeacherCreateSerializer
+        if self.action in ('update', 'partial_update'):
+            return TeacherUpdateSerializer
         return TeacherReadSerializer
 
     def create(self, request, *args, **kwargs):

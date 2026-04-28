@@ -12,7 +12,7 @@ class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
     """Public read access — guests can browse tests."""
 
     permission_classes = [AllowAny]
-    queryset = Test.objects.filter(is_published=True)
+    queryset = Test.objects.filter(is_published=True, is_deleted=False)
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -41,7 +41,8 @@ class TestCountsView(APIView):
     def get(self, request):
         return Response({
             module: Test.objects.filter(
-                is_published=True, module=module, organization__isnull=True,
+                is_published=True, is_deleted=False,
+                module=module, organization__isnull=True,
             ).count()
             for module, _ in Test.MODULE_CHOICES
         })

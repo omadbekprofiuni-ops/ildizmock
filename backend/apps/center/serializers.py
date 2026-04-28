@@ -60,6 +60,40 @@ class StudentReadSerializer(serializers.ModelSerializer):
         return None  # ETAP 5 da to'ldiramiz
 
 
+class StudentUpdateSerializer(serializers.ModelSerializer):
+    """Markaz admini talaba ma'lumotlarini tahrirlash."""
+
+    teacher_id = serializers.IntegerField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'phone',
+            'target_band', 'teacher_id',
+        ]
+
+    def validate_teacher_id(self, value):
+        if value in (None, '', 0):
+            return None
+        try:
+            t = User.objects.get(id=value, role='teacher')
+        except User.DoesNotExist:
+            raise serializers.ValidationError("O'qituvchi topilmadi.")
+        # Bir xil markazga tegishli bo'lishi shart
+        student = self.instance
+        if student and t.organization_id != student.organization_id:
+            raise serializers.ValidationError("O'qituvchi boshqa markazdan.")
+        return value
+
+    def update(self, instance, validated_data):
+        if 'teacher_id' in validated_data:
+            instance.teacher_id = validated_data.pop('teacher_id')
+        for k, v in validated_data.items():
+            setattr(instance, k, v)
+        instance.save()
+        return instance
+
+
 class StudentCreateSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
@@ -131,6 +165,12 @@ class TeacherReadSerializer(serializers.ModelSerializer):
 
     def get_students_count(self, obj):
         return obj.students.filter(role='student').count()
+
+
+class TeacherUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'phone']
 
 
 class TeacherCreateSerializer(serializers.Serializer):

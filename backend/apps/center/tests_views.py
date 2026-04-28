@@ -80,7 +80,60 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         org = self.get_organization()
-        return Test.objects.filter(organization=org).order_by('-created_at')
+        qs = Test.objects.filter(organization=org).order_by('-created_at')
+        # Default: o'chirilganlarni yashiramiz. ?archived=1 bo'lsa faqat
+        # arxivni qaytaramiz (ETAP 13 soft-delete).
+        archived = self.request.query_params.get('archived')
+        if archived in ('1', 'true', 'yes'):
+            qs = qs.filter(is_deleted=True)
+        else:
+            qs = qs.filter(is_deleted=False)
+        return qs
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft-delete: testni arxivga o'tkazadi (qayta tiklash mumkin)."""
+        from django.utils import timezone
+
+        test = self.get_object()
+        test.is_deleted = True
+        test.deleted_at = timezone.now()
+        test.deleted_by = request.user
+        test.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+        return Response(
+            {'detail': "Test arxivga o'tkazildi."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None, org_slug=None):
+        """Arxivdan qaytarish (ETAP 13)."""
+        test = self.get_object()
+        if not test.is_deleted:
+            return Response(
+                {'detail': 'Bu test arxivda emas.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        test.is_deleted = False
+        test.deleted_at = None
+        test.deleted_by = None
+        test.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+        return Response({'detail': 'Test qaytarildi.'})
+
+    @action(detail=True, methods=['delete'], url_path='hard-delete')
+    def hard_delete(self, request, pk=None, org_slug=None):
+        """Doimiy o'chirish — faqat arxivdagi testlar uchun.
+
+        Bu xavfli amal — barcha bog'liq passages/questions/attempts ham
+        cascade qilib o'chiriladi.
+        """
+        test = self.get_object()
+        if not test.is_deleted:
+            return Response(
+                {'detail': "Avval testni arxivga o'tkazing, keyin doimiy o'chirib bo'ladi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        test.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
