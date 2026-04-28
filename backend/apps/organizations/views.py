@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -212,6 +213,27 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         org = self.get_object()
         org.status = 'blocked' if org.status != 'blocked' else 'active'
         org.save(update_fields=['status'])
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(
+        detail=True, methods=['post', 'delete'], url_path='logo',
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def update_logo(self, request, pk=None):
+        """Drag-and-drop logo upload (multipart) yoki DELETE qilib o'chirish."""
+        org = self.get_object()
+        if request.method == 'DELETE':
+            if org.logo:
+                org.logo.delete(save=False)
+            org.logo = None
+            org.save(update_fields=['logo'])
+            return Response(OrganizationDetailSerializer(org).data)
+
+        f = request.FILES.get('logo') or request.FILES.get('file')
+        if not f:
+            return Response({'detail': 'Fayl yuborilmagan.'}, status=400)
+        org.logo = f
+        org.save()
         return Response(OrganizationDetailSerializer(org).data)
 
     @action(detail=True, methods=['get'])

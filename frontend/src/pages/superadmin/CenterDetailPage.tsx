@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, KeyRound, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, ImagePlus, KeyRound, Loader2, Plus, Trash2, UploadCloud } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,7 @@ type Org = {
   name: string
   slug: string
   primary_color: string
+  logo: string | null
   status: string
   contact_phone: string
   contact_email: string
@@ -128,6 +129,12 @@ export default function CenterDetailPage() {
           <StatCard label="Admins" value={org.admins_count} />
           <StatCard label="Plan" value={org.plan_name} subtitle={`${org.days_remaining} days left`} />
         </div>
+
+        <LogoDropzone
+          orgId={org.id}
+          logo={org.logo}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ['super-org', id] })}
+        />
 
         <Card>
           <CardContent className="p-6">
@@ -370,5 +377,145 @@ function ResetPasswordDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function LogoDropzone({
+  orgId,
+  logo,
+  onUpdated,
+}: {
+  orgId: number
+  logo: string | null
+  onUpdated: () => void
+}) {
+  const [dragging, setDragging] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const upload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Faqat rasm fayllari (PNG, JPG, SVG)')
+      return
+    }
+    setBusy(true)
+    try {
+      const fd = new FormData()
+      fd.append('logo', file)
+      await api.post(`/super/organizations/${orgId}/logo/`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      toast.success('Logo yuklandi')
+      onUpdated()
+    } catch {
+      toast.error('Yuklashda xatolik')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async () => {
+    if (!window.confirm('Logoni o‘chirmoqchimisiz?')) return
+    setBusy(true)
+    try {
+      await api.delete(`/super/organizations/${orgId}/logo/`)
+      toast.success('Logo o‘chirildi')
+      onUpdated()
+    } catch {
+      toast.error('O‘chirishda xatolik')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) upload(file)
+  }
+
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) upload(file)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <ImagePlus size={18} className="text-red-600" />
+        <h2 className="text-base font-semibold text-slate-900">Markaz logosi</h2>
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onPick}
+      />
+
+      {logo ? (
+        <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <img
+            src={logo}
+            alt="Logo"
+            className="h-20 w-20 rounded-xl border bg-white object-contain p-2"
+          />
+          <div className="flex-1 text-sm">
+            <p className="font-medium text-slate-900">Joriy logo</p>
+            <p className="text-xs text-slate-500">
+              Yangisini yuklash uchun pastga drag qiling yoki “Almashtirish”ni bosing.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={busy}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <UploadCloud size={14} className="mr-1 inline" /> Almashtirish
+            </button>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
+            >
+              <Trash2 size={14} className="mr-1 inline" /> O‘chirish
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        onClick={() => inputRef.current?.click()}
+        className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+          dragging
+            ? 'border-red-500 bg-red-50'
+            : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
+        }`}
+      >
+        <div
+          className={`flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ${
+            dragging ? 'text-red-600' : 'text-slate-400'
+          }`}
+        >
+          {busy ? <Loader2 size={26} className="animate-spin" /> : <UploadCloud size={26} />}
+        </div>
+        <p className="mt-3 text-sm font-medium text-slate-700">
+          Faylni bu yerga tashlang yoki <span className="text-red-600 underline">tanlang</span>
+        </p>
+        <p className="mt-1 text-xs text-slate-500">PNG, JPG, SVG (transparent background tavsiya etiladi)</p>
+      </div>
+    </div>
   )
 }
