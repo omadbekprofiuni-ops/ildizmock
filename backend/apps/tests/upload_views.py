@@ -41,3 +41,36 @@ class AudioUploadView(APIView):
             'path': saved_path,
             'duration': duration,
         })
+
+
+class ImageUploadView(APIView):
+    """Generic image upload — writing chart, passage diagram, savol rasmi.
+
+    Frontend `path` qiymatini `easy-create` payload'ida (masalan,
+    `writing_tasks[].chart_image_path`) yuboradi.
+    """
+
+    permission_classes = [IsAdmin]
+    parser_classes = [MultiPartParser, FormParser]
+
+    ALLOWED_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'}
+
+    def post(self, request):
+        f = request.FILES.get('file')
+        if not f:
+            return Response({'detail': 'Fayl yuborilmagan.'}, status=400)
+
+        ext = os.path.splitext(f.name)[1].lower() or '.png'
+        if ext not in self.ALLOWED_EXT:
+            return Response(
+                {'detail': 'Faqat rasm fayllari (png/jpg/webp).'}, status=400,
+            )
+
+        folder = (request.data.get('folder') or 'writing_charts').strip(
+            '/'
+        ) or 'writing_charts'
+        safe_name = f'{folder}/{uuid.uuid4().hex}{ext}'
+        saved_path = default_storage.save(safe_name, f)
+        url = settings.MEDIA_URL + saved_path
+
+        return Response({'url': url, 'path': saved_path})

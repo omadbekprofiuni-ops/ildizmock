@@ -320,7 +320,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
             # Writing tasks
             for wt_data in (d.get('writing_tasks') or []):
-                WritingTask.objects.create(
+                wt = WritingTask.objects.create(
                     test=test,
                     task_number=int(wt_data.get('task_number') or 1),
                     prompt=wt_data.get('prompt', '') or '',
@@ -328,6 +328,11 @@ class CenterTestViewSet(viewsets.ModelViewSet):
                     suggested_minutes=int(wt_data.get('suggested_minutes') or 20),
                     requirements=wt_data.get('requirements', '') or '',
                 )
+                # Faqat Task 1 uchun chart rasmni saqlaymiz
+                chart_path = wt_data.get('chart_image_path')
+                if chart_path and wt.task_number == 1:
+                    wt.chart_image.name = _normalize_path(chart_path)
+                    wt.save(update_fields=['chart_image'])
 
         return Response(
             SuperTestDetailSerializer(test, context={'request': request}).data,

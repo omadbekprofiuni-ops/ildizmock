@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle2, Clock, Home, Loader2, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Clock, Home, Loader2, Maximize2, Minimize2, XCircle } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Link,
@@ -272,6 +272,8 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
   const [currentQId, setCurrentQId] = useState<number | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [isFullscreen, setIsFullscreen] = useState(() => ieltsRules.isFullscreen())
+  const userExitedFsRef = useRef(false)
   const dirtyRef = useRef(false)
   const initialisedRef = useRef(false)
 
@@ -326,7 +328,14 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     })
 
     const removeFsChange = ieltsRules.onFullscreenChange(() => {
-      if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
+      const fs = ieltsRules.isFullscreen()
+      setIsFullscreen(fs)
+      if (
+        !fs &&
+        !userExitedFsRef.current &&
+        !submitMutation.isPending &&
+        !submitMutation.isSuccess
+      ) {
         toast.warning('Test must be in fullscreen mode.')
         setTimeout(() => ieltsRules.enterFullscreen(), 100)
       }
@@ -343,6 +352,16 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const toggleFullscreen = () => {
+    if (ieltsRules.isFullscreen()) {
+      userExitedFsRef.current = true
+      ieltsRules.exitFullscreen()
+    } else {
+      userExitedFsRef.current = false
+      ieltsRules.enterFullscreen()
+    }
+  }
 
   useEffect(() => {
     if (!dirtyRef.current) return
@@ -422,6 +441,24 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-xs text-slate-400 md:inline">{saveStatus}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={toggleFullscreen}
+            className="h-8 px-2 text-white hover:bg-slate-800 hover:text-white"
+            title={
+              isFullscreen
+                ? 'Ekranni kichraytirish (favqulodda holat uchun)'
+                : 'Full screen rejimiga o‘tish'
+            }
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
           <div className="flex items-center gap-2 rounded-md bg-slate-800 px-3 py-1.5 font-mono text-sm tabular-nums">
             <Clock className="h-4 w-4" />
             <span className={remainingSec < 60 ? 'text-amber-300' : ''}>
@@ -690,6 +727,8 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const [essay, setEssay] = useState(attempt.essay_text || '')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [isFullscreen, setIsFullscreen] = useState(() => ieltsRules.isFullscreen())
+  const userExitedFsRef = useRef(false)
   const dirtyRef = useRef(false)
   const initialisedRef = useRef(false)
 
@@ -740,7 +779,14 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
       }
     })
     const removeFsChange = ieltsRules.onFullscreenChange(() => {
-      if (!ieltsRules.isFullscreen() && !submitMutation.isPending && !submitMutation.isSuccess) {
+      const fs = ieltsRules.isFullscreen()
+      setIsFullscreen(fs)
+      if (
+        !fs &&
+        !userExitedFsRef.current &&
+        !submitMutation.isPending &&
+        !submitMutation.isSuccess
+      ) {
         toast.warning('Test must be in fullscreen mode.')
         setTimeout(() => ieltsRules.enterFullscreen(), 100)
       }
@@ -756,6 +802,16 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const toggleFullscreen = () => {
+    if (ieltsRules.isFullscreen()) {
+      userExitedFsRef.current = true
+      ieltsRules.exitFullscreen()
+    } else {
+      userExitedFsRef.current = false
+      ieltsRules.enterFullscreen()
+    }
+  }
 
   useEffect(() => {
     if (!dirtyRef.current) return
@@ -815,6 +871,24 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-xs text-slate-400 md:inline">{saveStatus}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={toggleFullscreen}
+            className="h-8 px-2 text-white hover:bg-slate-800 hover:text-white"
+            title={
+              isFullscreen
+                ? 'Ekranni kichraytirish (favqulodda holat uchun)'
+                : 'Full screen rejimiga o‘tish'
+            }
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
           <div className="flex items-center gap-2 rounded-md bg-slate-800 px-3 py-1.5 font-mono text-sm tabular-nums">
             <Clock className="h-4 w-4" />
             <span className={remainingSec < 60 ? 'text-amber-300' : ''}>

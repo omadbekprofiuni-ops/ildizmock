@@ -15,7 +15,7 @@ from .super_views import (
     SuperWritingTaskViewSet,
 )
 from .super_audio_views import SuperAdminAudioListView
-from .upload_views import AudioUploadView
+from .upload_views import AudioUploadView, ImageUploadView
 from .views import TestCountsView, TestViewSet
 
 router = DefaultRouter()
@@ -42,6 +42,7 @@ router.register(
 urlpatterns = [
     path('admin/stats/overview', AdminDashboardView.as_view()),
     path('admin/upload/audio', AudioUploadView.as_view()),
+    path('admin/upload/image', ImageUploadView.as_view()),
     path('tests/counts/', TestCountsView.as_view()),
     path('super/audio/', SuperAdminAudioListView.as_view(), name='super-audio'),
 ] + router.urls

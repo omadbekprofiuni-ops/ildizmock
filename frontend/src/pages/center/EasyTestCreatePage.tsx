@@ -3,11 +3,13 @@ import {
   BookOpen,
   GripVertical,
   Headphones,
+  ImageIcon,
   Loader2,
   PenLine,
   Plus,
   Trash2,
   Upload,
+  X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -53,6 +55,8 @@ type WritingTaskDraft = {
   min_words: number
   suggested_minutes: number
   requirements: string
+  chart_image_path: string | null
+  chart_image_url: string | null
 }
 
 const MODULE_OPTIONS: {
@@ -92,6 +96,8 @@ const blankWriting = (n: number): WritingTaskDraft => ({
   min_words: n === 1 ? 150 : 250,
   suggested_minutes: n === 1 ? 20 : 40,
   requirements: '',
+  chart_image_path: null,
+  chart_image_url: null,
 })
 
 export default function EasyTestCreatePage() {
@@ -232,7 +238,14 @@ export default function EasyTestCreatePage() {
           questions: s.questions,
         }))
       } else if (module === 'writing') {
-        payload.writing_tasks = writingTasks
+        payload.writing_tasks = writingTasks.map((t) => ({
+          task_number: t.task_number,
+          prompt: t.prompt,
+          min_words: t.min_words,
+          suggested_minutes: t.suggested_minutes,
+          requirements: t.requirements,
+          chart_image_path: t.task_number === 1 ? t.chart_image_path : null,
+        }))
       }
 
       await api.post(`/center/${slug}/tests/easy-create/`, payload)
@@ -409,6 +422,19 @@ export default function EasyTestCreatePage() {
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </Field>
+
+                {t.task_number === 1 && (
+                  <div className="mt-3">
+                    <ChartImageField
+                      task={t}
+                      onChange={(patch) =>
+                        setWritingTasks((arr) =>
+                          arr.map((x, idx) => (idx === i ? { ...x, ...patch } : x)),
+                        )
+                      }
+                    />
+                  </div>
+                )}
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Field label="Kamida so‘z">
                     <input
@@ -830,6 +856,96 @@ function AudioField({
       {section.audio_url && (
         <audio controls src={section.audio_url} className="mt-2 h-10 w-full max-w-md" />
       )}
+    </div>
+  )
+}
+
+function ChartImageField({
+  task,
+  onChange,
+}: {
+  task: WritingTaskDraft
+  onChange: (patch: Partial<WritingTaskDraft>) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('folder', 'writing_charts')
+      const res = await api.post<{ path: string; url: string }>(
+        '/admin/upload/image',
+        fd,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      onChange({
+        chart_image_path: res.data.path,
+        chart_image_url: res.data.url,
+      })
+      toast.success('Rasm yuklandi')
+    } catch {
+      toast.error('Rasm yuklashda xatolik')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+        <ImageIcon size={14} className="text-slate-500" />
+        Chart / rasm (Task 1 uchun)
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={onFile}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className={btnOutline + ' !py-2 !px-3'}
+        >
+          {uploading ? (
+            <>
+              <Loader2 size={14} className="animate-spin" /> Yuklanmoqda…
+            </>
+          ) : (
+            <>
+              <Upload size={14} /> {task.chart_image_path ? 'Almashtirish' : 'Rasm yuklash'}
+            </>
+          )}
+        </button>
+        {task.chart_image_path && (
+          <button
+            type="button"
+            onClick={() => onChange({ chart_image_path: null, chart_image_url: null })}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+          >
+            <X size={12} /> O‘chirish
+          </button>
+        )}
+      </div>
+      {task.chart_image_url && (
+        <img
+          src={task.chart_image_url}
+          alt="Chart preview"
+          className="mt-2 max-h-60 rounded-lg border border-slate-200 object-contain"
+        />
+      )}
+      <p className="mt-1 text-xs text-slate-500">
+        IELTS Task 1 uchun chart, grafik yoki jadval (PNG/JPG/WEBP).
+      </p>
     </div>
   )
 }
