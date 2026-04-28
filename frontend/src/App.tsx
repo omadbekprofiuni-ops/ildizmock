@@ -14,6 +14,8 @@ import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
+import StudentDetailPage from './pages/center/StudentDetailPage'
+import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import GroupCreatePage from './pages/center/GroupCreatePage'
 import GroupDetailPage from './pages/center/GroupDetailPage'
 import GroupsComparisonPage from './pages/center/GroupsComparisonPage'
@@ -62,6 +64,7 @@ import TakeTestPage from './pages/TakeTestPage'
 import TeacherGradePage from './pages/teacher/TeacherGradePage'
 import TeacherQueuePage from './pages/teacher/TeacherQueuePage'
 import TeacherStudentsPage from './pages/teacher/TeacherStudentsPage'
+import TeacherStudentDetailPage from './pages/teacher/TeacherStudentDetailPage'
 import MockSpeakingGradePage from './pages/teacher/mock/MockSpeakingGradePage'
 import MockSpeakingQueuePage from './pages/teacher/mock/MockSpeakingQueuePage'
 import MockWritingGradePage from './pages/teacher/mock/MockWritingGradePage'
@@ -106,6 +109,7 @@ export default function App() {
           <Route path="/teacher" element={<TeacherRoute><TeacherQueuePage /></TeacherRoute>} />
           <Route path="/teacher/grade/:id" element={<TeacherRoute><TeacherGradePage /></TeacherRoute>} />
           <Route path="/teacher/students" element={<TeacherRoute><TeacherStudentsPage /></TeacherRoute>} />
+          <Route path="/teacher/students/:studentId" element={<TeacherRoute><TeacherStudentDetailPage /></TeacherRoute>} />
           <Route path="/teacher/mock/writing" element={<TeacherRoute><MockWritingQueuePage /></TeacherRoute>} />
           <Route path="/teacher/mock/writing/:id" element={<TeacherRoute><MockWritingGradePage /></TeacherRoute>} />
           <Route path="/teacher/mock/speaking" element={<TeacherRoute><MockSpeakingQueuePage /></TeacherRoute>} />
@@ -201,9 +205,11 @@ export default function App() {
             <Route element={<CenterAdminLayout />}>
               <Route index element={<CenterDashboard />} />
               <Route path="students" element={<CenterStudentsPage />} />
+              <Route path="students/:studentId" element={<StudentDetailPage />} />
               <Route path="teachers" element={<CenterTeachersPage />} />
               <Route path="tests" element={<CenterTestsPage />} />
-              <Route path="tests/new" element={<EasyTestCreatePage />} />
+              <Route path="tests/new" element={<TestCreateHubPage />} />
+              <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/:testId/preview" element={<TestPreviewPage />} />
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />

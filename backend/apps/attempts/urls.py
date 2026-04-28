@@ -3,7 +3,12 @@ from rest_framework.routers import DefaultRouter
 
 from .practice_views import PracticeHistoryView
 from .student_writing_views import MyDashboardView, MyWritingsView, SubmitWritingView
-from .teacher_views import TeacherQueueView, TeacherStudentsView, TeacherSubmissionViewSet
+from .teacher_views import (
+    TeacherQueueView,
+    TeacherStudentsView,
+    TeacherStudentStatsView,
+    TeacherSubmissionViewSet,
+)
 from .views import AttemptViewSet, StartAttemptView
 
 router = DefaultRouter()
@@ -20,4 +25,5 @@ urlpatterns = [
     path('me/practice/history/', PracticeHistoryView.as_view()),
     path('teacher/queue/', TeacherQueueView.as_view()),
     path('teacher/students/', TeacherStudentsView.as_view()),
+    path('teacher/students/<int:student_id>/stats/', TeacherStudentStatsView.as_view()),
 ] + router.urls

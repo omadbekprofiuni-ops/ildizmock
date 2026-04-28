@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
@@ -59,7 +60,14 @@ export default function TeacherStudentsPage() {
                 <tbody className="divide-y">
                   {q.data.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-3 font-medium">{s.name}</td>
+                      <td className="px-6 py-3 font-medium">
+                        <Link
+                          to={`/teacher/students/${s.id}`}
+                          className="hover:text-red-700"
+                        >
+                          {s.name}
+                        </Link>
+                      </td>
                       <td className="px-6 py-3 font-mono text-xs">{s.username}</td>
                       <td className="px-6 py-3">{s.attempts_count}</td>
                       <td className="px-6 py-3">{formatDate(s.last_attempt)}</td>

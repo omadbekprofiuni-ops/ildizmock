@@ -117,6 +117,91 @@ class TeacherStudentsView(APIView):
         return Response(data)
 
 
+class TeacherStudentStatsView(APIView):
+    """GET /api/v1/teacher/students/<id>/stats/ — talabaning urinishlari ro'yxati."""
+
+    permission_classes = [IsTeacher]
+
+    def get(self, request, student_id):
+        from apps.attempts.models import Attempt
+        from apps.mock.models import MockParticipant
+
+        try:
+            student = User.objects.get(
+                id=student_id, teacher=request.user, role='student',
+            )
+        except User.DoesNotExist:
+            return Response({'detail': 'Talaba topilmadi.'}, status=404)
+
+        attempts = (
+            Attempt.objects
+            .filter(user=student, status__in=['submitted', 'graded'])
+            .select_related('test')
+            .order_by('-submitted_at')
+        )
+
+        per_module = {}
+        for module in ('listening', 'reading', 'writing'):
+            qs = attempts.filter(test__module=module)
+            agg = qs.aggregate(best=Max('band_score'), avg=Avg('band_score'))
+            per_module[module] = {
+                'count': qs.count(),
+                'best': float(agg['best']) if agg['best'] else None,
+                'avg': round(float(agg['avg']), 1) if agg['avg'] else None,
+            }
+
+        attempt_list = [
+            {
+                'id': str(a.id),
+                'test_id': str(a.test_id),
+                'test_name': a.test.name,
+                'module': a.test.module,
+                'band_score': float(a.band_score) if a.band_score else None,
+                'raw_score': a.raw_score,
+                'total_questions': a.total_questions,
+                'submitted_at': a.submitted_at.isoformat() if a.submitted_at else None,
+                'status': a.status,
+            }
+            for a in attempts[:50]
+        ]
+
+        mocks = (
+            MockParticipant.objects
+            .filter(user=student)
+            .select_related('session')
+            .order_by('-joined_at')[:20]
+        )
+        mock_list = [
+            {
+                'id': m.id,
+                'session_id': m.session_id,
+                'session_name': m.session.name,
+                'date': m.session.date.isoformat() if m.session.date else None,
+                'overall_band': (
+                    float(m.overall_band_score) if m.overall_band_score else None
+                ),
+                'listening': float(m.listening_score) if m.listening_score else None,
+                'reading': float(m.reading_score) if m.reading_score else None,
+                'writing': float(m.writing_score) if m.writing_score else None,
+            }
+            for m in mocks
+        ]
+
+        return Response({
+            'student': {
+                'id': student.id,
+                'username': student.username,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'phone': student.phone,
+                'is_active': student.is_active,
+            },
+            'per_module': per_module,
+            'attempts': attempt_list,
+            'mocks': mock_list,
+        })
+
+
 class TeacherSubmissionViewSet(viewsets.GenericViewSet):
     """GET /api/v1/teacher/submissions/:id/ + POST .../grade/."""
 

@@ -46,6 +46,8 @@ type SectionDraft = {
   instructions: string
   audio_file_path: string | null // listening only
   audio_url: string | null // preview
+  image_path: string | null // listening map/diagram (ixtiyoriy)
+  image_url: string | null
   questions: QDraft[]
 }
 
@@ -87,6 +89,8 @@ const blankSection = (n: number): SectionDraft => ({
   instructions: '',
   audio_file_path: null,
   audio_url: null,
+  image_path: null,
+  image_url: null,
   questions: [blankQuestion(1)],
 })
 
@@ -101,11 +105,23 @@ const blankWriting = (n: number): WritingTaskDraft => ({
 })
 
 export default function EasyTestCreatePage() {
-  const { slug } = useParams<{ slug: string }>()
+  const { slug, module: moduleParam } = useParams<{ slug: string; module?: string }>()
   const navigate = useNavigate()
-  useEffect(() => { document.title = 'ILDIZmock — Yangi test' }, [])
 
-  const [module, setModule] = useState<Module>('reading')
+  // URL'dan module aniqlanadi — hub'dan kelgan bo'lsa oldindan tanlanadi.
+  const initialModule: Module =
+    moduleParam === 'listening' ? 'listening'
+      : moduleParam === 'writing' ? 'writing'
+        : moduleParam === 'reading' ? 'reading'
+          : 'reading'
+  const moduleLocked = !!moduleParam
+
+  useEffect(() => {
+    const mod = moduleParam ? `(${moduleParam})` : ''
+    document.title = `ILDIZmock — Yangi test ${mod}`.trim()
+  }, [moduleParam])
+
+  const [module, setModule] = useState<Module>(initialModule)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert'>('intermediate')
@@ -233,6 +249,7 @@ export default function EasyTestCreatePage() {
         payload.listening_parts = sections.map((s) => ({
           part_number: s.part_number,
           audio_file_path: s.audio_file_path,
+          image_path: s.image_path,
           transcript: s.content,
           instructions: s.instructions,
           questions: s.questions,
@@ -299,7 +316,8 @@ export default function EasyTestCreatePage() {
       />
 
       <div className="space-y-6">
-        {/* Module selector */}
+        {/* Module selector — faqat URL'dan modul aniq emas bo'lsa ko'rinadi */}
+        {!moduleLocked && (
         <SurfaceCard>
           <p className="mb-3 text-sm font-medium text-slate-700">Test turi</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -334,6 +352,7 @@ export default function EasyTestCreatePage() {
             })}
           </div>
         </SurfaceCard>
+        )}
 
         {/* Basic info */}
         <SurfaceCard>
@@ -570,10 +589,10 @@ function SectionEditor({
         </Field>
 
         {module === 'listening' && (
-          <AudioField
-            section={section}
-            onChange={onChange}
-          />
+          <>
+            <AudioField section={section} onChange={onChange} />
+            <SectionImageField section={section} onChange={onChange} />
+          </>
         )}
 
         <Field label={module === 'listening' ? 'Audio matni / Transcript' : 'Passage matni'}>
@@ -855,6 +874,90 @@ function AudioField({
       </div>
       {section.audio_url && (
         <audio controls src={section.audio_url} className="mt-2 h-10 w-full max-w-md" />
+      )}
+    </div>
+  )
+}
+
+function SectionImageField({
+  section,
+  onChange,
+}: {
+  section: SectionDraft
+  onChange: (patch: Partial<SectionDraft>) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('folder', 'listening_images')
+      const res = await api.post<{ path: string; url: string }>(
+        '/admin/upload/image',
+        fd,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      onChange({ image_path: res.data.path, image_url: res.data.url })
+      toast.success('Rasm yuklandi')
+    } catch {
+      toast.error('Rasm yuklashda xatolik')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+        <ImageIcon size={14} className="text-slate-500" />
+        Rasm (map / diagram — ixtiyoriy)
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={onFile}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className={btnOutline + ' !py-2 !px-3'}
+        >
+          {uploading ? (
+            <>
+              <Loader2 size={14} className="animate-spin" /> Yuklanmoqda…
+            </>
+          ) : (
+            <>
+              <Upload size={14} /> {section.image_path ? 'Almashtirish' : 'Rasm yuklash'}
+            </>
+          )}
+        </button>
+        {section.image_path && (
+          <button
+            type="button"
+            onClick={() => onChange({ image_path: null, image_url: null })}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+          >
+            <X size={12} /> O‘chirish
+          </button>
+        )}
+      </div>
+      {section.image_url && (
+        <img
+          src={section.image_url}
+          alt="Section preview"
+          className="mt-2 max-h-48 rounded-lg border border-slate-200 object-contain"
+        />
       )}
     </div>
   )

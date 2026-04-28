@@ -1,6 +1,6 @@
 import { Plus, Search, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
 import {
   Chip,
@@ -141,14 +141,17 @@ export default function StudentsPage() {
                   return (
                     <tr key={s.id} className={adminTable.trHover}>
                       <td className={adminTable.td}>
-                        <div className="flex items-center gap-3">
+                        <Link
+                          to={`/${slug}/admin/students/${s.id}`}
+                          className="flex items-center gap-3 hover:text-red-700"
+                        >
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-semibold text-red-700">
                             {initials}
                           </div>
                           <div className="font-semibold text-slate-900">
                             {s.first_name} {s.last_name}
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className={adminTable.td + ' font-mono text-xs text-slate-600'}>
                         {s.username}

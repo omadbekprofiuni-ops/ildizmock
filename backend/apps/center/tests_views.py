@@ -315,6 +315,11 @@ class CenterTestViewSet(viewsets.ModelViewSet):
                 if audio_path:
                     lp.audio_file.name = _normalize_path(audio_path)
                     lp.save(update_fields=['audio_file'])
+                # Listening parts ham rasm bo'lishi mumkin (map, diagram).
+                image_path = lp_data.get('image_path')
+                if image_path:
+                    lp.image.name = _normalize_path(image_path)
+                    lp.save(update_fields=['image'])
                 for q_data in (lp_data.get('questions') or []):
                     _create_question(listening_part=lp, q=q_data)
 
