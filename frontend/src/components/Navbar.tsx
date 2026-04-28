@@ -11,7 +11,12 @@ export function Navbar() {
   return (
     <header className="border-b border-[var(--border)] bg-white">
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="text-xl font-bold tracking-tight">
+        <Link to="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <img
+            src="/ildizmock-logo.png"
+            alt="ILDIZmock"
+            className="h-9 w-9 object-contain"
+          />
           ILDIZmock
         </Link>
         {user ? (

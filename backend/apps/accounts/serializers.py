@@ -37,12 +37,25 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            raise serializers.ValidationError({'detail': 'Wrong username or password'})
+            raise serializers.ValidationError(
+                {'detail': "Login yoki parol noto'g'ri"},
+            )
 
         if not user.check_password(password):
-            raise serializers.ValidationError({'detail': 'Wrong username or password'})
+            raise serializers.ValidationError(
+                {'detail': "Login yoki parol noto'g'ri"},
+            )
+
+        # Parol to'g'ri, lekin akkaunt o'chirilgan/bloklangan
         if not user.is_active:
-            raise serializers.ValidationError({'detail': 'Account is blocked'})
+            raise serializers.ValidationError(
+                {
+                    'detail': (
+                        "Akkauntingiz markaz administratori tomonidan "
+                        "vaqtincha o'chirib qo'yilgan. Markazga murojaat qiling."
+                    ),
+                },
+            )
 
         attrs['user'] = user
         return attrs

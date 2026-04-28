@@ -66,8 +66,6 @@ export default function CenterAdminLayout() {
   const seg = path.replace(`/${slug}/admin`, '').replace(/^\//, '').split('/')[0] ?? ''
   const meta = TITLES[seg] ?? { title: seg || 'Bosh sahifa' }
 
-  const initials = (org?.name || slug || '?').slice(0, 2).toUpperCase()
-
   return (
     <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900">
       {/* SIDEBAR */}
@@ -76,20 +74,11 @@ export default function CenterAdminLayout() {
           to={`/${slug}/admin`}
           className="flex h-16 items-center gap-3 border-b border-slate-100 px-6"
         >
-          {org?.logo ? (
-            <img
-              src={org.logo}
-              alt={org.name}
-              className="h-9 w-9 rounded-xl bg-slate-50 object-contain p-1"
-            />
-          ) : (
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold text-sm"
-              style={{ background: org?.primary_color || '#DC2626' }}
-            >
-              {initials}
-            </div>
-          )}
+          <img
+            src="/ildizmock-logo.png"
+            alt="ILDIZmock"
+            className="h-9 w-9 shrink-0 object-contain"
+          />
           <div className="leading-tight">
             <div className="font-bold tracking-tight text-red-600">ILDIZmock</div>
             <div className="text-xs text-slate-500 truncate max-w-[120px]">

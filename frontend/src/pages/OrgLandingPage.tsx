@@ -62,6 +62,11 @@ export default function OrgLandingPage() {
       <header className="border-b border-[var(--border)] bg-white">
         <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
+            <img
+              src="/ildizmock-logo.png"
+              alt="ILDIZmock"
+              className="h-8 w-8 object-contain"
+            />
             <span className="text-lg font-bold tracking-tight">ILDIZmock</span>
             <span className="text-slate-300">×</span>
             {org.logo ? (

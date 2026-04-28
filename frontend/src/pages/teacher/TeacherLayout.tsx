@@ -25,8 +25,13 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 flex w-64 flex-col border-r border-slate-200 bg-white">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-6">
-          <Link to="/teacher" className="text-lg font-bold tracking-tight text-red-600">
-            ILDIZmock
+          <Link to="/teacher" className="flex items-center gap-2">
+            <img
+              src="/ildizmock-logo.png"
+              alt="ILDIZmock"
+              className="h-9 w-9 object-contain"
+            />
+            <span className="text-lg font-bold tracking-tight text-red-600">ILDIZmock</span>
           </Link>
           <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700">
             TEACHER
