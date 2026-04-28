@@ -5,6 +5,7 @@ from apps.mock.admin_views import CenterMockSessionViewSet
 
 from .analytics_views import CenterAnalyticsExcelView, CenterAnalyticsView
 from .dashboard_views import CenterDashboardView, CenterSettingsView
+from .groups_views import CenterGroupViewSet
 from .tests_views import CenterTestViewSet
 from .views import CenterStudentViewSet, CenterTeacherViewSet
 
@@ -13,6 +14,7 @@ router.register('students', CenterStudentViewSet, basename='center-students')
 router.register('teachers', CenterTeacherViewSet, basename='center-teachers')
 router.register('tests', CenterTestViewSet, basename='center-tests')
 router.register('mock', CenterMockSessionViewSet, basename='center-mock')
+router.register('groups', CenterGroupViewSet, basename='center-groups')
 
 urlpatterns = router.urls + [
     path('dashboard/', CenterDashboardView.as_view(), name='center-dashboard'),

@@ -58,6 +58,12 @@ class User(AbstractUser):
         on_delete=models.SET_NULL,
         limit_choices_to={'role': 'teacher'},
     )
+    group = models.ForeignKey(
+        'organizations.StudentGroup', null=True, blank=True,
+        related_name='members',
+        on_delete=models.SET_NULL,
+    )
+    enrolled_at = models.DateField(null=True, blank=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

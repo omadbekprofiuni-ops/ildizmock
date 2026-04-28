@@ -6,6 +6,7 @@ import {
   LogOut,
   Settings,
   Users,
+  UsersRound,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: '', label: 'Bosh sahifa', icon: LayoutDashboard, end: true },
   { to: 'students', label: "O'quvchilar", icon: Users },
   { to: 'teachers', label: 'Ustozlar', icon: GraduationCap },
+  { to: 'groups', label: 'Guruhlar', icon: UsersRound },
   { to: 'tests', label: 'Testlar', icon: BookOpen },
   { to: 'mock', label: 'Mock sessiyalar', icon: BookOpen },
   { to: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -34,6 +36,7 @@ const TITLES: Record<string, { title: string; crumb?: string }> = {
   '': { title: 'Bosh sahifa' },
   students: { title: "O'quvchilar", crumb: 'Foydalanuvchilar' },
   teachers: { title: 'Ustozlar', crumb: 'Foydalanuvchilar' },
+  groups: { title: 'Guruhlar', crumb: 'Monitoring' },
   tests: { title: 'Testlar', crumb: 'Test bazasi' },
   mock: { title: 'Mock sessiyalar', crumb: 'Sinov' },
   analytics: { title: 'Analytics', crumb: 'Hisobotlar' },

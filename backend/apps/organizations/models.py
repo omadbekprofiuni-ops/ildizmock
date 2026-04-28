@@ -125,6 +125,52 @@ class OrganizationMembership(models.Model):
         return f'{self.user.username} @ {self.organization.slug} ({self.role})'
 
 
+class StudentGroup(models.Model):
+    """Talabalar guruhi (markaz ichida).
+
+    O'qituvchilar guruhdagi talabalarni kuzatadi, admin esa
+    guruhlar o'rtasida taqqoslaydi.
+    """
+
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE,
+        related_name='student_groups',
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text='Misol: IELTS 7.0, Group A, Beginner 1',
+    )
+    description = models.TextField(blank=True, default='')
+
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='teaching_groups',
+        limit_choices_to={'role': 'teacher'},
+    )
+
+    target_band_score = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Maqsad band score (6.5, 7.0, 7.5...)',
+    )
+    class_schedule = models.CharField(max_length=200, blank=True, default='')
+
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = [('organization', 'name')]
+
+    def __str__(self):
+        return f'{self.name} — {self.organization.slug}'
+
+
 class Payment(models.Model):
     """To'lov tarixi (qo'lda belgilanadi superadmin tomonidan)."""
 

@@ -14,6 +14,10 @@ import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
+import GroupCreatePage from './pages/center/GroupCreatePage'
+import GroupDetailPage from './pages/center/GroupDetailPage'
+import GroupsComparisonPage from './pages/center/GroupsComparisonPage'
+import GroupsListPage from './pages/center/GroupsListPage'
 import CenterSettingsPage from './pages/center/SettingsPage'
 import CenterStudentsPage from './pages/center/StudentsPage'
 import CenterTeachersPage from './pages/center/TeachersPage'
@@ -203,6 +207,10 @@ export default function App() {
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />
               <Route path="mock/:sessionId/results" element={<MockResultsPage />} />
+              <Route path="groups" element={<GroupsListPage />} />
+              <Route path="groups/new" element={<GroupCreatePage />} />
+              <Route path="groups/comparison" element={<GroupsComparisonPage />} />
+              <Route path="groups/:groupId" element={<GroupDetailPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
               <Route path="settings" element={<CenterSettingsPage />} />
             </Route>
