@@ -51,7 +51,7 @@ const TONE_CLASSES: Record<
   'indigo' | 'blue' | 'emerald' | 'amber' | 'orange' | 'violet' | 'rose' | 'slate',
   { bg: string; text: string }
 > = {
-  indigo:  { bg: 'bg-indigo-100', text: 'text-indigo-600' },
+  indigo:  { bg: 'bg-red-100', text: 'text-red-600' },
   blue:    { bg: 'bg-blue-100', text: 'text-blue-600' },
   emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
   amber:   { bg: 'bg-amber-100', text: 'text-amber-600' },
@@ -162,7 +162,7 @@ export const adminTable = {
  * Indigo primary button class — `<button className={btnPrimary}>...</button>`.
  */
 export const btnPrimary =
-  'inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed'
+  'inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
 
 export const btnOutline =
   'inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
@@ -171,7 +171,7 @@ export const btnGhost =
   'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900'
 
 /**
- * Soft chip — `bg-indigo-50 text-indigo-700` etc.
+ * Soft chip — `bg-red-50 text-red-700` etc.
  */
 export function Chip({
   children,
@@ -184,7 +184,7 @@ export function Chip({
 }) {
   const tones: Record<typeof tone & string, string> = {
     slate:    'bg-slate-100 text-slate-700',
-    indigo:   'bg-indigo-50 text-indigo-700',
+    indigo:   'bg-red-50 text-red-700',
     emerald:  'bg-emerald-100 text-emerald-700',
     amber:    'bg-amber-100 text-amber-700',
     rose:     'bg-rose-100 text-rose-700',

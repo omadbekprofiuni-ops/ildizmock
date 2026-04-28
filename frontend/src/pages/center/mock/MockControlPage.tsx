@@ -154,7 +154,7 @@ export default function MockControlPage() {
       <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
         >
           <ArrowLeft size={14} /> Sessiyalar
         </Link>
@@ -177,7 +177,7 @@ export default function MockControlPage() {
       </div>
 
       {/* Join link */}
-      <SurfaceCard className="mb-6 border-indigo-100 bg-indigo-50/40">
+      <SurfaceCard className="mb-6 border-red-100 bg-red-50/40">
         <p className="mb-2 text-sm font-semibold text-slate-700">
           Talabalar uchun link:
         </p>
@@ -195,7 +195,7 @@ export default function MockControlPage() {
         </div>
         <p className="mt-2 text-xs text-slate-600">
           Access code:{' '}
-          <code className="rounded bg-white px-2 py-0.5 font-mono text-indigo-700">
+          <code className="rounded bg-white px-2 py-0.5 font-mono text-red-700">
             {session.access_code}
           </code>
         </p>

@@ -85,13 +85,13 @@ export default function CenterAdminLayout() {
           ) : (
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold text-sm"
-              style={{ background: org?.primary_color || '#4F46E5' }}
+              style={{ background: org?.primary_color || '#DC2626' }}
             >
               {initials}
             </div>
           )}
           <div className="leading-tight">
-            <div className="font-bold tracking-tight text-indigo-600">ILDIZmock</div>
+            <div className="font-bold tracking-tight text-red-600">ILDIZmock</div>
             <div className="text-xs text-slate-500 truncate max-w-[120px]">
               {org?.name ?? slug}
             </div>
@@ -107,7 +107,7 @@ export default function CenterAdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
+                    ? 'bg-red-50 text-red-700'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`
               }
@@ -120,7 +120,7 @@ export default function CenterAdminLayout() {
 
         <div className="border-t border-slate-100 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 font-bold text-red-700">
               {(user?.first_name || user?.username || '?').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">

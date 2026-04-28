@@ -133,7 +133,7 @@ export default function TestWizardPage() {
                   type="button"
                   onClick={createOrUpdate}
                   disabled={saving || !data.name}
-                  className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
                 >
                   {saving ? 'Saqlanmoqda…' : 'Saqlash va davom →'}
                 </button>
@@ -151,7 +151,7 @@ export default function TestWizardPage() {
                   type="button"
                   onClick={next}
                   disabled={step === 1 ? false : !testId}
-                  className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
                 >
                   Keyingisi →
                 </button>

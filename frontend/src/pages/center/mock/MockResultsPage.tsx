@@ -70,7 +70,7 @@ export default function MockResultsPage() {
       <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock/${sessionId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
         >
           <ArrowLeft size={14} /> Boshqaruv
         </Link>
@@ -124,7 +124,7 @@ export default function MockResultsPage() {
                   </td>
                   <td className={adminTable.td + ' text-center'}>
                     {p.overall_band_score ? (
-                      <span className="rounded-lg bg-indigo-50 px-3 py-1 font-mono text-base font-bold text-indigo-700">
+                      <span className="rounded-lg bg-red-50 px-3 py-1 font-mono text-base font-bold text-red-700">
                         {p.overall_band_score}
                       </span>
                     ) : (
@@ -159,7 +159,7 @@ function ScoreInput({
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => v !== (value ?? '') && onSave(v)}
-      className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-center font-mono text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-center font-mono text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
     />
   )
 }

@@ -122,7 +122,7 @@ export default function MockSessionsPage() {
                     <td className={adminTable.td + ' text-right'}>
                       <Link
                         to={`/${slug}/admin/mock/${s.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
                       >
                         Boshqarish <ArrowRight size={14} />
                       </Link>
@@ -249,7 +249,7 @@ function CreateSessionDialog({
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Masalan: 2026-04-27 Kechki guruh"
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
             </Field>
 
@@ -259,7 +259,7 @@ function CreateSessionDialog({
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
             </Field>
 
@@ -295,7 +295,7 @@ function CreateSessionDialog({
                       listening_duration: Number(e.target.value),
                     })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
               <Field label="Reading (daq.)">
@@ -307,7 +307,7 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, reading_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
               <Field label="Writing (daq.)">
@@ -319,7 +319,7 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, writing_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
             </div>
@@ -372,7 +372,7 @@ function TestSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
       >
         <option value="">— Tanlang —</option>
         {tests.map((t) => (

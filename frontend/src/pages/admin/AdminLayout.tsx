@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: Props) {
     <div className="flex min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 flex w-64 flex-col border-r border-slate-200 bg-white">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-6">
-          <Link to="/admin" className="text-lg font-bold tracking-tight text-indigo-600">
+          <Link to="/admin" className="text-lg font-bold tracking-tight text-red-600">
             ILDIZmock
           </Link>
           <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: Props) {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
+                    ? 'bg-red-50 text-red-700'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`
               }
@@ -61,7 +61,7 @@ export default function AdminLayout({ children }: Props) {
         </nav>
         <div className="border-t border-slate-100 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 font-bold text-red-700">
               {(user?.first_name || user?.username || '?').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">

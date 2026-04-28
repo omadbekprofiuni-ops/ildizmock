@@ -351,7 +351,7 @@ export default function AdminTestEditPage({
   }
 
   const moduleAccents: Record<TestDraft['module'], { ring: string; tint: string; text: string; chip: string }> = {
-    listening: { ring: 'border-indigo-100', tint: 'bg-indigo-50', text: 'text-indigo-700', chip: 'bg-indigo-100 text-indigo-700' },
+    listening: { ring: 'border-red-100', tint: 'bg-red-50', text: 'text-red-700', chip: 'bg-red-100 text-red-700' },
     reading:   { ring: 'border-emerald-100', tint: 'bg-emerald-50', text: 'text-emerald-700', chip: 'bg-emerald-100 text-emerald-700' },
     writing:   { ring: 'border-orange-100', tint: 'bg-orange-50', text: 'text-orange-700', chip: 'bg-orange-100 text-orange-700' },
     speaking:  { ring: 'border-purple-100', tint: 'bg-purple-50', text: 'text-purple-700', chip: 'bg-purple-100 text-purple-700' },
@@ -363,7 +363,7 @@ export default function AdminTestEditPage({
       <div className="mx-auto max-w-5xl p-6 lg:p-10">
         {/* Breadcrumb */}
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
-          <Link to={basePath} className="hover:text-indigo-600">Testlar</Link>
+          <Link to={basePath} className="hover:text-red-600">Testlar</Link>
           <span>/</span>
           <span className="text-slate-900">{isNew ? 'Yangi' : 'Tahrirlash'}</span>
         </div>
@@ -390,7 +390,7 @@ export default function AdminTestEditPage({
             <Button
               onClick={onSave}
               disabled={saveMutation.isPending}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+              className="rounded-xl bg-red-600 hover:bg-red-700"
             >
               {saveMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
             </Button>
@@ -588,7 +588,7 @@ export default function AdminTestEditPage({
         <Button
           variant="outline"
           onClick={addPassage}
-          className="w-full rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/40 py-6 font-medium text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
+          className="w-full rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-6 font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
         >
           <Plus className="mr-2 h-4 w-4" />
           {draft.module === 'listening' && "Yangi Qism (Part) qo'shish"}

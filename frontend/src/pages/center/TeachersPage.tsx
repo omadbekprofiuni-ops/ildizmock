@@ -103,7 +103,7 @@ export default function TeachersPage() {
                 placeholder="Ism yoki login bo'yicha qidirish..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
             </div>
           }
@@ -265,7 +265,7 @@ function AddTeacherModal({
           />
         </div>
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
-        <div className="mt-4 rounded-xl bg-indigo-50 p-3 text-xs text-indigo-700">
+        <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-700">
           💡 Parol avtomatik yaratiladi va keyingi ekranda ko'rsatiladi.
         </div>
         <div className="mt-5 flex gap-2">
@@ -303,7 +303,7 @@ function FormInput({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
       />
       {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>

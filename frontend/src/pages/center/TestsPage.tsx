@@ -173,7 +173,7 @@ export default function TestsPage() {
       )}
 
       {message && (
-        <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-700">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {message}
         </div>
       )}
@@ -181,7 +181,7 @@ export default function TestsPage() {
       <TableCard
         title={
           <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
-            <FileText size={18} className="text-indigo-600" />
+            <FileText size={18} className="text-red-600" />
             {tab === 'mine' ? 'Mening testlarim' : 'Global katalog'}
           </div>
         }
@@ -301,7 +301,7 @@ function TabButton({
       onClick={onClick}
       className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
         active
-          ? 'bg-white text-indigo-700 shadow-sm'
+          ? 'bg-white text-red-700 shadow-sm'
           : 'text-slate-600 hover:text-slate-900'
       }`}
     >
@@ -323,7 +323,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

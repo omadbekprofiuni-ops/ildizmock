@@ -93,7 +93,7 @@ export default function CenterDetailPage() {
         <div>
           <Link
             to="/super/organizations"
-            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
+            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
           >
             <ArrowLeft size={14} /> Back to centers
           </Link>

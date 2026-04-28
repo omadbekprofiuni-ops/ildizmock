@@ -136,7 +136,7 @@ export default function SuperAdminOrgsPage() {
                         <button
                           type="button"
                           onClick={() => enterOrgContext(o)}
-                          className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                          className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
                         >
                           <LogIn size={14} /> Enter
                         </button>
