@@ -48,16 +48,23 @@
     --border: var(--border-token);
   }
 
-  /* Brand-flavoured short variables for direct CSS use (override loop above) */
+  /* Brand-flavoured short variables for direct CSS use (override loop above)
+   *
+   * --accent: PUBLIC SITE brendi (qizil — ILDIZmock asl rangi). HomePage,
+   *           OrgLandingPage, talaba marketing tugmalari shu rangda bo'ladi.
+   *           Admin panellari to'g'ridan-to'g'ri indigo Tailwind klasslarini
+   *           ishlatadi va shadcn --primary tokeni indigo'ga sozlangan, shu
+   *           bois admin UI indigo'da qoladi.
+   */
   :root {
     --bg: #F8FAFC;
     --surface: #FFFFFF;
     --text: #0F172A;
     --muted: #64748B;
     --border: #E2E8F0;
-    --accent: #4F46E5;
-    --accent-dark: #4338CA;
-    --accent-soft: #EEF2FF;
+    --accent: #DC2626;        /* IELTS red — brand */
+    --accent-dark: #991B1B;
+    --accent-soft: #FEF2F2;
     --success: #16A34A;
     --error: #EF4444;
   }
