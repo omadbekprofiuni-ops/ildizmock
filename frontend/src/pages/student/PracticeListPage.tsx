@@ -1,86 +1,82 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Clock,
-  FileText,
   Headphones,
-  Loader2,
+  History,
   PenLine,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { UserMenu } from '@/components/UserMenu'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
-type PracticeTest = {
-  id: string
-  name: string
-  module: 'listening' | 'reading' | 'writing'
-  test_type: string
-  difficulty: string
-  duration_minutes: number
-  description: string
-  question_count: number
-  is_practice_enabled: boolean
-  practice_time_limit: number | null
+type Module = 'listening' | 'reading' | 'writing'
+
+type PracticeStats = Record<Module, {
+  tests_count: number
+  attempts_count: number
+  best_band: number | null
+  avg_band: number | null
+}> & {
+  recent: {
+    id: string
+    test_id: string
+    test_name: string
+    module: Module
+    band_score: number | null
+    submitted_at: string | null
+  }[]
 }
 
-const MODULE_META = {
+const MODULE_META: Record<Module, {
+  label: string
+  Icon: typeof Headphones
+  gradient: string
+  bg: string
+  text: string
+  band: string
+}> = {
   listening: {
     label: 'Listening',
     Icon: Headphones,
-    accent: 'text-emerald-600',
-    chip: 'bg-emerald-100 text-emerald-800',
+    gradient: 'from-blue-500 to-blue-600',
+    bg: 'bg-blue-50',
+    text: 'text-blue-600',
+    band: 'text-blue-700',
   },
   reading: {
     label: 'Reading',
     Icon: BookOpen,
-    accent: 'text-blue-600',
-    chip: 'bg-blue-100 text-blue-800',
+    gradient: 'from-purple-500 to-purple-600',
+    bg: 'bg-purple-50',
+    text: 'text-purple-600',
+    band: 'text-purple-700',
   },
   writing: {
     label: 'Writing',
     Icon: PenLine,
-    accent: 'text-orange-600',
-    chip: 'bg-orange-100 text-orange-800',
+    gradient: 'from-orange-500 to-orange-600',
+    bg: 'bg-orange-50',
+    text: 'text-orange-600',
+    band: 'text-orange-700',
   },
-} as const
+}
 
 export default function PracticeListPage() {
-  const navigate = useNavigate()
   useEffect(() => { document.title = 'ILDIZmock — Practice' }, [])
 
-  const query = useQuery({
-    queryKey: ['practice-tests'],
+  const stats = useQuery({
+    queryKey: ['practice-stats'],
     queryFn: async () =>
-      (await api.get<PracticeTest[]>('/tests/?practice=1')).data,
+      (await api.get<PracticeStats>('/practice/stats/')).data,
   })
 
-  const startAttempt = useMutation({
-    mutationFn: async (test: PracticeTest) => {
-      const res = await api.post<{ id: string }>(`/tests/${test.id}/attempts`)
-      return { attemptId: res.data.id }
-    },
-    onSuccess: ({ attemptId }) => navigate(`/take/${attemptId}`),
-    onError: (err) => {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response
-        ?.data?.detail
-      toast.error(detail || 'Practice testni boshlashda xatolik')
-    },
-  })
-
-  const tests = query.data ?? []
-  const grouped = {
-    listening: tests.filter((t) => t.module === 'listening'),
-    reading: tests.filter((t) => t.module === 'reading'),
-    writing: tests.filter((t) => t.module === 'writing'),
-  }
+  const data = stats.data
+  const modules: Module[] = ['listening', 'reading', 'writing']
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -94,103 +90,118 @@ export default function PracticeListPage() {
             </Link>
             <h1 className="text-lg font-semibold">Practice</h1>
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-2">
+            <Link to="/practice/history">
+              <Button variant="ghost" size="sm">
+                <History className="mr-2 h-4 w-4" /> Tarix
+              </Button>
+            </Link>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
-      <main className="container space-y-10 py-10">
-        <div className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 p-8 text-white">
+      <main className="container space-y-8 py-10">
+        {/* Hero */}
+        <section className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 p-8 text-white shadow-lg">
           <h2 className="text-3xl font-bold">Practice Mode</h2>
-          <p className="mt-2 text-emerald-100">
-            O‘z vaqtingizda mashq qiling, javob bergandan keyin darhol natijani
-            va to‘g‘ri javoblarni ko‘ring.
+          <p className="mt-2 text-red-100">
+            O‘zingizga qulay vaqtda mashq qiling — javob bergandan keyin
+            darhol natijani va to‘g‘ri javoblarni ko‘ring.
           </p>
-          <div className="mt-4">
-            <Link to="/practice/history">
-              <Button variant="secondary" size="sm">
-                Practice tarixi <ArrowRight className="ml-1 h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-        </div>
+        </section>
 
-        {query.isLoading && (
-          <p className="text-muted-foreground">Loading…</p>
-        )}
-        {query.isError && (
-          <p className="text-destructive">Practice testlarni yuklab bo‘lmadi.</p>
-        )}
-
-        {!query.isLoading && tests.length === 0 && (
-          <Card>
-            <CardContent className="p-10 text-center text-muted-foreground">
-              Hozircha practice uchun ochilgan test yo‘q.
-            </CardContent>
-          </Card>
-        )}
-
-        {(['listening', 'reading', 'writing'] as const).map((module) => {
-          const list = grouped[module]
-          const meta = MODULE_META[module]
-          if (list.length === 0) return null
-          return (
-            <section key={module}>
-              <div className="mb-3 flex items-center gap-2">
-                <meta.Icon className={`h-5 w-5 ${meta.accent}`} />
-                <h3 className="text-xl font-semibold">{meta.label} Practice</h3>
-                <span className="text-sm text-muted-foreground">
-                  ({list.length})
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {list.map((t) => (
-                  <Card key={t.id}>
-                    <CardContent className="flex h-full flex-col p-5">
-                      <span
-                        className={`mb-2 inline-flex w-fit items-center rounded px-2 py-0.5 text-xs font-semibold ${meta.chip}`}
-                      >
-                        {meta.label}
-                      </span>
-                      <h4 className="mb-2 text-base font-semibold">{t.name}</h4>
-                      <p className="mb-4 line-clamp-2 flex-1 text-sm text-muted-foreground">
-                        {t.description || '—'}
-                      </p>
-
-                      <div className="mb-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <FileText className="h-3.5 w-3.5" />
-                          {t.question_count} savol
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {t.practice_time_limit
-                            ? `${t.practice_time_limit} min`
-                            : 'Vaqt yo‘q'}
-                        </span>
+        {/* Module cards */}
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {modules.map((m) => {
+            const meta = MODULE_META[m]
+            const s = data?.[m]
+            return (
+              <Link
+                key={m}
+                to={`/practice/${m}`}
+                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                <div className={`bg-gradient-to-br ${meta.gradient} p-6 text-white`}>
+                  <meta.Icon className="h-10 w-10" />
+                  <h3 className="mt-3 text-2xl font-bold">{meta.label}</h3>
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-lg bg-slate-50 px-2 py-2">
+                      <div className="text-xs text-slate-500">Testlar</div>
+                      <div className="text-lg font-semibold text-slate-900">
+                        {s?.tests_count ?? '—'}
                       </div>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 px-2 py-2">
+                      <div className="text-xs text-slate-500">Urinish</div>
+                      <div className="text-lg font-semibold text-slate-900">
+                        {s?.attempts_count ?? 0}
+                      </div>
+                    </div>
+                    <div className={`rounded-lg ${meta.bg} px-2 py-2`}>
+                      <div className="text-xs text-slate-500">Eng yaxshi</div>
+                      <div className={`text-lg font-semibold ${meta.band}`}>
+                        {s?.best_band != null ? s.best_band.toFixed(1) : '—'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`mt-4 flex items-center justify-end text-sm ${meta.text} group-hover:gap-2`}>
+                    Boshlash <ArrowRight size={14} className="ml-1" />
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </section>
 
-                      <Button
-                        className="w-full"
-                        onClick={() => startAttempt.mutate(t)}
-                        disabled={startAttempt.isPending}
+        {/* Recent attempts */}
+        <section>
+          <h3 className="mb-3 text-lg font-semibold text-slate-900">Oxirgi mashqlar</h3>
+          {data?.recent && data.recent.length > 0 ? (
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <ul className="divide-y divide-slate-100">
+                {data.recent.map((r) => {
+                  const meta = MODULE_META[r.module]
+                  return (
+                    <li key={r.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${meta.bg} ${meta.text}`}>
+                          <meta.Icon size={18} />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900">{r.test_name}</div>
+                          <div className="text-xs text-slate-500">
+                            {meta.label} ·{' '}
+                            {r.submitted_at
+                              ? new Date(r.submitted_at).toLocaleString('uz-UZ', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : ''}
+                          </div>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/result/${r.id}`}
+                        className={`text-base font-semibold ${meta.band} hover:underline`}
                       >
-                        {startAttempt.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Boshlanmoqda…
-                          </>
-                        ) : (
-                          <>Boshlash</>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )
-        })}
+                        {r.band_score != null ? r.band_score.toFixed(1) : '—'}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
+              Hali biron-bir mashq yo‘q. Yuqoridagi modullardan boshlang.
+            </div>
+          )}
+        </section>
       </main>
     </div>
   )

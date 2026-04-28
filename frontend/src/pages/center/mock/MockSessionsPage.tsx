@@ -30,6 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
   reading: 'Reading',
   writing: 'Writing',
   finished: 'Tugagan',
+  cancelled: 'Bekor qilingan',
 }
 
 const STATUS_TONE: Record<string, 'slate' | 'blue' | 'amber' | 'rose' | 'emerald' | 'indigo'> = {
@@ -38,6 +39,7 @@ const STATUS_TONE: Record<string, 'slate' | 'blue' | 'amber' | 'rose' | 'emerald
   reading: 'blue',
   writing: 'amber',
   finished: 'emerald',
+  cancelled: 'rose',
 }
 
 export default function MockSessionsPage() {

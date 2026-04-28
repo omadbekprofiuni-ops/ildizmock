@@ -23,6 +23,7 @@ class MockSession(models.Model):
         ('reading', 'Reading'),
         ('writing', 'Writing'),
         ('finished', 'Tugagan'),
+        ('cancelled', 'Bekor qilingan'),
     ]
 
     organization = models.ForeignKey(

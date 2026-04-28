@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Copy, Play } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Copy, Play, RotateCcw, XOctagon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -28,7 +28,7 @@ interface SessionDetail {
   id: number
   name: string
   date: string
-  status: 'waiting' | 'listening' | 'reading' | 'writing' | 'finished'
+  status: 'waiting' | 'listening' | 'reading' | 'writing' | 'finished' | 'cancelled'
   access_code: string
   started_at: string | null
   finished_at: string | null
@@ -48,6 +48,7 @@ const STATUS_LABEL: Record<string, string> = {
   reading: 'Reading',
   writing: 'Writing',
   finished: 'Tugagan',
+  cancelled: 'Bekor qilingan',
 }
 
 export default function MockControlPage() {
@@ -112,6 +113,32 @@ export default function MockControlPage() {
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/advance/`)
       load()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const cancel = async () => {
+    if (!confirm("Sessiyani bekor qilasizmi? Talabalar natijalari saqlanmaydi.")) return
+    setBusy(true)
+    try {
+      await api.post(`/center/${slug}/mock/${sessionId}/cancel/`)
+      load()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const reopen = async () => {
+    if (!confirm('Sessiyani qayta ochasizmi? (24 soat ichida ruxsat etiladi)')) return
+    setBusy(true)
+    try {
+      await api.post(`/center/${slug}/mock/${sessionId}/reopen/`)
+      load()
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response
+        ?.data?.detail
+      alert(detail || 'Qayta ochib bo‘lmadi')
     } finally {
       setBusy(false)
     }
@@ -259,14 +286,57 @@ export default function MockControlPage() {
             <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-emerald-600">
               <CheckCircle2 size={20} /> Sessiya tugadi
             </p>
-            <div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <Link
                 to={`/${slug}/admin/mock/${session.id}/results`}
-                className={btnPrimary + ' mt-2'}
+                className={btnPrimary}
               >
                 Natijalarni ko'rish
               </Link>
+              <button
+                type="button"
+                onClick={reopen}
+                disabled={busy}
+                className={btnOutline}
+                title="24 soat ichida qayta ochish mumkin"
+              >
+                <RotateCcw size={14} /> Qayta ochish
+              </button>
             </div>
+          </div>
+        )}
+
+        {session.status === 'cancelled' && (
+          <div className="text-center">
+            <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-rose-600">
+              <XOctagon size={20} /> Sessiya bekor qilingan
+            </p>
+            <button
+              type="button"
+              onClick={reopen}
+              disabled={busy}
+              className={btnOutline}
+              title="24 soat ichida qayta ochish mumkin"
+            >
+              <RotateCcw size={14} /> Qayta ochish
+            </button>
+          </div>
+        )}
+
+        {/* Bekor qilish — faqat hali tugamagan sessiyalar uchun */}
+        {(session.status === 'waiting' ||
+          session.status === 'listening' ||
+          session.status === 'reading' ||
+          session.status === 'writing') && (
+          <div className="mt-4 border-t border-slate-100 pt-4 text-center">
+            <button
+              type="button"
+              onClick={cancel}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+            >
+              <XOctagon size={14} /> Sessiyani bekor qilish
+            </button>
           </div>
         )}
       </SurfaceCard>

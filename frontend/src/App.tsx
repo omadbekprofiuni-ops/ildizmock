@@ -55,6 +55,7 @@ import MockResultDetailPage from './pages/student/MockResultDetailPage'
 import StudentMockResultsPage from './pages/student/MockResultsPage'
 import PracticeHistoryPage from './pages/student/PracticeHistoryPage'
 import PracticeListPage from './pages/student/PracticeListPage'
+import PracticeModulePage from './pages/student/PracticeModulePage'
 import ProfilePage from './pages/student/ProfilePage'
 import StudentDashboard from './pages/student/StudentDashboard'
 import TakeTestPage from './pages/TakeTestPage'
@@ -99,6 +100,7 @@ export default function App() {
           <Route path="/student/mock/:id" element={<ProtectedRoute><MockResultDetailPage /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><PracticeListPage /></ProtectedRoute>} />
           <Route path="/practice/history" element={<ProtectedRoute><PracticeHistoryPage /></ProtectedRoute>} />
+          <Route path="/practice/:module" element={<ProtectedRoute><PracticeModulePage /></ProtectedRoute>} />
 
           {/* Teacher */}
           <Route path="/teacher" element={<TeacherRoute><TeacherQueuePage /></TeacherRoute>} />

@@ -1,4 +1,5 @@
-from rest_framework import mixins, viewsets
+from django.db.models import Avg, Max
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -44,3 +45,63 @@ class TestCountsView(APIView):
             ).count()
             for module, _ in Test.MODULE_CHOICES
         })
+
+
+class PracticeStatsView(APIView):
+    """ETAP 12 — Practice home uchun foydalanuvchi statistikasi.
+
+    Har modul uchun: mavjud testlar soni + foydalanuvchining urinishlari soni
+    + eng yaxshi band score + so'nggi 5 ta urinish.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from apps.attempts.models import Attempt
+
+        out = {}
+        modules = ['listening', 'reading', 'writing']
+        user = request.user
+
+        for module in modules:
+            tests_qs = Test.objects.filter(
+                is_published=True,
+                module=module,
+                is_practice_enabled=True,
+            )
+            attempts_qs = Attempt.objects.filter(
+                user=user, test__module=module,
+                status__in=['submitted', 'graded'],
+            )
+            stats = attempts_qs.aggregate(
+                best=Max('band_score'),
+                avg=Avg('band_score'),
+            )
+            out[module] = {
+                'tests_count': tests_qs.count(),
+                'attempts_count': attempts_qs.count(),
+                'best_band': float(stats['best']) if stats['best'] else None,
+                'avg_band': (
+                    round(float(stats['avg']), 1) if stats['avg'] else None
+                ),
+            }
+
+        # Recent 5 attempts across all modules
+        recent = (
+            Attempt.objects
+            .filter(user=user, status__in=['submitted', 'graded'])
+            .select_related('test')
+            .order_by('-submitted_at')[:5]
+        )
+        out['recent'] = [
+            {
+                'id': str(a.id),
+                'test_id': str(a.test_id),
+                'test_name': a.test.name,
+                'module': a.test.module,
+                'band_score': float(a.band_score) if a.band_score else None,
+                'submitted_at': a.submitted_at.isoformat() if a.submitted_at else None,
+            }
+            for a in recent
+        ]
+        return Response(out)

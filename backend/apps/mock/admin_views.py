@@ -164,6 +164,57 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         )
         return Response(MockSessionDetailSerializer(session).data)
 
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None, org_slug=None):
+        """Sessiyani bekor qilish — natijalar saqlanmaydi.
+
+        ETAP 12: tugatishdan farqli, bekor qilingan sessiya statistikaga
+        kiritilmaydi.
+        """
+        session = self.get_object()
+        if session.status == 'finished':
+            return Response(
+                {'detail': 'Tugagan sessiyani bekor qilib bo‘lmaydi.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if session.status == 'cancelled':
+            return Response(MockSessionDetailSerializer(session).data)
+        session.status = 'cancelled'
+        session.finished_at = timezone.now()
+        session.save(update_fields=['status', 'finished_at'])
+        MockStateLog.objects.create(
+            session=session, action='cancelled', triggered_by=request.user,
+        )
+        return Response(MockSessionDetailSerializer(session).data)
+
+    @action(detail=True, methods=['post'])
+    def reopen(self, request, pk=None, org_slug=None):
+        """Tugagan / bekor qilingan sessiyani 24 soat ichida qayta ochish."""
+        from datetime import timedelta
+
+        session = self.get_object()
+        if session.status not in ('finished', 'cancelled'):
+            return Response(
+                {'detail': 'Faqat tugagan yoki bekor qilingan sessiyani qayta ochish mumkin.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if session.finished_at and (timezone.now() - session.finished_at) > timedelta(hours=24):
+            return Response(
+                {'detail': 'Bu sessiyani qayta ochib bo‘lmaydi (24 soatdan ko‘p vaqt o‘tdi).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Sessiyani avvalgi bosqichga qaytaramiz: agar listening boshlanmagan bo'lsa
+        # 'waiting'ga, aks holda oxirgi faol bosqichga 'writing'ga qaytaramiz.
+        prev_status = 'writing' if session.started_at else 'waiting'
+        session.status = prev_status
+        session.finished_at = None
+        session.save(update_fields=['status', 'finished_at'])
+        MockStateLog.objects.create(
+            session=session, action='reopen', triggered_by=request.user,
+        )
+        return Response(MockSessionDetailSerializer(session).data)
+
     @action(detail=True, methods=['get'])
     def results(self, request, pk=None, org_slug=None):
         session = self.get_object()
