@@ -1,6 +1,15 @@
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  TableCard,
+  adminTable,
+  btnPrimary,
+} from '@/components/admin-shell'
 import SuperAdminLayout from '@/pages/superadmin/SuperAdminLayout'
 import { api } from '@/lib/api'
 
@@ -47,98 +56,93 @@ export default function SuperTestsListPage() {
 
   return (
     <SuperAdminLayout>
-      <div className="mx-auto max-w-7xl p-6 sm:p-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-xs uppercase tracking-widest text-slate-500">
-              SuperAdmin
-            </div>
-            <h1 className="text-3xl font-light text-slate-900">Global testlar</h1>
-          </div>
-          <Link
-            to="/super/tests/wizard"
-            className="rounded-full bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-700"
-          >
-            + Yangi test (Wizard)
-          </Link>
-        </div>
+      <PageShell>
+        <PageHeader
+          title="Global testlar"
+          subtitle="SuperAdmin tayyorlagan, hamma markazlar nusxalashi mumkin bo'lgan testlar"
+          actions={
+            <Link to="/super/tests/wizard" className={btnPrimary}>
+              <Plus size={16} /> Yangi test (Wizard)
+            </Link>
+          }
+        />
 
-        <div className="overflow-hidden rounded-2xl border bg-white">
-          <table className="w-full">
-            <thead className="border-b bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-                <th className="p-4">Nomi</th>
-                <th className="p-4">Modul</th>
-                <th className="p-4">Qiyinlik</th>
-                <th className="p-4">Savollar</th>
-                <th className="p-4">Holat</th>
-                <th className="p-4">Amal</th>
+        <TableCard>
+          <table className={adminTable.table}>
+            <thead className={adminTable.thead}>
+              <tr>
+                <th className={adminTable.th}>Nomi</th>
+                <th className={adminTable.th}>Modul</th>
+                <th className={adminTable.th}>Qiyinlik</th>
+                <th className={adminTable.th}>Savollar</th>
+                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={adminTable.tbody}>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                     Yuklanmoqda…
                   </td>
                 </tr>
               ) : tests.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                     Hali test yo'q. "+ Yangi test" tugmasi bilan boshlang.
                   </td>
                 </tr>
               ) : (
                 tests.map((t) => (
-                  <tr key={t.id} className="border-b last:border-0 hover:bg-slate-50">
-                    <td className="p-4">
-                      <div className="font-medium text-slate-900">{t.name}</div>
+                  <tr key={t.id} className={adminTable.trHover}>
+                    <td className={adminTable.td}>
+                      <div className="font-semibold text-slate-900">{t.name}</div>
                       {t.category && (
                         <div className="text-xs text-slate-500">{t.category}</div>
                       )}
                     </td>
-                    <td className="p-4 text-sm text-slate-700">
-                      {MODULE_LABEL[t.module] ?? t.module}
+                    <td className={adminTable.td}>
+                      <Chip tone="indigo">{MODULE_LABEL[t.module] ?? t.module}</Chip>
                     </td>
-                    <td className="p-4 text-sm text-slate-700">{t.difficulty}</td>
-                    <td className="p-4 text-sm text-slate-700">
-                      {t.questions_count}
+                    <td className={adminTable.td + ' text-slate-700'}>{t.difficulty}</td>
+                    <td className={adminTable.td + ' text-slate-700'}>{t.questions_count}</td>
+                    <td className={adminTable.td}>
+                      {t.status === 'published' ? (
+                        <Chip tone="emerald">published</Chip>
+                      ) : t.status === 'archived' ? (
+                        <Chip>archived</Chip>
+                      ) : (
+                        <Chip tone="amber">draft</Chip>
+                      )}
                     </td>
-                    <td className="p-4">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs ${
-                          t.status === 'published'
-                            ? 'bg-green-100 text-green-800'
-                            : t.status === 'archived'
-                              ? 'bg-slate-200 text-slate-600'
-                              : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm">
-                      <Link
-                        to={`/super/tests/wizard/${t.id}`}
-                        className="mr-3 text-orange-600 hover:underline"
-                      >
-                        Tahrirlash
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => togglePublish(t.id, t.status)}
-                        className="text-slate-700 hover:underline"
-                      >
-                        {t.status === 'published' ? 'Draft' : 'E\'lon qilish'}
-                      </button>
+                    <td className={adminTable.td + ' text-right'}>
+                      <div className="inline-flex items-center gap-1">
+                        <Link
+                          to={`/super/tests/wizard/${t.id}`}
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Tahrirlash
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => togglePublish(t.id, t.status)}
+                          className={
+                            t.status === 'published'
+                              ? 'inline-flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100'
+                              : 'inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100'
+                          }
+                        >
+                          {t.status === 'published' ? 'Draft' : "E'lon qilish"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+        </TableCard>
+      </PageShell>
     </SuperAdminLayout>
   )
 }

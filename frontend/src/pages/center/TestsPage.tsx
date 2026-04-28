@@ -1,6 +1,15 @@
+import { Copy, Eye, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  TableCard,
+  adminTable,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { api } from '@/lib/api'
 
 interface TestRow {
@@ -121,15 +130,14 @@ export default function TestsPage() {
   const rows = tab === 'mine' ? mine : catalog
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-light text-slate-900">Testlar</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Markaz bazasidagi testlar va SuperAdmin tayyorlagan global katalog.
-        </p>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Testlar"
+        subtitle="Markaz bazasidagi testlar va SuperAdmin tayyorlagan global katalog"
+      />
 
-      <div className="mb-4 flex gap-2 border-b border-slate-200">
+      {/* Pill tabs */}
+      <div className="mb-6 inline-flex rounded-xl bg-slate-100 p-1">
         <TabButton active={tab === 'mine'} onClick={() => setTab('mine')}>
           Mening testlarim ({mine.length})
         </TabButton>
@@ -165,73 +173,74 @@ export default function TestsPage() {
       )}
 
       {message && (
-        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+        <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-700">
           {message}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border bg-white">
-        <table className="w-full">
-          <thead className="border-b bg-slate-50">
-            <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-              <th className="p-4">Nomi</th>
-              <th className="p-4">Modul</th>
-              <th className="p-4">Qiyinlik</th>
-              <th className="p-4">Savollar</th>
-              <th className="p-4">Holat</th>
-              <th className="p-4">Amal</th>
+      <TableCard
+        title={
+          <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <FileText size={18} className="text-indigo-600" />
+            {tab === 'mine' ? 'Mening testlarim' : 'Global katalog'}
+          </div>
+        }
+      >
+        <table className={adminTable.table}>
+          <thead className={adminTable.thead}>
+            <tr>
+              <th className={adminTable.th}>Test</th>
+              <th className={adminTable.th}>Modul</th>
+              <th className={adminTable.th}>Qiyinlik</th>
+              <th className={adminTable.th}>Savollar</th>
+              <th className={adminTable.th}>Holat</th>
+              <th className={adminTable.th + ' text-right'}>Amal</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className={adminTable.tbody}>
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                   Yuklanmoqda…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                   {tab === 'mine'
-                    ? 'Hali testingiz yo\'q. Global katalogdan klon qiling.'
-                    : 'Katalogda hali test yo\'q.'}
+                    ? "Hali testingiz yo'q. Global katalogdan klon qiling."
+                    : "Katalogda hali test yo'q."}
                 </td>
               </tr>
             ) : (
               rows.map((t) => (
-                <tr key={t.id} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="p-4">
-                    <div className="font-medium text-slate-900">{t.name}</div>
+                <tr key={t.id} className={adminTable.trHover}>
+                  <td className={adminTable.td}>
+                    <div className="font-semibold text-slate-900">{t.name}</div>
                     {t.category && (
                       <div className="text-xs text-slate-500">{t.category}</div>
                     )}
                     {tab === 'mine' && t.is_cloned && (
-                      <span className="mt-1 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
-                        Klon
-                      </span>
+                      <Chip tone="blue" className="mt-1">Klon</Chip>
                     )}
                   </td>
-                  <td className="p-4 text-sm text-slate-700">
-                    {MODULE_LABEL[t.module] ?? t.module}
+                  <td className={adminTable.td}>
+                    <Chip tone="indigo">{MODULE_LABEL[t.module] ?? t.module}</Chip>
                   </td>
-                  <td className="p-4 text-sm text-slate-700">
+                  <td className={adminTable.td + ' text-slate-700'}>
                     {DIFFICULTY_LABEL[t.difficulty] ?? t.difficulty}
                   </td>
-                  <td className="p-4 text-sm text-slate-700">{t.questions_count}</td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        t.status === 'published'
-                          ? 'bg-green-100 text-green-800'
-                          : t.status === 'archived'
-                            ? 'bg-slate-200 text-slate-600'
-                            : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {t.status}
-                    </span>
+                  <td className={adminTable.td + ' text-slate-700'}>{t.questions_count}</td>
+                  <td className={adminTable.td}>
+                    {t.status === 'published' ? (
+                      <Chip tone="emerald">published</Chip>
+                    ) : t.status === 'archived' ? (
+                      <Chip>archived</Chip>
+                    ) : (
+                      <Chip tone="amber">draft</Chip>
+                    )}
                   </td>
-                  <td className="p-4">
+                  <td className={adminTable.td + ' text-right'}>
                     {tab === 'catalog' ? (
                       t.already_cloned ? (
                         <span className="text-xs text-slate-400">
@@ -242,26 +251,27 @@ export default function TestsPage() {
                           type="button"
                           disabled={busy === t.id}
                           onClick={() => cloneTest(t.id)}
-                          className="rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                          className={btnPrimary + ' !py-1.5 !px-3 text-xs'}
                         >
+                          <Copy size={14} />
                           {busy === t.id ? 'Klonlash…' : 'Klon qilish'}
                         </button>
                       )
                     ) : (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="inline-flex items-center gap-1">
                         <Link
                           to={`/${slug}/admin/tests/${t.id}/preview`}
-                          className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
-                          👁 Preview
+                          <Eye size={14} /> Preview
                         </Link>
                         <button
                           type="button"
                           disabled={busy === t.id}
                           onClick={() => cloneOwnTest(t.id)}
-                          className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
                         >
-                          {busy === t.id ? '…' : '📋 Clone'}
+                          <Copy size={14} /> {busy === t.id ? '…' : 'Clone'}
                         </button>
                       </div>
                     )}
@@ -271,8 +281,8 @@ export default function TestsPage() {
             )}
           </tbody>
         </table>
-      </div>
-    </div>
+      </TableCard>
+    </PageShell>
   )
 }
 
@@ -289,10 +299,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
+      className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
         active
-          ? 'border-slate-900 text-slate-900'
-          : 'border-transparent text-slate-500 hover:text-slate-700'
+          ? 'bg-white text-indigo-700 shadow-sm'
+          : 'text-slate-600 hover:text-slate-900'
       }`}
     >
       {children}
@@ -313,7 +323,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 focus:border-slate-900 focus:outline-none"
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

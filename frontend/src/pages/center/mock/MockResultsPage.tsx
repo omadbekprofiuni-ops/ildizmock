@@ -1,6 +1,12 @@
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
+import {
+  PageShell,
+  TableCard,
+  adminTable,
+} from '@/components/admin-shell'
 import { api } from '@/lib/api'
 
 interface Participant {
@@ -60,71 +66,78 @@ export default function MockResultsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-3">
+    <PageShell>
+      <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock/${sessionId}`}
-          className="text-sm text-slate-500 hover:text-slate-900"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
         >
-          ← Boshqaruv
+          <ArrowLeft size={14} /> Boshqaruv
         </Link>
-        <span className="text-slate-300">/</span>
-        <h1 className="text-2xl font-light text-slate-900">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           {session.name} — Natijalar
         </h1>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border bg-white">
-        <table className="w-full">
-          <thead className="border-b bg-slate-50">
-            <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-              <th className="p-4">Talaba</th>
-              <th className="p-4 text-center">Listening</th>
-              <th className="p-4 text-center">Reading</th>
-              <th className="p-4 text-center">Writing</th>
-              <th className="p-4 text-center">Speaking</th>
-              <th className="p-4 text-center">Overall</th>
+      <TableCard>
+        <table className={adminTable.table}>
+          <thead className={adminTable.thead}>
+            <tr>
+              <th className={adminTable.th}>Talaba</th>
+              <th className={adminTable.th + ' text-center'}>Listening</th>
+              <th className={adminTable.th + ' text-center'}>Reading</th>
+              <th className={adminTable.th + ' text-center'}>Writing</th>
+              <th className={adminTable.th + ' text-center'}>Speaking</th>
+              <th className={adminTable.th + ' text-center'}>Overall</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className={adminTable.tbody}>
             {session.participants.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                   Bu sessiyada talaba bo'lmagan.
                 </td>
               </tr>
             ) : (
               session.participants.map((p) => (
-                <tr key={p.id} className="border-b last:border-0">
-                  <td className="p-4 font-medium text-slate-900">{p.full_name}</td>
-                  <td className="p-4 text-center font-mono">
+                <tr key={p.id} className={adminTable.trHover}>
+                  <td className={adminTable.td + ' font-semibold text-slate-900'}>
+                    {p.full_name}
+                  </td>
+                  <td className={adminTable.td + ' text-center font-mono'}>
                     {p.listening_score ?? '—'}
                   </td>
-                  <td className="p-4 text-center font-mono">
+                  <td className={adminTable.td + ' text-center font-mono'}>
                     {p.reading_score ?? '—'}
                   </td>
-                  <td className="p-4 text-center">
+                  <td className={adminTable.td + ' text-center'}>
                     <ScoreInput
                       value={p.writing_score}
                       onSave={(v) => updateScore(p.id, 'writing', v)}
                     />
                   </td>
-                  <td className="p-4 text-center">
+                  <td className={adminTable.td + ' text-center'}>
                     <ScoreInput
                       value={p.speaking_score}
                       onSave={(v) => updateScore(p.id, 'speaking', v)}
                     />
                   </td>
-                  <td className="p-4 text-center font-mono font-bold text-slate-900">
-                    {p.overall_band_score ?? '—'}
+                  <td className={adminTable.td + ' text-center'}>
+                    {p.overall_band_score ? (
+                      <span className="rounded-lg bg-indigo-50 px-3 py-1 font-mono text-base font-bold text-indigo-700">
+                        {p.overall_band_score}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
-    </div>
+      </TableCard>
+    </PageShell>
   )
 }
 
@@ -146,7 +159,7 @@ function ScoreInput({
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => v !== (value ?? '') && onSave(v)}
-      className="w-20 rounded border border-slate-300 px-2 py-1 text-center font-mono"
+      className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-center font-mono text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
     />
   )
 }

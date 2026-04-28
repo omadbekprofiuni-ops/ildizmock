@@ -89,31 +89,39 @@ export default function CenterDetailPage() {
 
   return (
     <SuperAdminLayout>
-      <header className="border-b bg-white px-8 py-5">
-        <Link
-          to="/super/organizations"
-          className="mb-3 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900"
-        >
-          <ArrowLeft className="h-3 w-3" /> Back to centers
-        </Link>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="inline-block h-10 w-10 rounded-md"
-              style={{ background: org.primary_color }}
-            />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{org.name}</h1>
-              <p className="font-mono text-xs text-slate-500">/{org.slug}</p>
+      <div className="mx-auto max-w-7xl space-y-6 p-6 lg:p-10">
+        <div>
+          <Link
+            to="/super/organizations"
+            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
+          >
+            <ArrowLeft size={14} /> Back to centers
+          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="inline-block h-12 w-12 shrink-0 rounded-2xl"
+                style={{ background: org.primary_color }}
+              />
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                  {org.name}
+                </h1>
+                <p className="font-mono text-xs text-slate-500">/{org.slug}</p>
+              </div>
             </div>
+            <a href={`/${org.slug}`} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-slate-200"
+              >
+                Open site ↗
+              </Button>
+            </a>
           </div>
-          <a href={`/${org.slug}`} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm">Open site ↗</Button>
-          </a>
         </div>
-      </header>
 
-      <div className="space-y-6 p-8">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard label="Students" value={org.students_count} />
           <StatCard label="Teachers" value={org.teachers_count} />

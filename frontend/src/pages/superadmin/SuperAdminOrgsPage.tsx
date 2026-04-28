@@ -3,8 +3,16 @@ import { Check, Copy, Eye, LogIn, MoreVertical, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  TableCard,
+  adminTable,
+  btnOutline,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -66,85 +74,87 @@ export default function SuperAdminOrgsPage() {
 
   return (
     <SuperAdminLayout>
-      <header className="flex items-center justify-between border-b bg-white px-8 py-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Centers</h1>
-          <p className="text-sm text-muted-foreground">{orgs.data?.length ?? 0} centers</p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add new center
-        </Button>
-      </header>
+      <PageShell>
+        <PageHeader
+          title="Centers"
+          subtitle={`${orgs.data?.length ?? 0} centers`}
+          actions={
+            <button type="button" onClick={() => setOpen(true)} className={btnPrimary}>
+              <Plus size={16} /> Add new center
+            </button>
+          }
+        />
 
-      <div className="p-8">
-        {orgs.isLoading && <p className="text-muted-foreground">Loading…</p>}
+        {orgs.isLoading && <p className="text-slate-500">Loading…</p>}
         {orgs.data && orgs.data.length > 0 && (
-          <Card>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="px-6 py-3">Name</th>
-                    <th className="px-6 py-3">Plan</th>
-                    <th className="px-6 py-3">Students</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Expires</th>
-                    <th className="px-6 py-3"></th>
+          <TableCard>
+            <table className={adminTable.table}>
+              <thead className={adminTable.thead}>
+                <tr>
+                  <th className={adminTable.th}>Name</th>
+                  <th className={adminTable.th}>Plan</th>
+                  <th className={adminTable.th}>Students</th>
+                  <th className={adminTable.th}>Status</th>
+                  <th className={adminTable.th}>Expires</th>
+                  <th className={adminTable.th + ' text-right'}></th>
+                </tr>
+              </thead>
+              <tbody className={adminTable.tbody}>
+                {orgs.data.map((o) => (
+                  <tr key={o.id} className={adminTable.trHover}>
+                    <td className={adminTable.td}>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="inline-block h-9 w-9 shrink-0 rounded-xl"
+                          style={{ background: o.primary_color }}
+                        />
+                        <div>
+                          <div className="font-semibold text-slate-900">{o.name}</div>
+                          <div className="text-xs text-slate-500">/{o.slug}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={adminTable.td}>{o.plan_name}</td>
+                    <td className={adminTable.td}>
+                      {o.students_count}
+                      {o.max_students > 0 ? ` / ${o.max_students}` : ' / ∞'}
+                    </td>
+                    <td className={adminTable.td}>
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className={adminTable.td + ' text-xs text-slate-500'}>
+                      {o.days_remaining > 0 ? `${o.days_remaining} days` : '—'}
+                    </td>
+                    <td className={adminTable.td + ' text-right'}>
+                      <div className="inline-flex items-center gap-1">
+                        <Link
+                          to={`/super/organizations/${o.id}`}
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          <Eye size={14} /> View
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => enterOrgContext(o)}
+                          className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                        >
+                          <LogIn size={14} /> Enter
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"
+                        >
+                          <MoreVertical size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {orgs.data.map((o) => (
-                    <tr key={o.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-3">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="inline-block h-6 w-6 rounded"
-                            style={{ background: o.primary_color }}
-                          />
-                          <div>
-                            <div className="font-medium">{o.name}</div>
-                            <div className="text-xs text-muted-foreground">/{o.slug}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">{o.plan_name}</td>
-                      <td className="px-6 py-3">
-                        {o.students_count}
-                        {o.max_students > 0 ? ` / ${o.max_students}` : ' / ∞'}
-                      </td>
-                      <td className="px-6 py-3">
-                        <StatusBadge status={o.status} />
-                      </td>
-                      <td className="px-6 py-3 text-xs">
-                        {o.days_remaining > 0 ? `${o.days_remaining} days` : '—'}
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Link to={`/super/organizations/${o.id}`}>
-                            <Button variant="outline" size="sm" title="View details">
-                              <Eye className="mr-1 h-3 w-3" /> View
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="outline" size="sm"
-                            onClick={() => enterOrgContext(o)}
-                            title="Enter center"
-                          >
-                            <LogIn className="mr-1 h-3 w-3" /> Enter
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+                ))}
+              </tbody>
+            </table>
+          </TableCard>
         )}
-      </div>
+      </PageShell>
 
       <CreateOrgDialog
         open={open}
@@ -157,18 +167,13 @@ export default function SuperAdminOrgsPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cls =
-    status === 'active' ? 'bg-emerald-100 text-emerald-700'
-    : status === 'trial' ? 'bg-amber-100 text-amber-700'
-    : status === 'expired' ? 'bg-rose-100 text-rose-700'
-    : 'bg-slate-200 text-slate-700'
-  const label =
-    status === 'active' ? '● Active'
-    : status === 'trial' ? '● Trial'
-    : status === 'expired' ? '⚠ Expired'
-    : '● Blocked'
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{label}</span>
+  if (status === 'active') return <Chip tone="emerald">● Active</Chip>
+  if (status === 'trial') return <Chip tone="amber">● Trial</Chip>
+  if (status === 'expired') return <Chip tone="rose">⚠ Expired</Chip>
+  return <Chip>● Blocked</Chip>
 }
+
+void btnOutline
 
 function CreateOrgDialog({
   open, onOpenChange, plans, onCreated,

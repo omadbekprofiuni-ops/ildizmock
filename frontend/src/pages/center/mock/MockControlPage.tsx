@@ -1,6 +1,14 @@
+import { ArrowLeft, CheckCircle2, Copy, Play } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
+import {
+  Chip,
+  PageShell,
+  SurfaceCard,
+  btnOutline,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { api } from '@/lib/api'
 
 interface Participant {
@@ -142,31 +150,34 @@ export default function MockControlPage() {
   }).length
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-3">
+    <PageShell>
+      <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock`}
-          className="text-sm text-slate-500 hover:text-slate-900"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
         >
-          ← Sessiyalar
+          <ArrowLeft size={14} /> Sessiyalar
         </Link>
-        <span className="text-slate-300">/</span>
-        <h1 className="text-2xl font-light text-slate-900">{session.name}</h1>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            session.status === 'finished'
-              ? 'bg-green-100 text-green-700'
-              : session.status === 'waiting'
-                ? 'bg-slate-100 text-slate-700'
-                : 'bg-blue-100 text-blue-800'
-          }`}
-        >
-          {STATUS_LABEL[session.status]}
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            {session.name}
+          </h1>
+          <Chip
+            tone={
+              session.status === 'finished'
+                ? 'emerald'
+                : session.status === 'waiting'
+                  ? 'slate'
+                  : 'indigo'
+            }
+          >
+            {STATUS_LABEL[session.status]}
+          </Chip>
+        </div>
       </div>
 
       {/* Join link */}
-      <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+      <SurfaceCard className="mb-6 border-indigo-100 bg-indigo-50/40">
         <p className="mb-2 text-sm font-semibold text-slate-700">
           Talabalar uchun link:
         </p>
@@ -174,28 +185,25 @@ export default function MockControlPage() {
           <input
             readOnly
             value={joinUrl}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm"
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm"
             onFocus={(e) => e.target.select()}
           />
-          <button
-            type="button"
-            onClick={copyLink}
-            className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            {copied ? '✓ Nusxalandi' : 'Nusxa olish'}
+          <button type="button" onClick={copyLink} className={btnPrimary}>
+            <Copy size={14} />
+            {copied ? 'Nusxalandi' : 'Nusxa olish'}
           </button>
         </div>
         <p className="mt-2 text-xs text-slate-600">
           Access code:{' '}
-          <code className="rounded bg-white px-2 py-0.5 font-mono">
+          <code className="rounded bg-white px-2 py-0.5 font-mono text-indigo-700">
             {session.access_code}
           </code>
         </p>
-      </div>
+      </SurfaceCard>
 
       {/* Control */}
-      <div className="mb-6 rounded-2xl border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Boshqaruv</h2>
+      <SurfaceCard className="mb-6">
+        <h2 className="mb-4 text-base font-semibold text-slate-900">Boshqaruv</h2>
 
         {session.status === 'waiting' && (
           <>
@@ -203,13 +211,14 @@ export default function MockControlPage() {
               type="button"
               disabled={busy || session.participants.length === 0}
               onClick={start}
-              className="rounded-full bg-green-600 px-8 py-3 text-lg font-bold text-white hover:bg-green-700 disabled:opacity-40"
+              className={btnPrimary + ' !px-8 !py-3 text-base'}
             >
-              ▶ START — Listening
+              <Play size={18} /> START — Listening
             </button>
             <p className="mt-2 text-sm text-slate-600">
               {session.participants.length} ta talaba qo'shilgan
-              {session.participants.length === 0 && ' — talabalar qo\'shilishini kuting'}
+              {session.participants.length === 0 &&
+                ' — talabalar qo\'shilishini kuting'}
             </p>
           </>
         )}
@@ -218,7 +227,7 @@ export default function MockControlPage() {
           session.status === 'reading' ||
           session.status === 'writing') && (
           <div className="space-y-4">
-            <div className="rounded-xl bg-slate-100 px-6 py-4 text-center">
+            <div className="rounded-2xl bg-slate-50 px-6 py-5 text-center">
               <div className="text-xs uppercase tracking-widest text-slate-500">
                 {STATUS_LABEL[session.status]} taymeri
               </div>
@@ -236,7 +245,7 @@ export default function MockControlPage() {
               type="button"
               disabled={busy}
               onClick={advance}
-              className="w-full rounded-full bg-orange-500 px-8 py-3 text-lg font-bold text-white hover:bg-orange-600 disabled:opacity-40"
+              className={btnPrimary + ' w-full justify-center !py-3 text-base'}
             >
               {session.status === 'listening' && 'NEXT → Reading'}
               {session.status === 'reading' && 'NEXT → Writing'}
@@ -247,22 +256,24 @@ export default function MockControlPage() {
 
         {session.status === 'finished' && (
           <div className="text-center">
-            <p className="mb-3 text-lg font-semibold text-green-700">
-              ✓ Sessiya tugadi
+            <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-emerald-600">
+              <CheckCircle2 size={20} /> Sessiya tugadi
             </p>
-            <Link
-              to={`/${slug}/admin/mock/${session.id}/results`}
-              className="inline-block rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Natijalarni ko'rish
-            </Link>
+            <div>
+              <Link
+                to={`/${slug}/admin/mock/${session.id}/results`}
+                className={btnPrimary + ' mt-2'}
+              >
+                Natijalarni ko'rish
+              </Link>
+            </div>
           </div>
         )}
-      </div>
+      </SurfaceCard>
 
       {/* Participants */}
-      <div className="rounded-2xl border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">
+      <SurfaceCard>
+        <h2 className="mb-4 text-base font-semibold text-slate-900">
           Talabalar ({session.participants.length})
         </h2>
 
@@ -279,7 +290,9 @@ export default function MockControlPage() {
                 <div
                   key={p.id}
                   className={`rounded-xl border p-3 ${
-                    submittedThis ? 'border-green-300 bg-green-50' : 'bg-slate-50'
+                    submittedThis
+                      ? 'border-emerald-200 bg-emerald-50'
+                      : 'border-slate-200 bg-slate-50'
                   }`}
                 >
                   <div className="font-medium text-slate-900">{p.full_name}</div>
@@ -289,7 +302,7 @@ export default function MockControlPage() {
                       minute: '2-digit',
                     })}
                     {submittedThis && (
-                      <span className="ml-2 font-semibold text-green-700">
+                      <span className="ml-2 font-semibold text-emerald-700">
                         ✓ topshirdi
                       </span>
                     )}
@@ -299,7 +312,9 @@ export default function MockControlPage() {
             })}
           </div>
         )}
-      </div>
-    </div>
+      </SurfaceCard>
+    </PageShell>
   )
 }
+
+void btnOutline

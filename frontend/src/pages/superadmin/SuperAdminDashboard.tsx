@@ -2,8 +2,16 @@ import { useQuery } from '@tanstack/react-query'
 import { Building2, ClipboardList, DollarSign, Plus, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  StatCard,
+  SurfaceCard,
+  TableCard,
+  adminTable,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { api } from '@/lib/api'
 
 import SuperAdminLayout from './SuperAdminLayout'
@@ -14,9 +22,28 @@ type Stats = {
   students_total: number
   attempts_this_month: number
   revenue_total_usd: number
-  recent_payments: { id: number; organization_name: string; plan_name: string; amount_usd: string; status: string; paid_at: string | null }[]
-  recent_students: { username: string; name: string; org_name: string | null; org_slug: string | null; created_at: string }[]
-  soon_expiring: { id: number; name: string; slug: string; days_remaining: number; plan_name: string }[]
+  recent_payments: {
+    id: number
+    organization_name: string
+    plan_name: string
+    amount_usd: string
+    status: string
+    paid_at: string | null
+  }[]
+  recent_students: {
+    username: string
+    name: string
+    org_name: string | null
+    org_slug: string | null
+    created_at: string
+  }[]
+  soon_expiring: {
+    id: number
+    name: string
+    slug: string
+    days_remaining: number
+    plan_name: string
+  }[]
 }
 
 function fmtDate(iso: string | null) {
@@ -31,185 +58,177 @@ export default function SuperAdminDashboard() {
 
   return (
     <SuperAdminLayout>
-      <header className="flex items-center justify-between border-b bg-white px-8 py-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Hello, Super Admin</h1>
-          <p className="text-sm text-muted-foreground">ILDIZmock platform management</p>
-        </div>
-        <Link to="/super/organizations">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add new center
-          </Button>
-        </Link>
-      </header>
+      <PageShell>
+        <PageHeader
+          title="Hello, Super Admin"
+          subtitle="ILDIZmock platform management"
+          actions={
+            <Link to="/super/organizations" className={btnPrimary}>
+              <Plus size={16} /> Add new center
+            </Link>
+          }
+        />
 
-      <div className="space-y-6 p-8">
-        {q.isLoading && <p className="text-muted-foreground">Loading…</p>}
-        {q.isError && <p className="text-destructive">Failed to load statistics.</p>}
+        {q.isLoading && <p className="text-slate-500">Loading…</p>}
+        {q.isError && <p className="text-rose-600">Failed to load statistics.</p>}
+
         {q.data && (
-          <>
+          <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Stat
+              <StatCard
                 Icon={Building2}
+                tone="blue"
                 label="Centers"
                 value={q.data.orgs_total}
                 hint={`${q.data.orgs_by_status.active} active · ${q.data.orgs_by_status.trial} trial`}
-                tint="bg-blue-500"
               />
-              <Stat
+              <StatCard
                 Icon={Users}
+                tone="emerald"
                 label="Students"
                 value={q.data.students_total}
                 hint="Across all centers"
-                tint="bg-emerald-500"
               />
-              <Stat
+              <StatCard
                 Icon={ClipboardList}
+                tone="orange"
                 label="This month"
                 value={q.data.attempts_this_month}
                 hint="tests submitted"
-                tint="bg-orange-500"
               />
-              <Stat
+              <StatCard
                 Icon={DollarSign}
+                tone="violet"
                 label="Revenue"
                 value={`$${q.data.revenue_total_usd.toLocaleString()}`}
                 hint="Total paid"
-                tint="bg-purple-500"
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="mb-4 text-base font-semibold">Centers status</h2>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <SurfaceCard>
+                <h2 className="mb-4 text-base font-semibold text-slate-900">Centers status</h2>
+                <ul className="space-y-3 text-sm">
+                  <StatusRow label="Active" count={q.data.orgs_by_status.active} tone="emerald" />
+                  <StatusRow label="Trial" count={q.data.orgs_by_status.trial} tone="amber" />
+                  <StatusRow label="Plan expired" count={q.data.orgs_by_status.expired} tone="rose" />
+                  <StatusRow label="Blocked" count={q.data.orgs_by_status.blocked} tone="slate" />
+                </ul>
+              </SurfaceCard>
+
+              <SurfaceCard>
+                <h2 className="mb-4 text-base font-semibold text-slate-900">
+                  Plans expiring soon
+                </h2>
+                {q.data.soon_expiring.length === 0 ? (
+                  <p className="text-sm text-slate-500">No plans expiring within 7 days.</p>
+                ) : (
                   <ul className="space-y-2 text-sm">
-                    <StatusRow label="Active" count={q.data.orgs_by_status.active} dot="bg-emerald-500" />
-                    <StatusRow label="Trial" count={q.data.orgs_by_status.trial} dot="bg-amber-500" />
-                    <StatusRow label="Plan expired" count={q.data.orgs_by_status.expired} dot="bg-rose-500" />
-                    <StatusRow label="Blocked" count={q.data.orgs_by_status.blocked} dot="bg-slate-500" />
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="mb-4 text-base font-semibold">Plans expiring soon</h2>
-                  {q.data.soon_expiring.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No plans expiring within 7 days.</p>
-                  ) : (
-                    <ul className="space-y-2 text-sm">
-                      {q.data.soon_expiring.map((o) => (
-                        <li key={o.id} className="flex items-center justify-between">
-                          <span>{o.name} · <span className="text-muted-foreground">{o.plan_name}</span></span>
-                          <span className="font-mono text-xs text-rose-700">{o.days_remaining} days</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                <div className="border-b px-6 py-4">
-                  <h2 className="text-base font-semibold">Recent payments</h2>
-                </div>
-                {q.data.recent_payments.length === 0 ? (
-                  <p className="p-6 text-sm text-muted-foreground">Nothing yet.</p>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
-                      <tr>
-                        <th className="px-6 py-3">Center</th>
-                        <th className="px-6 py-3">Plan</th>
-                        <th className="px-6 py-3">Amount</th>
-                        <th className="px-6 py-3">Status</th>
-                        <th className="px-6 py-3">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {q.data.recent_payments.map((p) => (
-                        <tr key={p.id}>
-                          <td className="px-6 py-3 font-medium">{p.organization_name}</td>
-                          <td className="px-6 py-3">{p.plan_name}</td>
-                          <td className="px-6 py-3 font-mono">${p.amount_usd}</td>
-                          <td className="px-6 py-3">
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
-                              ✓ {p.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 text-muted-foreground">{fmtDate(p.paid_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-0">
-                <div className="border-b px-6 py-4">
-                  <h2 className="text-base font-semibold">Recently joined students</h2>
-                </div>
-                {q.data.recent_students.length === 0 ? (
-                  <p className="p-6 text-sm text-muted-foreground">Nothing yet.</p>
-                ) : (
-                  <ul className="divide-y">
-                    {q.data.recent_students.map((s) => (
-                      <li key={s.username} className="flex items-center justify-between px-6 py-3 text-sm">
-                        <div>
-                          <span className="font-medium">{s.name}</span>
-                          {s.org_name && (
-                            <span className="text-muted-foreground"> → {s.org_name}</span>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{fmtDate(s.created_at)}</span>
+                    {q.data.soon_expiring.map((o) => (
+                      <li key={o.id} className="flex items-center justify-between">
+                        <span>
+                          <span className="font-medium text-slate-900">{o.name}</span>{' '}
+                          <span className="text-slate-500">· {o.plan_name}</span>
+                        </span>
+                        <Chip tone="rose">{o.days_remaining} kun</Chip>
                       </li>
                     ))}
                   </ul>
                 )}
-              </CardContent>
-            </Card>
-          </>
+              </SurfaceCard>
+            </div>
+
+            <TableCard title="Recent payments">
+              {q.data.recent_payments.length === 0 ? (
+                <p className="p-6 text-sm text-slate-500">Nothing yet.</p>
+              ) : (
+                <table className={adminTable.table}>
+                  <thead className={adminTable.thead}>
+                    <tr>
+                      <th className={adminTable.th}>Center</th>
+                      <th className={adminTable.th}>Plan</th>
+                      <th className={adminTable.th}>Amount</th>
+                      <th className={adminTable.th}>Status</th>
+                      <th className={adminTable.th}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className={adminTable.tbody}>
+                    {q.data.recent_payments.map((p) => (
+                      <tr key={p.id} className={adminTable.trHover}>
+                        <td className={adminTable.td + ' font-semibold text-slate-900'}>
+                          {p.organization_name}
+                        </td>
+                        <td className={adminTable.td}>{p.plan_name}</td>
+                        <td className={adminTable.td + ' font-mono'}>${p.amount_usd}</td>
+                        <td className={adminTable.td}>
+                          <Chip tone="emerald">✓ {p.status}</Chip>
+                        </td>
+                        <td className={adminTable.td + ' text-slate-500'}>
+                          {fmtDate(p.paid_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </TableCard>
+
+            <TableCard title="Recently joined students">
+              {q.data.recent_students.length === 0 ? (
+                <p className="p-6 text-sm text-slate-500">Nothing yet.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {q.data.recent_students.map((s) => (
+                    <li
+                      key={s.username}
+                      className="flex items-center justify-between px-6 py-3 text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+                          {s.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{s.name}</p>
+                          {s.org_name && (
+                            <p className="text-xs text-slate-500">→ {s.org_name}</p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500">{fmtDate(s.created_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </TableCard>
+          </div>
         )}
-      </div>
+      </PageShell>
     </SuperAdminLayout>
   )
 }
 
-function Stat({
-  Icon, label, value, hint, tint,
+function StatusRow({
+  label,
+  count,
+  tone,
 }: {
-  Icon: React.ComponentType<{ className?: string }>
-  label: string; value: string | number; hint?: string; tint: string
+  label: string
+  count: number
+  tone: 'emerald' | 'amber' | 'rose' | 'slate'
 }) {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-6">
-        <div className={`rounded-lg ${tint} p-3 text-white`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-2xl font-bold">{value}</div>
-          <div className="text-xs uppercase tracking-wider text-slate-500">{label}</div>
-          {hint && <div className="mt-1 text-xs text-slate-400">{hint}</div>}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatusRow({ label, count, dot }: { label: string; count: number; dot: string }) {
+  const dotClass = {
+    emerald: 'bg-emerald-500',
+    amber: 'bg-amber-500',
+    rose: 'bg-rose-500',
+    slate: 'bg-slate-400',
+  }[tone]
   return (
     <li className="flex items-center justify-between">
-      <span className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${dot}`} />
+      <span className="flex items-center gap-2 text-slate-700">
+        <span className={`h-2 w-2 rounded-full ${dotClass}`} />
         {label}
       </span>
-      <span className="font-mono">{count}</span>
+      <span className="font-mono text-slate-900">{count}</span>
     </li>
   )
 }

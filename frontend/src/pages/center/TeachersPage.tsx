@@ -1,6 +1,18 @@
-import { useEffect, useState } from 'react'
+import { GraduationCap, Plus, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  StateCard,
+  TableCard,
+  adminTable,
+  btnGhost,
+  btnOutline,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { CredentialsModal } from '@/components/center/CredentialsModal'
 import { api } from '@/lib/api'
 
@@ -27,6 +39,7 @@ export default function TeachersPage() {
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [credentials, setCredentials] = useState<Credentials | null>(null)
+  const [filter, setFilter] = useState('')
 
   const load = () => {
     if (!slug) return
@@ -39,6 +52,14 @@ export default function TeachersPage() {
 
   useEffect(load, [slug])
 
+  const filtered = useMemo(() => {
+    if (!filter.trim()) return teachers
+    const q = filter.trim().toLowerCase()
+    return teachers.filter((t) =>
+      `${t.first_name} ${t.last_name} ${t.username}`.toLowerCase().includes(q),
+    )
+  }, [teachers, filter])
+
   const resetPassword = async (id: number) => {
     if (!slug || !window.confirm('Parolni tiklamoqchimisiz?')) return
     const r = await api.post(`/center/${slug}/teachers/${id}/reset-password/`)
@@ -46,91 +67,121 @@ export default function TeachersPage() {
   }
 
   const deactivate = async (id: number) => {
-    if (!slug || !window.confirm('Ustozni o\'chirmoqchimisiz?')) return
+    if (!slug || !window.confirm("Ustozni o'chirmoqchimisiz?")) return
     await api.post(`/center/${slug}/teachers/${id}/deactivate/`)
     load()
   }
 
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-light text-slate-900">Ustozlar</h1>
-        <button
-          type="button"
-          onClick={() => setShowAdd(true)}
-          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-        >
-          + Yangi ustoz
-        </button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Ustozlar"
+        subtitle="Markazda ishlaydigan ustozlar va ularning faolligi"
+        actions={
+          <button type="button" onClick={() => setShowAdd(true)} className={btnPrimary}>
+            <Plus size={16} /> Yangi ustoz
+          </button>
+        }
+      />
 
-      <div className="overflow-hidden rounded-2xl border bg-white">
-        <table className="w-full">
-          <thead className="border-b bg-slate-50">
-            <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-              <th className="p-4">Ism</th>
-              <th className="p-4">Login</th>
-              <th className="p-4">Talabalari</th>
-              <th className="p-4">Holat</th>
-              <th className="p-4">Amal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      {!loading && teachers.length === 0 ? (
+        <StateCard
+          Icon={GraduationCap}
+          tone="emerald"
+          title="Hali ustoz qo'shilmagan"
+          description="Markaz uchun birinchi ustozni qo'shing — talabalar tayinlash mumkin bo'ladi."
+        />
+      ) : (
+        <TableCard
+          toolbar={
+            <div className="relative w-full sm:w-64">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                placeholder="Ism yoki login bo'yicha qidirish..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+          }
+        >
+          <table className={adminTable.table}>
+            <thead className={adminTable.thead}>
               <tr>
-                <td colSpan={5} className="p-6 text-center text-slate-400">
-                  Yuklanmoqda…
-                </td>
+                <th className={adminTable.th}>Ustoz</th>
+                <th className={adminTable.th}>Login</th>
+                <th className={adminTable.th}>Talabalari</th>
+                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
-            ) : teachers.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-slate-400">
-                  Hali ustoz yo'q.
-                </td>
-              </tr>
-            ) : (
-              teachers.map((t) => (
-                <tr key={t.id} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="p-4 font-medium text-slate-900">
-                    {t.first_name} {t.last_name}
-                  </td>
-                  <td className="p-4 font-mono text-sm text-slate-600">{t.username}</td>
-                  <td className="p-4 text-slate-700">{t.students_count}</td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        t.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {t.is_active ? 'Faol' : 'O\'chirilgan'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm">
-                    <button
-                      type="button"
-                      onClick={() => resetPassword(t.id)}
-                      className="mr-3 text-orange-600 hover:underline"
-                    >
-                      Parolni tiklash
-                    </button>
-                    {t.is_active && (
-                      <button
-                        type="button"
-                        onClick={() => deactivate(t.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        O'chirish
-                      </button>
-                    )}
+            </thead>
+            <tbody className={adminTable.tbody}>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">
+                    Yuklanmoqda…
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">
+                    Qidiruv bo'yicha hech narsa topilmadi.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((t) => {
+                  const initials =
+                    `${t.first_name?.[0] ?? ''}${t.last_name?.[0] ?? ''}`.toUpperCase() || '?'
+                  return (
+                    <tr key={t.id} className={adminTable.trHover}>
+                      <td className={adminTable.td}>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">
+                            {initials}
+                          </div>
+                          <div className="font-semibold text-slate-900">
+                            {t.first_name} {t.last_name}
+                          </div>
+                        </div>
+                      </td>
+                      <td className={adminTable.td + ' font-mono text-xs text-slate-600'}>
+                        {t.username}
+                      </td>
+                      <td className={adminTable.td}>{t.students_count} ta</td>
+                      <td className={adminTable.td}>
+                        {t.is_active ? <Chip tone="emerald">Faol</Chip> : <Chip>O'chirilgan</Chip>}
+                      </td>
+                      <td className={adminTable.td + ' text-right'}>
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => resetPassword(t.id)}
+                            className={btnGhost}
+                          >
+                            Parolni tiklash
+                          </button>
+                          {t.is_active && (
+                            <button
+                              type="button"
+                              onClick={() => deactivate(t.id)}
+                              className="rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                            >
+                              O'chirish
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </TableCard>
+      )}
 
       {showAdd && (
         <AddTeacherModal
@@ -145,12 +196,9 @@ export default function TeachersPage() {
       )}
 
       {credentials && (
-        <CredentialsModal
-          credentials={credentials}
-          onClose={() => setCredentials(null)}
-        />
+        <CredentialsModal credentials={credentials} onClose={() => setCredentials(null)} />
       )}
-    </div>
+    </PageShell>
   )
 }
 
@@ -195,9 +243,9 @@ function AddTeacherModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6">
-        <h2 className="mb-4 text-xl font-semibold text-slate-900">Yangi ustoz</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Yangi ustoz</h2>
         <div className="space-y-3">
           <FormInput
             label="Ism"
@@ -216,23 +264,19 @@ function AddTeacherModal({
             hint="Faqat lotin harflari va raqamlar"
           />
         </div>
-        {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-        <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
+        <div className="mt-4 rounded-xl bg-indigo-50 p-3 text-xs text-indigo-700">
           💡 Parol avtomatik yaratiladi va keyingi ekranda ko'rsatiladi.
         </div>
         <div className="mt-5 flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-full border border-slate-300 py-2.5 text-sm hover:bg-slate-50"
-          >
+          <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
             Bekor qilish
           </button>
           <button
             type="button"
             onClick={submit}
             disabled={submitting}
-            className="flex-1 rounded-full bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+            className={btnPrimary + ' flex-1 justify-center'}
           >
             {submitting ? 'Saqlanmoqda…' : 'Saqlash va parol olish'}
           </button>
@@ -255,13 +299,11 @@ function FormInput({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
-        {label}
-      </label>
+      <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-300 px-4 py-2 outline-none focus:border-slate-900"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
       />
       {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>

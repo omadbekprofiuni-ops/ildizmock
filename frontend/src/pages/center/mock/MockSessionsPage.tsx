@@ -1,6 +1,17 @@
+import { ArrowRight, CalendarPlus, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
+import {
+  Chip,
+  PageHeader,
+  PageShell,
+  StateCard,
+  TableCard,
+  adminTable,
+  btnOutline,
+  btnPrimary,
+} from '@/components/admin-shell'
 import { api } from '@/lib/api'
 
 interface SessionRow {
@@ -21,12 +32,12 @@ const STATUS_LABEL: Record<string, string> = {
   finished: 'Tugagan',
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  waiting: 'bg-slate-100 text-slate-700',
-  listening: 'bg-blue-100 text-blue-800',
-  reading: 'bg-amber-100 text-amber-800',
-  writing: 'bg-orange-100 text-orange-800',
-  finished: 'bg-green-100 text-green-700',
+const STATUS_TONE: Record<string, 'slate' | 'blue' | 'amber' | 'rose' | 'emerald' | 'indigo'> = {
+  waiting: 'slate',
+  listening: 'indigo',
+  reading: 'blue',
+  writing: 'amber',
+  finished: 'emerald',
 }
 
 export default function MockSessionsPage() {
@@ -50,78 +61,79 @@ export default function MockSessionsPage() {
   }, [slug])
 
   return (
-    <div>
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-light text-slate-900">Mock sessiyalar</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Sinxron mock testlar — talabalar bitta linkdan kirib, bir vaqtda boshlaydi.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600"
-        >
-          + Yangi sessiya
-        </button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Mock sessiyalar"
+        subtitle="Sinxron mock testlar — talabalar bitta linkdan kirib, bir vaqtda boshlaydi."
+        actions={
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className={btnPrimary}
+          >
+            <Plus size={16} /> Yangi sessiya
+          </button>
+        }
+      />
 
-      <div className="overflow-hidden rounded-2xl border bg-white">
-        <table className="w-full">
-          <thead className="border-b bg-slate-50">
-            <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-              <th className="p-4">Nomi</th>
-              <th className="p-4">Sana</th>
-              <th className="p-4">Kod</th>
-              <th className="p-4">Talabalar</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Amal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      {!loading && sessions.length === 0 ? (
+        <StateCard
+          Icon={CalendarPlus}
+          tone="indigo"
+          title="Hali sessiya yaratilmagan"
+          description="“Yangi sessiya” tugmasi orqali birinchi mock sessiyani rejalashtiring."
+        />
+      ) : (
+        <TableCard>
+          <table className={adminTable.table}>
+            <thead className={adminTable.thead}>
               <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
-                  Yuklanmoqda…
-                </td>
+                <th className={adminTable.th}>Sessiya</th>
+                <th className={adminTable.th}>Sana</th>
+                <th className={adminTable.th}>Kod</th>
+                <th className={adminTable.th}>Talabalar</th>
+                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
-            ) : sessions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-slate-400">
-                  Hali sessiya yaratilmagan.
-                </td>
-              </tr>
-            ) : (
-              sessions.map((s) => (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="p-4 font-medium text-slate-900">{s.name}</td>
-                  <td className="p-4 text-sm text-slate-700">{s.date}</td>
-                  <td className="p-4 font-mono text-sm">{s.access_code}</td>
-                  <td className="p-4 text-sm">{s.participants_count}</td>
-                  <td className="p-4">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs ${
-                        STATUS_COLOR[s.status] ?? 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {STATUS_LABEL[s.status] ?? s.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <Link
-                      to={`/${slug}/admin/mock/${s.id}`}
-                      className="text-sm font-medium text-blue-600 hover:underline"
-                    >
-                      Ochish →
-                    </Link>
+            </thead>
+            <tbody className={adminTable.tbody}>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                    Yuklanmoqda…
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                sessions.map((s) => (
+                  <tr key={s.id} className={adminTable.trHover}>
+                    <td className={adminTable.td + ' font-semibold text-slate-900'}>
+                      {s.name}
+                    </td>
+                    <td className={adminTable.td + ' text-slate-600'}>{s.date}</td>
+                    <td className={adminTable.td + ' font-mono text-xs'}>
+                      {s.access_code}
+                    </td>
+                    <td className={adminTable.td}>{s.participants_count}</td>
+                    <td className={adminTable.td}>
+                      <Chip tone={STATUS_TONE[s.status] ?? 'slate'}>
+                        {STATUS_LABEL[s.status] ?? s.status}
+                      </Chip>
+                    </td>
+                    <td className={adminTable.td + ' text-right'}>
+                      <Link
+                        to={`/${slug}/admin/mock/${s.id}`}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                      >
+                        Boshqarish <ArrowRight size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </TableCard>
+      )}
 
       {showCreate && (
         <CreateSessionDialog
@@ -133,9 +145,11 @@ export default function MockSessionsPage() {
           }}
         />
       )}
-    </div>
+    </PageShell>
   )
 }
+
+void btnOutline
 
 interface TestPick {
   id: string
@@ -212,14 +226,14 @@ function CreateSessionDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-2xl font-semibold">Yangi mock sessiya</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Yangi mock sessiya</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
             ✕
           </button>
@@ -235,7 +249,7 @@ function CreateSessionDialog({
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Masalan: 2026-04-27 Kechki guruh"
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-slate-900 focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </Field>
 
@@ -245,7 +259,7 @@ function CreateSessionDialog({
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </Field>
 
@@ -281,7 +295,7 @@ function CreateSessionDialog({
                       listening_duration: Number(e.target.value),
                     })
                   }
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </Field>
               <Field label="Reading (daq.)">
@@ -293,7 +307,7 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, reading_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </Field>
               <Field label="Writing (daq.)">
@@ -305,30 +319,22 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, writing_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </Field>
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                 {error}
               </div>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-              >
+              <button type="button" onClick={onClose} className={btnOutline}>
                 Bekor
               </button>
-              <button
-                type="submit"
-                disabled={busy}
-                className="rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
-              >
+              <button type="submit" disabled={busy} className={btnPrimary}>
                 {busy ? 'Yaratilmoqda…' : 'Yaratish'}
               </button>
             </div>
@@ -366,7 +372,7 @@ function TestSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-300 px-4 py-2"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
       >
         <option value="">— Tanlang —</option>
         {tests.map((t) => (
