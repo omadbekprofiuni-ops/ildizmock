@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'apps.center',
     'apps.mock',
     'apps.billing',
+    'apps.attendance',
 ]
 
 MIDDLEWARE = [
@@ -99,6 +100,21 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # ETAP 14 BUG #22 — throttling. Pagination DEFAULT qo'yilmaydi
+    # (existing frontend kod oddiy arraylarni kutadi). Specific viewset'lar
+    # opt-in: `pagination_class = PageNumberPagination`.
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '120/min',
+        'user': '600/min',
+        'login': '5/min',          # phone/password attempts
+        'mock_join': '10/min',     # talaba sessiya'ga join
+        'speaking_upload': '6/hour',
+    },
 }
 
 SIMPLE_JWT = {
@@ -118,3 +134,98 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 CORS_ALLOW_CREDENTIALS = True
+
+# ETAP 20 — Sertifikat verification URL'i (PDF'da QR/link uchun)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# Frontend custom headerlari (SuperAdmin context switch + guest attempt token).
+# django-cors-headers default ro'yxatida yo'q — preflight rad qilmasin.
+from corsheaders.defaults import default_headers  # noqa: E402
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-org-context',
+    'x-guest-token',
+]
+
+
+# ============================================
+# ETAP 14 BUG #17 — Production-only security
+# ============================================
+# Settingni alohida fayllarga bo'lishning o'rniga shu yerda DEBUG flag bilan
+# ajratamiz — har deployment bitta DJANGO_DEBUG env'dan boshqariladi.
+if not DEBUG:
+    AUTH_COOKIE_SECURE = True
+    AUTH_COOKIE_SAMESITE = 'Lax'
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31_536_000  # 1 yil
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# ============================================
+# ETAP 14 BUG #15 — Logging
+# ============================================
+import os  # noqa: E402
+
+LOGS_DIR = BASE_DIR / 'logs'
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'ildizmock.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'errors.log'),
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['error_file', 'console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}

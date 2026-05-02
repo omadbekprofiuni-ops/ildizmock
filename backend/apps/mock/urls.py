@@ -25,6 +25,20 @@ urlpatterns = [
         'student/mock/results/<int:participant_id>/certificate/',
         me_views.my_mock_certificate, name='my-mock-certificate',
     ),
+
+    # ETAP 20 — Persistent sertifikatlar
+    path(
+        'student/certificates/',
+        me_views.my_certificates, name='my-certificates',
+    ),
+    path(
+        'student/certificates/<int:certificate_id>/download/',
+        me_views.my_certificate_download, name='my-certificate-download',
+    ),
+    path(
+        'verify/<str:verification_code>/',
+        me_views.verify_certificate, name='verify-certificate',
+    ),
     path(
         'mock/join/<str:access_code>/',
         student_views.join_view,
@@ -54,6 +68,11 @@ urlpatterns = [
         'mock/submit/writing/<str:browser_session_id>/',
         student_views.submit_writing,
         name='mock-submit-writing',
+    ),
+    path(
+        'mock/submit/speaking/<str:browser_session_id>/',
+        student_views.submit_speaking,
+        name='mock-submit-speaking',
     ),
     path(
         'mock/result/<str:browser_session_id>/',

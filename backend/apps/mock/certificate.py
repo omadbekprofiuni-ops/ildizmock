@@ -16,7 +16,7 @@ def _safe_score(value, fmt='{:.1f}', dash='—'):
         return dash
 
 
-def generate_certificate(participant) -> BytesIO:
+def generate_certificate(participant, certificate=None) -> BytesIO:
     """ReportLab bilan A4-landscape mock sertifikatni qaytaradi (BytesIO)."""
 
     buffer = BytesIO()
@@ -159,7 +159,35 @@ def generate_certificate(participant) -> BytesIO:
         'Issued by ILDIZmock Platform · ildizmock.uz',
     )
 
+    # ETAP 20 — Certificate number + verification URL (agar berilgan bo'lsa)
+    if certificate is not None:
+        c.setFont('Helvetica-Bold', 10)
+        c.setFillColorRGB(0.12, 0.27, 0.6)
+        c.drawString(
+            2.5 * cm, 1.4 * cm,
+            f'Certificate No: {certificate.certificate_number}',
+        )
+        c.setFont('Helvetica', 8)
+        c.setFillColorRGB(0.45, 0.5, 0.6)
+        verify_url = _build_verify_url(certificate)
+        c.drawRightString(
+            width - 2.5 * cm, 1.4 * cm,
+            f'Verify: {verify_url}',
+        )
+
     c.showPage()
     c.save()
     buffer.seek(0)
     return buffer
+
+
+def _build_verify_url(certificate) -> str:
+    """Frontend orqali tekshirish URL'ini quradi."""
+    from django.conf import settings
+    base = getattr(settings, 'FRONTEND_URL', '') or 'https://ildizmock.uz'
+    return f'{base.rstrip("/")}/verify/{certificate.verification_code}'
+
+
+def render_certificate_pdf(certificate) -> BytesIO:
+    """ETAP 20 — Persistent Certificate uchun PDF (snapshot fields'dan)."""
+    return generate_certificate(certificate.participant, certificate=certificate)

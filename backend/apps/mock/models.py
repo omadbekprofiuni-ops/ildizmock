@@ -1,4 +1,5 @@
 import random
+import secrets
 import string
 
 from django.conf import settings
@@ -14,6 +15,11 @@ def generate_browser_session_id() -> str:
     return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
 
 
+def generate_verification_code() -> str:
+    """ETAP 20 — Sertifikat verification kodini yaratish (URL-safe token)."""
+    return secrets.token_urlsafe(32)
+
+
 class MockSession(models.Model):
     """Markaz admini yaratadigan sinxron mock sessiya."""
 
@@ -22,6 +28,7 @@ class MockSession(models.Model):
         ('listening', 'Listening'),
         ('reading', 'Reading'),
         ('writing', 'Writing'),
+        ('speaking', 'Speaking'),
         ('finished', 'Tugagan'),
         ('cancelled', 'Bekor qilingan'),
     ]
@@ -62,10 +69,19 @@ class MockSession(models.Model):
         related_name='+',
         limit_choices_to={'module': 'writing'},
     )
+    speaking_test = models.ForeignKey(
+        'tests.Test',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        limit_choices_to={'module': 'speaking'},
+        help_text='Speaking test (ixtiyoriy — mavjud bo\'lsa speaking bosqichi qo\'shiladi)',
+    )
 
     listening_duration = models.PositiveIntegerField(default=30)
     reading_duration = models.PositiveIntegerField(default=60)
     writing_duration = models.PositiveIntegerField(default=60)
+    speaking_duration = models.PositiveIntegerField(default=15)
 
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='waiting',
@@ -78,6 +94,20 @@ class MockSession(models.Model):
         max_length=16, unique=True, default=generate_access_code,
     )
 
+    # ETAP 19 — Link amal qilish muddati va kech qo'shilish ruxsati
+    link_expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Linkning amal qilish muddati (bo\'sh bo\'lsa cheksiz)',
+    )
+    allow_late_join = models.BooleanField(
+        default=True,
+        help_text='Sessiya boshlangandan keyin ham qo\'shilishga ruxsat',
+    )
+    allow_guests = models.BooleanField(
+        default=True,
+        help_text='Ro\'yxatda yo\'q talabalar ham ism kiritib qo\'shilsinmi',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -88,6 +118,17 @@ class MockSession(models.Model):
     def __str__(self):
         return f'{self.name} ({self.access_code}) — {self.get_status_display()}'
 
+    def is_join_allowed(self) -> bool:
+        """ETAP 19 — Hozir bu sessiyaga qo'shilish mumkinmi?"""
+        from django.utils import timezone
+        if self.link_expires_at and timezone.now() > self.link_expires_at:
+            return False
+        if self.status in ('finished', 'cancelled'):
+            return False
+        if self.status != 'waiting' and not self.allow_late_join:
+            return False
+        return True
+
     @property
     def current_test(self):
         if self.status == 'listening':
@@ -96,6 +137,8 @@ class MockSession(models.Model):
             return self.reading_test
         if self.status == 'writing':
             return self.writing_test
+        if self.status == 'speaking':
+            return self.speaking_test
         return None
 
     @property
@@ -106,6 +149,8 @@ class MockSession(models.Model):
             return self.reading_duration
         if self.status == 'writing':
             return self.writing_duration
+        if self.status == 'speaking':
+            return self.speaking_duration
         return 0
 
 
@@ -170,7 +215,23 @@ class MockParticipant(models.Model):
     reading_submitted_at = models.DateTimeField(null=True, blank=True)
     writing_submitted_at = models.DateTimeField(null=True, blank=True)
 
+    # ETAP 14 BUG #11 — Speaking audio recording
+    speaking_audio = models.FileField(
+        upload_to='speaking_recordings/%Y/%m/',
+        null=True, blank=True,
+        help_text='Talaba yozib olgan speaking audio (webm/mp3/m4a)',
+    )
+    speaking_uploaded_at = models.DateTimeField(null=True, blank=True)
+    speaking_duration_seconds = models.PositiveIntegerField(null=True, blank=True)
+
     joined_at = models.DateTimeField(auto_now_add=True)
+
+    # ETAP 19 — Pre-registered (teacher tomondan oldindan qo'shilgan) vs claimed
+    # `joined_at` — record yaratilgan vaqt (teacher pre-registered yoki guest qo'shilgan)
+    # `has_joined` — talaba aslida link orqali kirib, ismini bosgan
+    # `claimed_at` — qachon kirib, sessiya tokenini olgan
+    has_joined = models.BooleanField(default=False)
+    claimed_at = models.DateTimeField(null=True, blank=True)
 
     # ===== ETAP 4: Writing kriteriyalari =====
     SCORE_KW = dict(max_digits=3, decimal_places=1, null=True, blank=True)
@@ -250,6 +311,21 @@ class MockParticipant(models.Model):
     def __str__(self):
         return f'{self.full_name} @ {self.session.access_code}'
 
+    @property
+    def is_guest(self) -> bool:
+        """ETAP 19 — Login akkauntiga bog'lanmagan participant."""
+        return self.user_id is None
+
+    def get_display_name(self) -> str:
+        """ETAP 19 — Ism (linked user nomi yoki guest full_name)."""
+        if self.user_id:
+            full = (
+                f'{(self.user.first_name or "").strip()} '
+                f'{(self.user.last_name or "").strip()}'
+            ).strip()
+            return full or self.user.username
+        return self.full_name
+
     # ===== Helper methods =====
 
     @staticmethod
@@ -321,3 +397,102 @@ class MockStateLog(models.Model):
 
     def __str__(self):
         return f'{self.session_id}:{self.action}@{self.timestamp:%H:%M:%S}'
+
+
+class Certificate(models.Model):
+    """ETAP 20 — Persistent IELTS Mock Certificate.
+
+    Teacher participantni baholab bo'lganidan keyin "Sertifikat berish"
+    tugmasini bosadi va shu yerda yaratiladi (PDF ham yoziladi).
+    Talaba o'z dashboardida ko'radi va PDF yuklab oladi.
+    """
+
+    participant = models.OneToOneField(
+        MockParticipant,
+        on_delete=models.CASCADE,
+        related_name='certificate',
+        help_text='Sertifikat berilgan mock participant',
+    )
+
+    # Unique identifiers
+    certificate_number = models.CharField(
+        max_length=50, unique=True,
+        help_text='ORG-YYYY-MM-NNN formatida (e.g. ILDIZ-2026-05-001)',
+    )
+    verification_code = models.CharField(
+        max_length=64, unique=True, default=generate_verification_code,
+        help_text='QR/URL orqali tekshirish uchun token',
+    )
+
+    # Snapshot of scores (immutable — sertifikat berilganda yozilgan)
+    listening_score = models.DecimalField(max_digits=3, decimal_places=1)
+    reading_score = models.DecimalField(max_digits=3, decimal_places=1)
+    writing_score = models.DecimalField(max_digits=3, decimal_places=1)
+    speaking_score = models.DecimalField(max_digits=3, decimal_places=1)
+    overall_band_score = models.DecimalField(max_digits=3, decimal_places=1)
+
+    # Snapshot of identity
+    full_name = models.CharField(max_length=200)
+    test_date = models.DateField()
+    organization_name = models.CharField(max_length=200, blank=True, default='')
+
+    # PDF saqlangan fayl
+    pdf_file = models.FileField(
+        upload_to='certificates/%Y/%m/',
+        null=True, blank=True,
+    )
+
+    # Issuer
+    issued_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='issued_certificates',
+    )
+
+    # Revocation
+    is_revoked = models.BooleanField(default=False)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_reason = models.TextField(blank=True, default='')
+    revoked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='revoked_certificates',
+    )
+
+    issue_date = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'mock_certificates'
+        ordering = ['-issue_date', '-id']
+        indexes = [
+            models.Index(fields=['certificate_number']),
+            models.Index(fields=['verification_code']),
+        ]
+
+    def __str__(self):
+        return f'{self.certificate_number} — {self.full_name}'
+
+    @staticmethod
+    def generate_certificate_number(organization, test_date) -> str:
+        """ORG-YYYY-MM-NNN — markaz uchun shu oydagi navbatdagi raqam."""
+        org_code = ''.join(
+            ch for ch in (organization.name or 'ORG').upper() if ch.isalnum()
+        )[:6] or 'ORG'
+        year = test_date.year
+        month = test_date.month
+        # Shu oydagi sertifikatlar sonini sanaymiz
+        count = Certificate.objects.filter(
+            participant__session__organization=organization,
+            test_date__year=year,
+            test_date__month=month,
+        ).count()
+        # Unique kafolati (race conditionga qarshi while loop)
+        while True:
+            candidate = f'{org_code}-{year}-{month:02d}-{count + 1:03d}'
+            if not Certificate.objects.filter(certificate_number=candidate).exists():
+                return candidate
+            count += 1

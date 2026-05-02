@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Dumbbell, FilePen, GraduationCap, History, Target, TrendingUp, User } from 'lucide-react'
+import { ArrowRight, Award, Dumbbell, FilePen, GraduationCap, History, Target, TrendingUp, User } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -149,7 +149,13 @@ export default function StudentDashboard() {
               to="/student/mock"
               label="Mock results"
               Icon={GraduationCap}
-              hint="Sertifikat & progress"
+              hint="Mock natijalar"
+            />
+            <ActionCard
+              to="/student/certificates"
+              label="Sertifikatlar"
+              Icon={Award}
+              hint="Berilgan sertifikatlar"
             />
             <ActionCard
               to="/my-writings"

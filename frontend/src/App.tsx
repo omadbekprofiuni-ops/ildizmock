@@ -9,11 +9,15 @@ import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
-import { RequireCenterAdmin } from '@/components/guards/RequireCenterAdmin'
+import { RequireCenterMember } from '@/components/guards/RequireCenterMember'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
+import AttendanceMarkPage from './pages/center/AttendanceMarkPage'
+import AttendancePage from './pages/center/AttendancePage'
+import AttendanceReportPage from './pages/center/AttendanceReportPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
+import GroupSchedulePage from './pages/center/GroupSchedulePage'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import GroupCreatePage from './pages/center/GroupCreatePage'
@@ -47,14 +51,18 @@ import AdminTestsPage from './pages/admin/AdminTestsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
+import FeaturesPage from './pages/public/FeaturesPage'
+import PricingPage from './pages/public/PricingPage'
 import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
 import ResultPage from './pages/ResultPage'
 import SpeakingComingSoonPage from './pages/SpeakingComingSoonPage'
+import StudentCertificatesPage from './pages/student/CertificatesPage'
 import MockResultDetailPage from './pages/student/MockResultDetailPage'
 import StudentMockResultsPage from './pages/student/MockResultsPage'
+import VerifyCertificatePage from './pages/VerifyCertificatePage'
 import PracticeHistoryPage from './pages/student/PracticeHistoryPage'
 import PracticeListPage from './pages/student/PracticeListPage'
 import PracticeModulePage from './pages/student/PracticeModulePage'
@@ -83,6 +91,8 @@ export default function App() {
           {/* Public — guest can browse */}
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
@@ -93,6 +103,9 @@ export default function App() {
           <Route path="/mock/join/:code" element={<MockJoinPage />} />
           <Route path="/mock/session/:bsid" element={<MockSessionPage />} />
 
+          {/* ETAP 20 — Public certificate verification */}
+          <Route path="/verify/:code" element={<VerifyCertificatePage />} />
+
           {/* Auth-required */}
           <Route path="/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -101,6 +114,7 @@ export default function App() {
           <Route path="/writing/sent" element={<ProtectedRoute><WritingSentPage /></ProtectedRoute>} />
           <Route path="/student/mock" element={<ProtectedRoute><StudentMockResultsPage /></ProtectedRoute>} />
           <Route path="/student/mock/:id" element={<ProtectedRoute><MockResultDetailPage /></ProtectedRoute>} />
+          <Route path="/student/certificates" element={<ProtectedRoute><StudentCertificatesPage /></ProtectedRoute>} />
           <Route path="/practice" element={<ProtectedRoute><PracticeListPage /></ProtectedRoute>} />
           <Route path="/practice/history" element={<ProtectedRoute><PracticeHistoryPage /></ProtectedRoute>} />
           <Route path="/practice/:module" element={<ProtectedRoute><PracticeModulePage /></ProtectedRoute>} />
@@ -200,8 +214,10 @@ export default function App() {
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
-          {/* Center admin (slug-based) — ETAP 2 */}
-          <Route path="/:slug/admin" element={<RequireCenterAdmin />}>
+          {/* Center layout (slug-based) — admin to'liq, teacher faqat
+              attendance + groups (sidebar role-based filter). Permission'lar
+              backend tomonda IsCenterAdmin / IsCenterMember orqali. */}
+          <Route path="/:slug/admin" element={<RequireCenterMember />}>
             <Route element={<CenterAdminLayout />}>
               <Route index element={<CenterDashboard />} />
               <Route path="students" element={<CenterStudentsPage />} />
@@ -218,6 +234,10 @@ export default function App() {
               <Route path="groups/new" element={<GroupCreatePage />} />
               <Route path="groups/comparison" element={<GroupsComparisonPage />} />
               <Route path="groups/:groupId" element={<GroupDetailPage />} />
+              <Route path="groups/:groupId/schedule" element={<GroupSchedulePage />} />
+              <Route path="groups/:groupId/attendance" element={<AttendanceReportPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
+              <Route path="attendance/:sessionId" element={<AttendanceMarkPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
               <Route path="settings" element={<CenterSettingsPage />} />
             </Route>

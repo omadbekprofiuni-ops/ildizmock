@@ -1,5 +1,6 @@
 """Markaz admini uchun mock sessiyalar API."""
 
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
@@ -11,7 +12,14 @@ from apps.organizations.models import Organization, OrganizationMembership
 from apps.organizations.permissions import IsCenterAdmin
 from apps.tests.models import Test
 
-from .models import MockParticipant, MockSession, MockStateLog, generate_access_code
+from .certificate import render_certificate_pdf
+from .models import (
+    Certificate,
+    MockParticipant,
+    MockSession,
+    MockStateLog,
+    generate_access_code,
+)
 from .serializers import (
     MockSessionCreateSerializer,
     MockSessionDetailSerializer,
@@ -19,11 +27,14 @@ from .serializers import (
     TestPickSerializer,
 )
 
-# Listening → Reading → Writing → Finished
+User = get_user_model()
+
+# Listening → Reading → Writing → (Speaking, ixtiyoriy) → Finished
 NEXT_STATUS = {
     'listening': 'reading',
     'reading': 'writing',
-    'writing': 'finished',
+    'writing': 'speaking',
+    'speaking': 'finished',
 }
 
 
@@ -99,6 +110,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             'listening': TestPickSerializer(qs.filter(module='listening'), many=True).data,
             'reading': TestPickSerializer(qs.filter(module='reading'), many=True).data,
             'writing': TestPickSerializer(qs.filter(module='writing'), many=True).data,
+            'speaking': TestPickSerializer(qs.filter(module='speaking'), many=True).data,
         })
 
     @action(detail=True, methods=['post'])
@@ -138,6 +150,27 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             )
 
         nxt = NEXT_STATUS[session.status]
+
+        # Keyingi bo'lim uchun test biriktirilganligini tekshirish.
+        # Reading va Writing — majburiy. Speaking ixtiyoriy: agar
+        # speaking_test yo'q bo'lsa, to'g'ridan-to'g'ri finished'ga o'tamiz.
+        next_test_field = {
+            'reading': 'reading_test_id',
+            'writing': 'writing_test_id',
+            'speaking': 'speaking_test_id',
+        }.get(nxt)
+        if next_test_field and not getattr(session, next_test_field):
+            if nxt == 'speaking':
+                # Speaking yo'q — sessiyani yakunlaymiz
+                nxt = 'finished'
+            else:
+                module_label = nxt.capitalize()
+                return Response(
+                    {'detail': f'{module_label} test biriktirilmagan. '
+                               'Sessiyani Yakunlash tugmasi orqali tugatishingiz mumkin.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         now = timezone.now()
         session.status = nxt
         session.section_started_at = now
@@ -253,8 +286,18 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             MockParticipant, id=participant_id, session=session,
         )
         participant.writing_score = round(score, 1)
-        participant.save(update_fields=['writing_score'])
-        return Response({'writing_score': str(participant.writing_score)})
+        participant.writing_status = 'graded'
+        participant.writing_graded_by = request.user
+        participant.writing_graded_at = timezone.now()
+        participant.calculate_overall_band_score()
+        participant.save()
+        return Response({
+            'writing_score': str(participant.writing_score),
+            'overall_band_score': (
+                str(participant.overall_band_score)
+                if participant.overall_band_score is not None else None
+            ),
+        })
 
     @action(
         detail=True, methods=['post'],
@@ -274,5 +317,251 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             MockParticipant, id=participant_id, session=session,
         )
         participant.speaking_score = round(score, 1)
-        participant.save(update_fields=['speaking_score'])
-        return Response({'speaking_score': str(participant.speaking_score)})
+        participant.speaking_status = 'graded'
+        participant.speaking_graded_by = request.user
+        participant.speaking_graded_at = timezone.now()
+        participant.calculate_overall_band_score()
+        participant.save()
+        return Response({
+            'speaking_score': str(participant.speaking_score),
+            'overall_band_score': (
+                str(participant.overall_band_score)
+                if participant.overall_band_score is not None else None
+            ),
+        })
+
+    # ===== ETAP 19 — Pre-registered participants =====
+
+    @action(detail=True, methods=['get'], url_path='eligible-students')
+    def eligible_students(self, request, pk=None, org_slug=None):
+        """Markazdagi talabalar ro'yxati (pre-registration uchun).
+
+        Sessiyaga allaqachon qo'shilganlar `is_added=True` bilan ko'rsatiladi.
+        """
+        session = self.get_object()
+        org = self.get_organization()
+
+        students = User.objects.filter(
+            org_memberships__organization=org,
+            org_memberships__role='student',
+            is_active=True,
+        ).distinct().order_by('first_name', 'last_name', 'username')
+
+        registered_ids = set(
+            session.participants.filter(user__isnull=False)
+            .values_list('user_id', flat=True)
+        )
+
+        rows = []
+        for s in students:
+            full = f'{s.first_name or ""} {s.last_name or ""}'.strip() or s.username
+            rows.append({
+                'id': s.id,
+                'full_name': full,
+                'username': s.username,
+                'phone': s.phone or '',
+                'is_added': s.id in registered_ids,
+            })
+        return Response(rows)
+
+    @action(detail=True, methods=['post'], url_path='add-participants')
+    def add_participants(self, request, pk=None, org_slug=None):
+        """Talabalarni sessiyaga oldindan qo'shish (pre-registration).
+
+        Body: `{user_ids: [1, 2, 3]}` — markazga tegishli student userlari.
+        """
+        session = self.get_object()
+        org = self.get_organization()
+
+        if session.status not in ('waiting',):
+            return Response(
+                {'detail': 'Faqat boshlanmagan sessiyaga talaba qo\'shish mumkin.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_ids = request.data.get('user_ids') or []
+        if not isinstance(user_ids, list) or not user_ids:
+            return Response(
+                {'detail': 'user_ids ro\'yxati majburiy.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        valid_users = User.objects.filter(
+            id__in=user_ids,
+            org_memberships__organization=org,
+            org_memberships__role='student',
+        ).distinct()
+
+        existing_user_ids = set(
+            session.participants.filter(user__isnull=False)
+            .values_list('user_id', flat=True)
+        )
+
+        added = []
+        skipped = []
+        for u in valid_users:
+            if u.id in existing_user_ids:
+                skipped.append(u.id)
+                continue
+            full = f'{u.first_name or ""} {u.last_name or ""}'.strip() or u.username
+            # full_name unique_together(session, full_name) ga qarshi tekshiruv
+            if session.participants.filter(full_name=full).exists():
+                # Bir xil ismli boshqa guest bor — username bilan farqlash
+                full = f'{full} ({u.username})'
+            try:
+                participant = MockParticipant.objects.create(
+                    session=session,
+                    user=u,
+                    full_name=full,
+                    has_joined=False,
+                )
+                added.append({
+                    'id': participant.id,
+                    'user_id': u.id,
+                    'full_name': full,
+                })
+            except Exception:
+                skipped.append(u.id)
+
+        return Response({
+            'added': added,
+            'skipped_user_ids': skipped,
+            'total': session.participants.count(),
+        }, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True, methods=['delete'],
+        url_path=r'participants/(?P<participant_id>\d+)/remove',
+    )
+    def remove_participant(self, request, pk=None, org_slug=None, participant_id=None):
+        """Pre-registered participantni ro'yxatdan olib tashlash.
+
+        Faqat hali kirmagan (has_joined=False) participantlar uchun ruxsat.
+        """
+        session = self.get_object()
+        participant = get_object_or_404(
+            MockParticipant, id=participant_id, session=session,
+        )
+        if participant.has_joined:
+            return Response(
+                {'detail': 'Talaba allaqachon sessiyaga kirgan, o\'chirib bo\'lmaydi.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        participant.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # ===== ETAP 20 — Sertifikat berish / bekor qilish =====
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'participants/(?P<participant_id>\d+)/issue-certificate',
+    )
+    def issue_certificate(self, request, pk=None, org_slug=None, participant_id=None):
+        """Teacher participantga rasmiy sertifikat beradi (PDF + DB record).
+
+        Talaba barcha 4 modulni topshirgan va overall_band_score hisoblangan
+        bo'lishi shart.
+        """
+        from django.core.files.base import ContentFile
+
+        session = self.get_object()
+        org = self.get_organization()
+        participant = get_object_or_404(
+            MockParticipant, id=participant_id, session=session,
+        )
+
+        if hasattr(participant, 'certificate') and not participant.certificate.is_revoked:
+            return Response(
+                {'detail': 'Bu talabaga allaqachon sertifikat berilgan.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Barcha 4 modul ham bo'lishi kerak
+        missing = []
+        if participant.listening_score is None:
+            missing.append('Listening')
+        if participant.reading_score is None:
+            missing.append('Reading')
+        if participant.writing_score is None:
+            missing.append('Writing')
+        if participant.speaking_score is None:
+            missing.append('Speaking')
+        if missing:
+            return Response(
+                {'detail': f'Quyidagi modullar baholanmagan: {", ".join(missing)}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if participant.overall_band_score is None:
+            participant.calculate_overall_band_score()
+            participant.save(update_fields=['overall_band_score'])
+
+        # Eski revoked sertifikat bo'lsa, uni qayta ishlatamiz (overwrite)
+        certificate = getattr(participant, 'certificate', None)
+        if certificate and certificate.is_revoked:
+            certificate.delete()
+            certificate = None
+
+        cert_number = Certificate.generate_certificate_number(org, session.date)
+        certificate = Certificate.objects.create(
+            participant=participant,
+            certificate_number=cert_number,
+            listening_score=participant.listening_score,
+            reading_score=participant.reading_score,
+            writing_score=participant.writing_score,
+            speaking_score=participant.speaking_score,
+            overall_band_score=participant.overall_band_score,
+            full_name=participant.get_display_name(),
+            test_date=session.date,
+            organization_name=org.name,
+            issued_by=request.user,
+        )
+
+        # PDF yaratib FileField ga saqlaymiz
+        pdf_buffer = render_certificate_pdf(certificate)
+        filename = f'certificate_{certificate.certificate_number}.pdf'
+        certificate.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
+
+        return Response({
+            'id': certificate.id,
+            'certificate_number': certificate.certificate_number,
+            'verification_code': certificate.verification_code,
+            'pdf_url': (
+                request.build_absolute_uri(certificate.pdf_file.url)
+                if certificate.pdf_file else None
+            ),
+            'issue_date': certificate.issue_date.isoformat(),
+        }, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'participants/(?P<participant_id>\d+)/revoke-certificate',
+    )
+    def revoke_certificate(self, request, pk=None, org_slug=None, participant_id=None):
+        """Berilgan sertifikatni bekor qilish (audit qoldirilib)."""
+        session = self.get_object()
+        participant = get_object_or_404(
+            MockParticipant, id=participant_id, session=session,
+        )
+        certificate = getattr(participant, 'certificate', None)
+        if certificate is None:
+            return Response(
+                {'detail': 'Bu talabada sertifikat yo\'q.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if certificate.is_revoked:
+            return Response(
+                {'detail': 'Sertifikat allaqachon bekor qilingan.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        certificate.is_revoked = True
+        certificate.revoked_at = timezone.now()
+        certificate.revoked_reason = (request.data.get('reason') or '').strip()
+        certificate.revoked_by = request.user
+        certificate.save(update_fields=[
+            'is_revoked', 'revoked_at', 'revoked_reason', 'revoked_by',
+        ])
+        return Response({
+            'id': certificate.id,
+            'is_revoked': True,
+        })
