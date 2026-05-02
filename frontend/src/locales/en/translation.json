@@ -61,6 +61,15 @@
       "title": "Ready to Achieve Your IELTS Target Score?",
       "subtitle": "Start your IELTS preparation journey with our comprehensive mock test platform designed to help you succeed",
       "button": "Start Practice Test"
+    },
+    "pricing": {
+      "title": "Simple Pricing",
+      "subtitle": "Practice for free, pay only for mock exams",
+      "perTest": "per mock test",
+      "feat1": "Unlimited free practice",
+      "feat2": "Pay only for mock exams",
+      "feat3": "Instant scoring & certificates",
+      "viewMore": "View Full Pricing Details"
     }
   },
   "practice": {

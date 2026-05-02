@@ -307,136 +307,43 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Pricing teaser */}
+      {/* Pricing teaser — soddalashtirilgan single-card preview */}
       <section className="bg-gray-50 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
-              {t('pricing.title')}
-            </h2>
-            <p className="mt-3 text-lg text-gray-600">{t('pricing.subtitle')}</p>
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
+            {t('home.pricing.title')}
+          </h2>
+          <p className="mt-3 text-lg text-gray-600">{t('home.pricing.subtitle')}</p>
+
+          <div className="mx-auto mt-10 inline-flex flex-col items-center rounded-2xl border-2 border-brand-500 bg-white px-12 py-10 shadow-lg">
+            <div className="text-5xl font-extrabold text-brand-600">
+              30,000 UZS
+            </div>
+            <p className="mt-2 text-gray-600">{t('home.pricing.perTest')}</p>
+            <ul className="mt-6 space-y-2 text-left">
+              <li className="flex items-center gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
+                {t('home.pricing.feat1')}
+              </li>
+              <li className="flex items-center gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
+                {t('home.pricing.feat2')}
+              </li>
+              <li className="flex items-center gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
+                {t('home.pricing.feat3')}
+              </li>
+            </ul>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* Pay Per Test — only active plan */}
-            <div className="relative rounded-xl border-2 border-brand-500 bg-white p-8 shadow-lg">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-4 py-1 text-xs font-bold text-white">
-                Available Now
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">
-                {t('pricing.payPerTest.name')}
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                {t('pricing.payPerTest.description')}
-              </p>
-              <div className="mt-6">
-                <span className="text-4xl font-extrabold text-gray-900">
-                  {t('pricing.payPerTest.price')}
-                </span>
-                <span className="text-gray-600">
-                  {' '}
-                  {t('pricing.payPerTest.currency')} · {t('pricing.payPerTest.priceUnit')}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {(t('pricing.payPerTest.features', { returnObjects: true }) as string[]).map(
-                  (feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" />
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ),
-                )}
-              </ul>
-              <Link
-                to="/pricing"
-                className="mt-8 inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
-              >
-                {t('pricing.payPerTest.cta')}
-              </Link>
-            </div>
-
-            {/* Center Starter — Coming Soon */}
-            <div className="relative rounded-xl border-2 border-gray-200 bg-white p-8 opacity-70">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-400 px-4 py-1 text-xs font-bold text-white">
-                {t('pricing.centerStarter.badge')}
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">
-                {t('pricing.centerStarter.name')}
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                {t('pricing.centerStarter.description')}
-              </p>
-              <div className="mt-6">
-                <span className="text-4xl font-extrabold text-gray-400 line-through">
-                  {t('pricing.centerStarter.price')}
-                </span>
-                <span className="text-gray-500">
-                  {' '}
-                  {t('pricing.centerStarter.currency')} ·{' '}
-                  {t('pricing.centerStarter.priceUnit')}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {(
-                  t('pricing.centerStarter.features', { returnObjects: true }) as string[]
-                ).map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-300" />
-                    <span className="text-sm text-gray-500">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                disabled
-                className="mt-8 inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-gray-200 px-4 py-3 text-sm font-semibold text-gray-500"
-              >
-                {t('pricing.centerStarter.cta')}
-              </button>
-            </div>
-
-            {/* Center Pro — Coming Soon */}
-            <div className="relative rounded-xl border-2 border-gray-200 bg-white p-8 opacity-70">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-400 px-4 py-1 text-xs font-bold text-white">
-                {t('common.comingSoon')}
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">
-                {t('pricing.centerPro.name')}
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                {t('pricing.centerPro.description')}
-              </p>
-              <div className="mt-6">
-                <span className="text-4xl font-extrabold text-gray-400 line-through">
-                  {t('pricing.centerPro.price')}
-                </span>
-                <span className="text-gray-500">
-                  {' '}
-                  {t('pricing.centerPro.currency')} · {t('pricing.centerPro.priceUnit')}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {(t('pricing.centerPro.features', { returnObjects: true }) as string[]).map(
-                  (feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-300" />
-                      <span className="text-sm text-gray-500">{feature}</span>
-                    </li>
-                  ),
-                )}
-              </ul>
-              <button
-                type="button"
-                disabled
-                className="mt-8 inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-gray-200 px-4 py-3 text-sm font-semibold text-gray-500"
-              >
-                {t('pricing.centerPro.cta')}
-              </button>
-            </div>
+          <div className="mt-8">
+            <Link
+              to="/pricing"
+              className="font-semibold text-brand-600 hover:text-brand-700"
+            >
+              {t('home.pricing.viewMore')} →
+            </Link>
           </div>
-
-          <p className="mt-10 text-center text-sm text-gray-600">{t('pricing.note')}</p>
         </div>
       </section>
 
