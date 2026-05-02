@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
@@ -110,8 +111,11 @@ class AttemptViewSet(
         saved = 0
         for item in serializer.validated_data['answers']:
             try:
-                question = Question.objects.get(pk=item['question_id'],
-                                                passage__test=attempt.test)
+                question = Question.objects.get(
+                    Q(passage__test=attempt.test)
+                    | Q(listening_part__test=attempt.test),
+                    pk=item['question_id'],
+                )
             except Question.DoesNotExist:
                 continue
             Answer.objects.update_or_create(

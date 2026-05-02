@@ -1,15 +1,40 @@
+# ============================================
+# ILDIZmock — Backend dependencies
+# ============================================
+
+# --- Core ---
 asgiref==3.11.1
 Django==5.1.15
 django-cors-headers==4.9.0
 djangorestframework==3.17.1
 djangorestframework_simplejwt==5.5.1
-mutagen>=1.47
-openpyxl>=3.1
-Pillow>=10.0
-psycopg==3.3.3
-psycopg-binary==3.3.3
 PyJWT==2.12.1
 python-decouple==3.8
-reportlab>=4.0
 sqlparse==0.5.5
 typing_extensions==4.15.0
+
+# --- Database ---
+psycopg==3.3.3
+psycopg-binary==3.3.3
+
+# --- File processing ---
+mutagen>=1.47          # audio metadata
+openpyxl>=3.1          # xlsx export
+Pillow>=10.0           # image upload
+reportlab>=4.0         # PDF certificates
+
+# --- Phase 2 (AI / async / rate limit) ---
+# Hozircha ishlatilmaydi, lekin ETAP 17 (AI feedback, Telegram, payments) uchun:
+anthropic>=0.39        # Writing/Speaking AI feedback
+celery>=5.3            # async task queue
+redis>=5.0             # Celery broker
+django-ratelimit>=4.1  # login throttling
+
+# --- Production ---
+gunicorn>=21.2
+whitenoise>=6.6
+
+# --- Dev / Testing ---
+pytest>=7.4
+pytest-django>=4.5
+pytest-cov>=4.1

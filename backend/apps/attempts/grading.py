@@ -51,6 +51,9 @@ def grade_answer(question, user_answer) -> bool:
 
 def grade_attempt(attempt: Attempt) -> Attempt:
     questions = [q for p in attempt.test.passages.all() for q in p.questions.all()]
+    questions += [
+        q for lp in attempt.test.listening_parts.all() for q in lp.questions.all()
+    ]
     total = len(questions)
     answers_by_q = {a.question_id: a for a in attempt.answers.all()}
 

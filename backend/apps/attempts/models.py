@@ -52,7 +52,8 @@ class Attempt(models.Model):
         ordering = ['-started_at']
 
     def __str__(self):
-        return f'{self.user.phone} — {self.test.name} ({self.status})'
+        who = self.user.username if self.user_id else f'guest:{self.guest_token}'
+        return f'{who} — {self.test.name} ({self.status})'
 
     def save(self, *args, **kwargs):
         if not self.organization_id and self.user_id and self.user.organization_id:

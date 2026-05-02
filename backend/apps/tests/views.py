@@ -1,4 +1,4 @@
-from django.db.models import Avg, Max
+from django.db.models import Avg, Max, Q
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,7 +20,21 @@ class TestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
         return TestListSerializer
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(organization__isnull=True)
+        # ETAP 14 BUG #10 — markaz a'zolari o'z markaz testlarini ham ko'radi.
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            if user.role == 'superadmin':
+                pass  # barcha publish testlar
+            elif getattr(user, 'organization_id', None):
+                qs = qs.filter(
+                    Q(organization__isnull=True) | Q(organization=user.organization),
+                )
+            else:
+                qs = qs.filter(organization__isnull=True)
+        else:
+            qs = qs.filter(organization__isnull=True)
+
         module = self.request.query_params.get('module')
         difficulty = self.request.query_params.get('difficulty')
         practice = self.request.query_params.get('practice')
