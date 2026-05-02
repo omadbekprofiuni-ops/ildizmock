@@ -1,0 +1,259 @@
+{
+  "nav": {
+    "home": "Home",
+    "practice": "Practice Tests",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "common": {
+    "login": "Login",
+    "logout": "Logout",
+    "signup": "Sign Up",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "viewAll": "View All",
+    "comingSoon": "Coming Soon",
+    "getStarted": "Get Started",
+    "contactSales": "Contact Sales"
+  },
+  "home": {
+    "hero": {
+      "title": {
+        "start": "Experience the Real Computer-Delivered",
+        "highlight": "IELTS Exam Environment from Home"
+      },
+      "subtitle": "Practice with authentic Computer-Delivered IELTS tests featuring real timing, interface, and instant scoring. Build confidence and achieve your target band score.",
+      "cta": "Start Practice Test"
+    },
+    "features": {
+      "title": "Why Choose Our ILDIZmock Platform?",
+      "subtitle": "Experience the most authentic Computer-Delivered test environment",
+      "authentic": {
+        "title": "Authentic Interface",
+        "description": "Practice with the exact same interface you'll encounter in the real Computer-Delivered IELTS test"
+      },
+      "timing": {
+        "title": "Real Timing",
+        "description": "Experience authentic test timing with countdown timers and automatic section transitions"
+      },
+      "scoring": {
+        "title": "Instant Scoring",
+        "description": "Get immediate feedback with detailed score breakdowns and band score calculations"
+      },
+      "tracking": {
+        "title": "Progress Tracking",
+        "description": "Monitor your improvement with comprehensive analytics and personalized study recommendations"
+      }
+    },
+    "cta": {
+      "title": "Ready to Achieve Your IELTS Target Score?",
+      "subtitle": "Start your IELTS preparation journey with our comprehensive mock test platform designed to help you succeed",
+      "button": "Start Practice Test"
+    }
+  },
+  "practice": {
+    "title": "Practice Tests",
+    "subtitle": "Choose your module and start practicing for free",
+    "listening": {
+      "title": "Listening Test",
+      "description": "Answer questions from real-life conversations and lectures"
+    },
+    "reading": {
+      "title": "Reading Test",
+      "description": "Read academic texts and find answers"
+    },
+    "writing": {
+      "title": "Writing Test",
+      "description": "Write essays with clear, effective arguments"
+    },
+    "speaking": {
+      "title": "Speaking Test",
+      "description": "Coming Soon — Practice real interview questions"
+    },
+    "fullTest": {
+      "title": "Full Test",
+      "description": "Coming Soon — Experience all 4 modules together"
+    }
+  },
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "Pay only for mock exams. Practice is always free.",
+    "card": {
+      "name": "Pay Per Test",
+      "description": "Perfect for students and education centers",
+      "price": "30,000",
+      "currency": "UZS",
+      "priceNote": "per mock test (first 100 tests)",
+      "tierAfterLabel": "After 100 tests:",
+      "tierAfterPrice": "50,000 UZS",
+      "tierAfterNote": "Premium pricing for high-volume users",
+      "features": [
+        {
+          "title": "Unlimited Free Practice",
+          "description": "Practice all modules (Listening, Reading, Writing, Speaking) as many times as you want"
+        },
+        {
+          "title": "Pay Only for Mock Exams",
+          "description": "Teacher-supervised full mock exams with official certificates"
+        },
+        {
+          "title": "Instant Scoring & Certificates",
+          "description": "Automatic grading for Listening/Reading, professional certificates with PDF download"
+        },
+        {
+          "title": "Progress Tracking",
+          "description": "Track your improvement over time with detailed analytics"
+        },
+        {
+          "title": "Student Management",
+          "description": "For centers — add students, track attendance, manage groups, create custom tests"
+        }
+      ],
+      "cta": "Get Started"
+    },
+    "questions": "Questions about pricing?",
+    "contact": "Contact Us",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": [
+        {
+          "q": "Is practice always free?",
+          "a": "Yes. Practice tests for Reading, Listening, and Writing modules are completely free with unlimited attempts. You only pay for proctored mock exams."
+        },
+        {
+          "q": "What does the Pay Per Test plan include?",
+          "a": "You get instant scoring, progress tracking, and unlimited free practice. Pay only when your students take a real mock exam — 30,000 UZS per test for the first 100, then 50,000 UZS each."
+        },
+        {
+          "q": "Are there any monthly subscriptions?",
+          "a": "No. We offer a single Pay Per Test model — there are no monthly fees or hidden charges. You only pay when a mock test is taken."
+        },
+        {
+          "q": "Do students pay separately?",
+          "a": "No. Each mock test is charged to the center's account. Students join with a code and don't need to make a separate payment."
+        }
+      ]
+    }
+  },
+  "featuresPage": {
+    "hero": {
+      "title": "Everything you need to ace IELTS",
+      "subtitle": "An end-to-end Computer-Delivered IELTS practice platform built for centers, teachers, and students."
+    },
+    "modules": {
+      "title": "All 4 IELTS Modules",
+      "subtitle": "Practice each skill with authentic test material",
+      "items": [
+        {
+          "title": "Reading",
+          "description": "Academic & General Training passages with all 13 official question types: matching headings, T/F/NG, multiple choice, sentence completion, and more.",
+          "highlights": ["3 passages × 40 questions", "60-minute timer", "Instant scoring", "Full review with answer explanations"]
+        },
+        {
+          "title": "Listening",
+          "description": "Real-time audio with synced questions across 4 sections. Conversations, monologues, lectures — exactly like the official Cambridge format.",
+          "highlights": ["30-minute timer + 10-minute transfer", "4 sections × 10 questions", "Audio playback control", "Section-locked answer flow"]
+        },
+        {
+          "title": "Writing",
+          "description": "Task 1 (chart, graph, diagram) and Task 2 (essay) with word count tracking. Teacher feedback against the 4 official band descriptors.",
+          "highlights": ["Task 1 + Task 2", "Word count + spell-check", "Teacher band scoring", "Detailed feedback by criterion"]
+        },
+        {
+          "title": "Speaking (coming soon)",
+          "description": "Browser-based audio recording with Part 1, 2, and 3 prompts. Examiner-style grading with band scores.",
+          "highlights": ["Part 1, 2, 3 prompts", "Audio recording in browser", "Examiner grading queue", "Launching May 2026"]
+        }
+      ]
+    },
+    "platform": {
+      "title": "Platform Capabilities",
+      "subtitle": "Built for education centers running real mock exams at scale",
+      "items": [
+        { "title": "Mock Sessions", "description": "Schedule a mock exam, share a join code, and watch students take it in real time with proctor controls." },
+        { "title": "Group Management", "description": "Organize students into groups, assign teachers, and track group-level analytics." },
+        { "title": "Attendance Tracking", "description": "Mark attendance per session — Present, Absent, Late, Excused, Sick — with monthly reports." },
+        { "title": "Custom Test Builder", "description": "Centers create their own tests for Reading, Listening, and Writing — no developer needed." },
+        { "title": "Billing & Invoices", "description": "Transparent billing per mock test or monthly subscription, with downloadable invoices." },
+        { "title": "Multi-role Access", "description": "Center admin, teacher, and student roles with the right permissions for each." }
+      ]
+    },
+    "cta": {
+      "title": "See it in action",
+      "subtitle": "Try a free practice test now — no signup needed.",
+      "button": "Start Free Practice"
+    }
+  },
+  "footer": {
+    "tagline": "The most authentic IELTS Computer-Delivered test environment",
+    "product": "Product",
+    "company": "Company",
+    "rights": "All rights reserved."
+  },
+  "dashboard": {
+    "student": {
+      "title": "Student Dashboard",
+      "practiceTests": "Practice Tests",
+      "mockSessions": "Mock Sessions",
+      "results": "Results",
+      "progress": "Progress"
+    },
+    "center": {
+      "title": "Center Dashboard",
+      "overview": "Overview",
+      "students": "Students",
+      "groups": "Groups",
+      "tests": "Tests",
+      "attendance": "Attendance",
+      "billing": "Billing",
+      "reports": "Reports"
+    }
+  },
+  "attendance": {
+    "title": "Attendance Management",
+    "subtitle": "Track student attendance for all your groups",
+    "todaySessions": "Today's Sessions",
+    "noSessionsToday": "No sessions today",
+    "markAttendance": "Mark Attendance",
+    "present": "Present",
+    "absent": "Absent",
+    "late": "Late",
+    "excused": "Excused",
+    "sick": "Sick"
+  },
+  "testCreator": {
+    "title": "Create Custom Test",
+    "subtitle": "Build your own IELTS practice test for your students",
+    "selectModule": "Select Test Module",
+    "reading": "Reading",
+    "listening": "Listening",
+    "writing": "Writing",
+    "addPassage": "Add Passage",
+    "addQuestion": "Add Question",
+    "addSection": "Add Section",
+    "addTask": "Add Task",
+    "saveTest": "Save Test",
+    "testName": "Test Name",
+    "description": "Description",
+    "passageTitle": "Passage Title",
+    "passageText": "Passage Text",
+    "questionText": "Question Text",
+    "questionType": "Question Type",
+    "options": "Options",
+    "correctAnswer": "Correct Answer",
+    "removePassage": "Remove Passage",
+    "removeQuestion": "Remove Question"
+  }
+}

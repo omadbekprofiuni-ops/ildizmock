@@ -46,6 +46,8 @@ import AdminTestsPage from './pages/admin/AdminTestsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
+import FeaturesPage from './pages/public/FeaturesPage'
+import PricingPage from './pages/public/PricingPage'
 import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -84,6 +86,8 @@ export default function App() {
           {/* Public — guest can browse */}
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
