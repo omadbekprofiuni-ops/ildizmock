@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 
 import { AdminRoute } from '@/components/AdminRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -9,15 +9,10 @@ import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
-import { RequireCenterMember } from '@/components/guards/RequireCenterMember'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
-import AttendanceMarkPage from './pages/center/AttendanceMarkPage'
-import AttendancePage from './pages/center/AttendancePage'
-import AttendanceReportPage from './pages/center/AttendanceReportPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
-import GroupSchedulePage from './pages/center/GroupSchedulePage'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import GroupCreatePage from './pages/center/GroupCreatePage'
@@ -51,8 +46,6 @@ import AdminTestsPage from './pages/admin/AdminTestsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
-import FeaturesPage from './pages/public/FeaturesPage'
-import PricingPage from './pages/public/PricingPage'
 import LoginPage from './pages/auth/LoginPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -91,8 +84,6 @@ export default function App() {
           {/* Public — guest can browse */}
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
@@ -214,10 +205,9 @@ export default function App() {
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
-          {/* Center layout (slug-based) — admin to'liq, teacher faqat
-              attendance + groups (sidebar role-based filter). Permission'lar
-              backend tomonda IsCenterAdmin / IsCenterMember orqali. */}
-          <Route path="/:slug/admin" element={<RequireCenterMember />}>
+          {/* Center layout (slug-based) — Permission'lar backend tomonda
+              IsCenterAdmin / IsCenterMember orqali tekshiriladi. */}
+          <Route path="/:slug/admin" element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
             <Route element={<CenterAdminLayout />}>
               <Route index element={<CenterDashboard />} />
               <Route path="students" element={<CenterStudentsPage />} />
@@ -234,10 +224,6 @@ export default function App() {
               <Route path="groups/new" element={<GroupCreatePage />} />
               <Route path="groups/comparison" element={<GroupsComparisonPage />} />
               <Route path="groups/:groupId" element={<GroupDetailPage />} />
-              <Route path="groups/:groupId/schedule" element={<GroupSchedulePage />} />
-              <Route path="groups/:groupId/attendance" element={<AttendanceReportPage />} />
-              <Route path="attendance" element={<AttendancePage />} />
-              <Route path="attendance/:sessionId" element={<AttendanceMarkPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
               <Route path="settings" element={<CenterSettingsPage />} />
             </Route>

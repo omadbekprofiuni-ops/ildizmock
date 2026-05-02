@@ -286,7 +286,6 @@ function EditTeacherModal({
             label="Telefon"
             value={form.phone}
             onChange={(v) => setForm({ ...form, phone: v })}
-            placeholder="+998901234567"
           />
         </div>
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
@@ -397,17 +396,20 @@ function FormInput({
   value,
   onChange,
   hint,
+  placeholder,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   hint?: string
+  placeholder?: string
 }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
       <input
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
       />

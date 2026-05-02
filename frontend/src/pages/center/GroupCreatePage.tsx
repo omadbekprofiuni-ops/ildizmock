@@ -66,7 +66,7 @@ export default function GroupCreatePage() {
   }
 
   return (
-    <PageShell maxWidth="max-w-3xl">
+    <PageShell maxWidth="max-w-4xl">
       <Link
         to={`/${slug}/admin/groups`}
         className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"

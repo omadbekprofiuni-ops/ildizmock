@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     'apps.center',
     'apps.mock',
     'apps.billing',
-    'apps.attendance',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +83,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATIC_ROOT = config('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles'))
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
