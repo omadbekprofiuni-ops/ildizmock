@@ -3,6 +3,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # ETAP 17 — Center subscription
+    path('subscription/', views.CenterSubscriptionView.as_view(), name='billing-subscription'),
     path('overview/', views.BillingOverviewView.as_view(), name='billing-overview'),
     path(
         'organizations/<int:org_id>/',
@@ -23,5 +25,11 @@ urlpatterns = [
         'cycles/<int:cycle_id>/mark-paid/',
         views.MarkBillingPaidView.as_view(),
         name='billing-mark-paid',
+    ),
+    # ETAP 16
+    path(
+        'organizations/<int:org_id>/payments/',
+        views.PaymentHistoryView.as_view(),
+        name='billing-payment-history',
     ),
 ]

@@ -35,14 +35,35 @@ type Overview = {
 
 type CycleRow = {
   id: number
-  period_start: string
-  period_end: string
+  period_start: string | null
+  period_end: string | null
+  period_label: string
+  year: number | null
+  month: number | null
   total_sessions: number
+  total_students: number
   total_amount: number
   paid_amount: number
   status: string
+  payment_method: string
+  payment_date: string | null
   invoice_number: string
   paid_at: string | null
+  notes: string
+}
+
+type PaymentRow = {
+  id: number
+  amount_paid: number
+  payment_method: string
+  payment_method_label: string
+  payment_date: string
+  receipt_number: string
+  received_by: string | null
+  invoice_number: string
+  cycle_period: string
+  notes: string
+  created_at: string
 }
 
 type OrgDetail = {
@@ -119,17 +140,39 @@ export default function SuperAdminBillingPage() {
   })
 
   const markPaid = useMutation({
-    mutationFn: async ({ cycleId, amount }: { cycleId: number; amount: number }) =>
-      (await api.post(`/super/billing/cycles/${cycleId}/mark-paid/`, {
-        paid_amount: amount,
+    mutationFn: async (payload: {
+      cycleId: number
+      paid_amount: number
+      payment_method: string
+      payment_date: string
+      notes?: string
+    }) =>
+      (await api.post(`/super/billing/cycles/${payload.cycleId}/mark-paid/`, {
+        paid_amount: payload.paid_amount,
+        payment_method: payload.payment_method,
+        payment_date: payload.payment_date,
+        notes: payload.notes ?? '',
       })).data,
     onSuccess: () => {
-      toast.success('Cycle to‘langan deb belgilandi')
+      toast.success('To\'langan deb belgilandi')
+      setPayCycle(null)
       qc.invalidateQueries({ queryKey: ['super-billing-org', selectedOrgId] })
       qc.invalidateQueries({ queryKey: ['super-billing-overview'] })
+      qc.invalidateQueries({ queryKey: ['super-billing-payments', selectedOrgId] })
     },
     onError: () => toast.error('Yangilashda xatolik'),
   })
+
+  const paymentHistory = useQuery({
+    queryKey: ['super-billing-payments', selectedOrgId],
+    queryFn: async () =>
+      (await api.get<PaymentRow[]>(
+        `/super/billing/organizations/${selectedOrgId}/payments/`,
+      )).data,
+    enabled: !!selectedOrgId,
+  })
+
+  const [payCycle, setPayCycle] = useState<CycleRow | null>(null)
 
   const updatePricing = useMutation({
     mutationFn: async ({
@@ -348,7 +391,12 @@ export default function SuperAdminBillingPage() {
                             {orgDetail.data.cycles.map((c) => (
                               <tr key={c.id}>
                                 <td className="px-3 py-2">
-                                  {c.period_start} → {c.period_end}
+                                  <div className="font-medium">{c.period_label}</div>
+                                  {c.total_students > 0 && (
+                                    <div className="text-xs text-slate-500">
+                                      {c.total_students} talaba
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="px-3 py-2 text-center">{c.total_sessions}</td>
                                 <td className="px-3 py-2 text-right font-mono">
@@ -374,16 +422,10 @@ export default function SuperAdminBillingPage() {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() =>
-                                        markPaid.mutate({
-                                          cycleId: c.id,
-                                          amount: c.total_amount,
-                                        })
-                                      }
-                                      disabled={markPaid.isPending}
+                                      onClick={() => setPayCycle(c)}
                                     >
                                       <CheckCircle2 className="mr-1 h-3 w-3" />
-                                      To‘landi deb belgilash
+                                      To'landi
                                     </Button>
                                   )}
                                 </td>
@@ -421,13 +463,193 @@ export default function SuperAdminBillingPage() {
                       </ul>
                     </div>
                   )}
+
+                  {/* ETAP 16 — to'lov tarixi */}
+                  {paymentHistory.data && paymentHistory.data.length > 0 && (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold">
+                        To'lov tarixi
+                      </h3>
+                      <div className="overflow-x-auto rounded-md border">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                              <th className="px-3 py-2">Sana</th>
+                              <th className="px-3 py-2">Davr</th>
+                              <th className="px-3 py-2">Usul</th>
+                              <th className="px-3 py-2 text-right">Summa</th>
+                              <th className="px-3 py-2">Qabul qildi</th>
+                              <th className="px-3 py-2">Izoh</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {paymentHistory.data.map((p) => (
+                              <tr key={p.id}>
+                                <td className="px-3 py-2 font-medium">
+                                  {new Date(p.payment_date).toLocaleDateString('uz-UZ')}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-slate-500">
+                                  {p.cycle_period} {p.invoice_number && `· ${p.invoice_number}`}
+                                </td>
+                                <td className="px-3 py-2 text-xs">
+                                  {p.payment_method_label}
+                                </td>
+                                <td className="px-3 py-2 text-right font-mono text-emerald-700">
+                                  {fmtMoney(p.amount_paid)}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-slate-600">
+                                  {p.received_by ?? '—'}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-slate-500">
+                                  {p.notes || '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
           </Card>
         )}
+
+        {payCycle && (
+          <MarkPaidModal
+            cycle={payCycle}
+            onCancel={() => setPayCycle(null)}
+            onConfirm={(form) =>
+              markPaid.mutate({
+                cycleId: payCycle.id,
+                paid_amount: form.paid_amount,
+                payment_method: form.payment_method,
+                payment_date: form.payment_date,
+                notes: form.notes,
+              })
+            }
+            saving={markPaid.isPending}
+          />
+        )}
       </div>
     </SuperAdminLayout>
+  )
+}
+
+function MarkPaidModal({
+  cycle,
+  onCancel,
+  onConfirm,
+  saving,
+}: {
+  cycle: CycleRow
+  onCancel: () => void
+  onConfirm: (form: {
+    paid_amount: number
+    payment_method: string
+    payment_date: string
+    notes: string
+  }) => void
+  saving: boolean
+}) {
+  const [amount, setAmount] = useState(String(cycle.total_amount))
+  const [method, setMethod] = useState('cash')
+  const [paymentDate, setPaymentDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  )
+  const [notes, setNotes] = useState('')
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-semibold text-slate-900">
+          To'landi deb belgilash
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          {cycle.period_label} · {fmtMoney(cycle.total_amount)}
+          {cycle.invoice_number && ` · ${cycle.invoice_number}`}
+        </p>
+
+        <div className="mt-4 space-y-3">
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Summa (so'm)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              To'lov usuli
+            </label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="cash">Naqd</option>
+              <option value="bank_transfer">Bank o'tkazmasi</option>
+              <option value="card">Karta</option>
+              <option value="other">Boshqa</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              To'lov sanasi
+            </label>
+            <input
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Izoh (ixtiyoriy)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              placeholder="Receipt #, eslatma..."
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={saving}>
+            Bekor
+          </Button>
+          <Button
+            onClick={() =>
+              onConfirm({
+                paid_amount: Number(amount),
+                payment_method: method,
+                payment_date: paymentDate,
+                notes,
+              })
+            }
+            disabled={saving || !amount}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            {saving ? 'Saqlanmoqda…' : 'Tasdiqlash'}
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -13,9 +13,16 @@ from rest_framework.views import APIView
 
 from apps.mock.models import MockSession
 from apps.organizations.models import Organization
-from apps.organizations.permissions import IsSuperAdmin
+from apps.organizations.permissions import IsCenterAdmin, IsSuperAdmin
 
-from .models import BillingCycle, PricingTier, SessionBillingLog
+from .models import (
+    BillingCycle,
+    MockSessionCharge,
+    PaymentHistory,
+    PricingTier,
+    SessionBillingLog,
+    SubscriptionTier,
+)
 
 
 def _money(value) -> float:
@@ -128,14 +135,21 @@ class BillingOrganizationDetailView(APIView):
             'cycles': [
                 {
                     'id': c.id,
-                    'period_start': c.period_start.isoformat(),
-                    'period_end': c.period_end.isoformat(),
+                    'period_start': c.period_start.isoformat() if c.period_start else None,
+                    'period_end': c.period_end.isoformat() if c.period_end else None,
+                    'period_label': c.period_label,
+                    'year': c.year,
+                    'month': c.month,
                     'total_sessions': c.total_sessions,
+                    'total_students': c.total_students,
                     'total_amount': float(c.total_amount),
                     'paid_amount': float(c.paid_amount),
                     'status': c.status,
+                    'payment_method': c.payment_method,
+                    'payment_date': c.payment_date.isoformat() if c.payment_date else None,
                     'invoice_number': c.invoice_number,
                     'paid_at': c.paid_at.isoformat() if c.paid_at else None,
+                    'notes': c.notes,
                 }
                 for c in cycles
             ],
@@ -160,6 +174,65 @@ class BillingOrganizationDetailView(APIView):
                 }
                 for s in finished_sessions
             ],
+        })
+
+
+class CenterSubscriptionView(APIView):
+    """ETAP 17 — Markaz adminining hozirgi obuna + joriy oydagi quota usage.
+
+    GET /api/v1/billing/subscription/?org=<slug>
+    """
+
+    permission_classes = [IsAuthenticated, IsCenterAdmin]
+
+    def get(self, request):
+        slug = request.query_params.get('org')
+        org = get_object_or_404(Organization, slug=slug)
+
+        tier, _ = SubscriptionTier.objects.get_or_create(
+            organization=org,
+            defaults={'plan_type': 'pay_per_test'},
+        )
+
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+
+        total_count = MockSessionCharge.objects.filter(
+            session__organization=org, is_charged=True,
+        ).count()
+        month_count = MockSessionCharge.objects.filter(
+            session__organization=org,
+            is_charged=True,
+            charged_at__date__gte=month_start,
+        ).count()
+
+        next_amount = tier.amount_for_next_charge(
+            total_charged_count=total_count,
+            month_charged_count=month_count,
+        )
+
+        if tier.monthly_quota is None:
+            quota_remaining = None
+        else:
+            quota_remaining = max(0, tier.monthly_quota - month_count)
+
+        return Response({
+            'plan_type': tier.plan_type,
+            'plan_label': tier.get_plan_type_display(),
+            'monthly_price': float(tier.monthly_price),
+            'monthly_quota': tier.monthly_quota,
+            'pay_per_test_threshold': tier.pay_per_test_threshold,
+            'pay_per_test_first_price': float(tier.pay_per_test_first_price),
+            'pay_per_test_after_price': float(tier.pay_per_test_after_price),
+            'usage': {
+                'total_charged_count': total_count,
+                'month_charged_count': month_count,
+                'quota_remaining': quota_remaining,
+                'next_charge_amount': float(next_amount),
+            },
+            'is_active': tier.is_active,
+            'starts_at': tier.starts_at.isoformat() if tier.starts_at else None,
+            'ends_at': tier.ends_at.isoformat() if tier.ends_at else None,
         })
 
 
@@ -227,11 +300,16 @@ class GenerateBillingCycleView(APIView):
 
 
 class MarkBillingPaidView(APIView):
-    """POST /api/v1/super/billing/cycles/<id>/mark-paid/."""
+    """POST /api/v1/super/billing/cycles/<id>/mark-paid/.
+
+    ETAP 16: PaymentHistory ham yaratiladi (audit log).
+    """
 
     permission_classes = [IsAuthenticated, IsSuperAdmin]
 
     def post(self, request, cycle_id):
+        from datetime import date as _date
+
         cycle = get_object_or_404(BillingCycle, pk=cycle_id)
 
         amount = request.data.get('paid_amount') or cycle.total_amount
@@ -243,21 +321,65 @@ class MarkBillingPaidView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        cycle.paid_amount = amount_dec
-        cycle.status = 'paid'
-        cycle.paid_at = timezone.now()
-        cycle.payment_method = request.data.get('payment_method', '') or ''
-        cycle.payment_reference = request.data.get('payment_reference', '') or ''
-        cycle.marked_paid_by = request.user
-        cycle.save()
-        cycle.ensure_invoice_number()
+        # Payment date — frontend yuborgan yoki bugun
+        payment_date_raw = request.data.get('payment_date')
+        if payment_date_raw:
+            try:
+                payment_date = _date.fromisoformat(payment_date_raw)
+            except (TypeError, ValueError):
+                payment_date = timezone.now().date()
+        else:
+            payment_date = timezone.now().date()
+
+        cycle.mark_as_paid(
+            payment_method=request.data.get('payment_method') or 'other',
+            payment_date=payment_date,
+            amount_paid=amount_dec,
+            marked_paid_by=request.user,
+            notes=request.data.get('notes', ''),
+        )
 
         return Response({
             'id': cycle.id,
             'status': cycle.status,
             'paid_amount': float(cycle.paid_amount),
             'paid_at': cycle.paid_at.isoformat(),
+            'payment_date': cycle.payment_date.isoformat() if cycle.payment_date else None,
+            'invoice_number': cycle.invoice_number,
         })
+
+
+class PaymentHistoryView(APIView):
+    """ETAP 16 — GET /api/v1/super/billing/organizations/<id>/payments/."""
+
+    permission_classes = [IsAuthenticated, IsSuperAdmin]
+
+    def get(self, request, org_id):
+        org = get_object_or_404(Organization, pk=org_id)
+        history = PaymentHistory.objects.filter(
+            organization=org,
+        ).select_related('billing_cycle', 'received_by').order_by(
+            '-payment_date', '-created_at',
+        )
+        return Response([
+            {
+                'id': p.id,
+                'amount_paid': float(p.amount_paid),
+                'payment_method': p.payment_method,
+                'payment_method_label': p.get_payment_method_display(),
+                'payment_date': p.payment_date.isoformat(),
+                'receipt_number': p.receipt_number,
+                'received_by': (
+                    p.received_by.get_full_name() or p.received_by.username
+                    if p.received_by else None
+                ),
+                'invoice_number': p.billing_cycle.invoice_number if p.billing_cycle else '',
+                'cycle_period': p.billing_cycle.period_label if p.billing_cycle else '',
+                'notes': p.notes,
+                'created_at': p.created_at.isoformat(),
+            }
+            for p in history
+        ])
 
 
 class PricingTierUpdateView(APIView):
