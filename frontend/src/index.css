@@ -25,19 +25,19 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 0 73% 50%;              /* red-600 (#DC2626) */
+    --primary: 1 77% 55%;              /* ILDIZmock red (#E53935) */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;          /* slate-100 */
     --secondary-foreground: 222 47% 11%;
     --muted-token: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent-token: 0 86% 97%;         /* red-50 */
-    --accent-foreground: 0 73% 50%;
+    --accent-token: 0 100% 96%;        /* primary-50 (#FFEBEE) */
+    --accent-foreground: 1 77% 55%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border-token: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 0 73% 50%;
+    --ring: 1 77% 55%;
     --radius: 0.75rem;
   }
 
@@ -62,9 +62,9 @@
     --text: #0F172A;
     --muted: #64748B;
     --border: #E2E8F0;
-    --accent: #DC2626;        /* IELTS red — brand */
-    --accent-dark: #991B1B;
-    --accent-soft: #FEF2F2;
+    --accent: #E53935;        /* ILDIZmock red — brand */
+    --accent-dark: #C62828;
+    --accent-soft: #FFEBEE;
     --success: #16A34A;
     --error: #EF4444;
   }

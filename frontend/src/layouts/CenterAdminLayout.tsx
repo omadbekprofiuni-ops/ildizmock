@@ -1,6 +1,7 @@
 import {
   BarChart3,
   BookOpen,
+  CalendarCheck,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -21,15 +22,31 @@ interface OrgInfo {
   primary_color?: string | null
 }
 
-const NAV_ITEMS = [
-  { to: '', label: 'Bosh sahifa', icon: LayoutDashboard, end: true },
-  { to: 'students', label: "O'quvchilar", icon: Users },
-  { to: 'teachers', label: 'Ustozlar', icon: GraduationCap },
-  { to: 'groups', label: 'Guruhlar', icon: UsersRound },
-  { to: 'tests', label: 'Testlar', icon: BookOpen },
-  { to: 'mock', label: 'Mock sessiyalar', icon: BookOpen },
-  { to: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { to: 'settings', label: 'Sozlamalar', icon: Settings },
+type NavItem = {
+  to: string
+  label: string
+  icon: typeof LayoutDashboard
+  end?: boolean
+  roles?: string[]  // Agar bo'sh — hammaga, aks holda faqat ro'yxatdagiga
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { to: '', label: 'Bosh sahifa', icon: LayoutDashboard, end: true,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'students', label: "O'quvchilar", icon: Users,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'teachers', label: 'Ustozlar', icon: GraduationCap,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'groups', label: 'Guruhlar', icon: UsersRound },  // hammaga
+  { to: 'attendance', label: 'Davomat', icon: CalendarCheck },  // hammaga
+  { to: 'tests', label: 'Testlar', icon: BookOpen,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'mock', label: 'Mock sessiyalar', icon: BookOpen,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'analytics', label: 'Analytics', icon: BarChart3,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  { to: 'settings', label: 'Sozlamalar', icon: Settings,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
 ]
 
 const TITLES: Record<string, { title: string; crumb?: string }> = {
@@ -37,6 +54,7 @@ const TITLES: Record<string, { title: string; crumb?: string }> = {
   students: { title: "O'quvchilar", crumb: 'Foydalanuvchilar' },
   teachers: { title: 'Ustozlar', crumb: 'Foydalanuvchilar' },
   groups: { title: 'Guruhlar', crumb: 'Monitoring' },
+  attendance: { title: 'Davomat', crumb: 'Monitoring' },
   tests: { title: 'Testlar', crumb: 'Test bazasi' },
   mock: { title: 'Mock sessiyalar', crumb: 'Sinov' },
   analytics: { title: 'Analytics', crumb: 'Hisobotlar' },
@@ -91,7 +109,9 @@ export default function CenterAdminLayout() {
         </Link>
 
         <nav className="flex-1 space-y-1 p-4">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {NAV_ITEMS.filter(
+            (it) => !it.roles || (user?.role && it.roles.includes(user.role)),
+          ).map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to || 'index'}
               to={to ? `/${slug}/admin/${to}` : `/${slug}/admin`}

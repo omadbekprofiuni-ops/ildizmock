@@ -15,9 +15,32 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        // ILDIZmock brand palette (Material Red 500 family)
+        brand: {
+          50: '#FFEBEE',
+          100: '#FFCDD2',
+          200: '#EF9A9A',
+          300: '#E57373',
+          400: '#EF5350',
+          500: '#E53935',
+          600: '#D32F2F',
+          700: '#C62828',
+          800: '#B71C1C',
+          900: '#8E0000',
+        },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          50: '#FFEBEE',
+          100: '#FFCDD2',
+          200: '#EF9A9A',
+          300: '#E57373',
+          400: '#EF5350',
+          500: '#E53935',
+          600: '#D32F2F',
+          700: '#C62828',
+          800: '#B71C1C',
+          900: '#8E0000',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -44,10 +67,16 @@ export default {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
       },
       keyframes: {
         'accordion-down': {

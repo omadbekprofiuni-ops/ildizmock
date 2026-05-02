@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
+import { AttendanceWidget } from '@/components/center/AttendanceWidget'
 import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
 
@@ -144,6 +145,7 @@ export default function CenterDashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {slug && <AttendanceWidget slug={slug} />}
             <PendingCard
               label="Writing baholash kutmoqda"
               count={data.pending.writing}
@@ -156,6 +158,9 @@ export default function CenterDashboard() {
               Icon={Mic}
               tone="bg-purple-50 text-purple-700"
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
             <Card>
               <CardContent className="flex h-full flex-col p-6">
                 <h2 className="mb-2 text-base font-semibold">Tezkor amallar</h2>
