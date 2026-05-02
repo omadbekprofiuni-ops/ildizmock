@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from apps.mock.admin_views import CenterMockSessionViewSet
@@ -25,4 +25,6 @@ urlpatterns = router.urls + [
         CenterAnalyticsExcelView.as_view(),
         name='center-analytics-export',
     ),
+    # ETAP 15 — Davomat tizimi
+    path('', include('apps.attendance.urls')),
 ]

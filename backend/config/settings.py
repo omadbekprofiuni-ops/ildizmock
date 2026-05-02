@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'apps.center',
     'apps.mock',
     'apps.billing',
+    'apps.attendance',  # mahalliy: center/urls.py attendance.urls import qiladi
 ]
 
 MIDDLEWARE = [
