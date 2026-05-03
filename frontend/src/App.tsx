@@ -13,6 +13,7 @@ import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
+import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import GroupCreatePage from './pages/center/GroupCreatePage'
@@ -303,6 +304,7 @@ export default function App() {
               <Route path="tests" element={<CenterTestsPage />} />
               <Route path="tests/new" element={<TestCreateHubPage />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
+              <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
               <Route path="tests/:testId/preview" element={<TestPreviewPage />} />
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />

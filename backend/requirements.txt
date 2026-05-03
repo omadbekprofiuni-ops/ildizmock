@@ -22,6 +22,7 @@ mutagen>=1.47          # audio metadata
 openpyxl>=3.1          # xlsx export
 Pillow>=10.0           # image upload
 reportlab>=4.0         # PDF certificates
+pdfplumber>=0.11       # PDF parse (Listening test import)
 
 # --- Phase 2 (AI / async / rate limit) ---
 # Hozircha ishlatilmaydi, lekin ETAP 17 (AI feedback, Telegram, payments) uchun:

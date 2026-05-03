@@ -609,3 +609,33 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             SuperTestDetailSerializer(clone).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=False, methods=['post'], url_path='parse-pdf')
+    def parse_pdf(self, request, org_slug=None):
+        """Listening test PDF'ni tarkibga ajratib qaytaradi.
+
+        Body: multipart/form-data, `pdf` field bilan PDF fayl
+        Response: { parts: [...], warnings: [...] }
+        """
+        from apps.tests.pdf_parser import parse_listening_pdf
+
+        self.get_organization()  # permission check
+        pdf = request.FILES.get('pdf') or request.FILES.get('file')
+        if not pdf:
+            return Response(
+                {'detail': "PDF fayl yuborilmadi (field nomi 'pdf')."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not pdf.name.lower().endswith('.pdf'):
+            return Response(
+                {'detail': 'Faqat PDF fayllar qabul qilinadi.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if pdf.size > 20 * 1024 * 1024:
+            return Response(
+                {'detail': 'PDF 20 MB dan oshmasligi kerak.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = parse_listening_pdf(pdf.read())
+        return Response(result)
