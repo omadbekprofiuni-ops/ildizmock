@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, ImageIcon, Plus, Trash2, Upload } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -32,6 +32,8 @@ type QDraft = {
   group_id: number
   instruction: string
   points: number
+  image_path?: string | null
+  image?: string | null  // read-only preview URL
 }
 
 type PDraft = {
@@ -67,6 +69,8 @@ const blankQuestion = (order: number): QDraft => ({
   group_id: 1,
   instruction: '',
   points: 1,
+  image_path: null,
+  image: null,
 })
 
 const blankPassage = (partNumber: number): PDraft => ({
@@ -169,6 +173,8 @@ function draftFromServer(data: {
         group_id: q.group_id ?? 0,
         instruction: q.instruction ?? '',
         points: q.points ?? 1,
+        image: (q as { image?: string | null }).image ?? null,
+        image_path: (q as { image_path?: string | null }).image_path ?? null,
       })),
     })),
   }
@@ -585,6 +591,12 @@ export default function AdminTestEditPage({
                     onAcceptable={(vals) =>
                       updateQuestion(pi, qi, { acceptable_answers: vals })
                     }
+                    onImage={(path, url) =>
+                      updateQuestion(pi, qi, { image_path: path, image: url })
+                    }
+                    onClearImage={() =>
+                      updateQuestion(pi, qi, { image_path: null, image: null })
+                    }
                     onRemove={() => removeQuestion(pi, qi)}
                   />
                 ))}
@@ -628,6 +640,8 @@ type QBProps = {
   onAddMatchingOption: () => void
   onRemoveMatchingOption: (oi: number) => void
   onAcceptable: (vals: string[]) => void
+  onImage: (path: string, url: string) => void
+  onClearImage: () => void
   onRemove: () => void
 }
 
@@ -643,6 +657,8 @@ function QuestionBuilder({
   onAddMatchingOption,
   onRemoveMatchingOption,
   onAcceptable,
+  onImage,
+  onClearImage,
   onRemove,
 }: QBProps) {
   return (
@@ -838,6 +854,13 @@ function QuestionBuilder({
           </div>
         )}
 
+        <QuestionImageField
+          currentUrl={q.image ?? null}
+          currentPath={q.image_path ?? null}
+          onUploaded={onImage}
+          onClear={onClearImage}
+        />
+
         <div className="flex items-center gap-3">
           <Label className="text-xs">Points:</Label>
           <Input
@@ -849,6 +872,83 @@ function QuestionBuilder({
           />
         </div>
       </div>
+    </div>
+  )
+}
+
+type QuestionImageFieldProps = {
+  currentUrl: string | null
+  currentPath: string | null
+  onUploaded: (path: string, url: string) => void
+  onClear: () => void
+}
+
+function QuestionImageField({
+  currentUrl,
+  currentPath,
+  onUploaded,
+  onClear,
+}: QuestionImageFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('folder', 'question_images')
+      const { data } = await api.post<{ path: string; url: string }>(
+        '/admin/upload/image',
+        form,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      onUploaded(data.path, data.url)
+      toast.success('Rasm yuklandi')
+    } catch {
+      toast.error('Rasm yuklanmadi')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">Rasm (ixtiyoriy)</Label>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleChange}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          <ImageIcon className="mr-2 h-4 w-4" />
+          {uploading ? 'Yuklanmoqda…' : currentPath ? "O'zgartirish" : 'Rasm tanlash'}
+        </Button>
+        {currentPath && (
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+            <Trash2 className="h-4 w-4 text-rose-600" />
+          </Button>
+        )}
+      </div>
+      {currentUrl && (
+        <img
+          src={currentUrl}
+          alt="Question"
+          className="mt-2 max-h-48 rounded-md border border-slate-200 object-contain"
+        />
+      )}
     </div>
   )
 }

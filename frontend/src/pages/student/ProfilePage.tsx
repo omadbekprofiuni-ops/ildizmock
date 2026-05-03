@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/toaster'
-import { useAuth } from '@/stores/auth'
+import { roleLabel, useAuth } from '@/stores/auth'
 
 const TARGETS = ['5.0', '5.5', '6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0']
 const LANGUAGES = [
@@ -69,7 +69,7 @@ export default function ProfilePage() {
               <ReadOnly label="Last name" value={user.last_name} />
             </div>
             <ReadOnly label="Username" value={user.username} />
-            <ReadOnly label="Role" value={user.role} />
+            <ReadOnly label="Role" value={roleLabel(user.role) || user.role} />
             <p className="text-xs text-[var(--muted)]">
               Contact admin to change first name, last name or phone.
             </p>

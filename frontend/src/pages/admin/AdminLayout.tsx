@@ -8,7 +8,7 @@ import {
 import type { ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 
-import { useAuth } from '@/stores/auth'
+import { roleLabel, useAuth } from '@/stores/auth'
 
 type Props = { children: ReactNode }
 
@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{user?.username}</p>
-              <p className="truncate text-xs text-slate-500">{user?.role}</p>
+              <p className="truncate text-xs text-slate-500">{roleLabel(user?.role)}</p>
             </div>
             <button
               type="button"

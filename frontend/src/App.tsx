@@ -12,6 +12,7 @@ import { useAuth } from '@/stores/auth'
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
+import AttendancePage from './pages/center/AttendancePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
 import StudentDetailPage from './pages/center/StudentDetailPage'
@@ -317,6 +318,7 @@ export default function App() {
               <Route path="groups/new" element={<GroupCreatePage />} />
               <Route path="groups/comparison" element={<GroupsComparisonPage />} />
               <Route path="groups/:groupId" element={<GroupDetailPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
               <Route path="settings" element={<CenterSettingsPage />} />
             </Route>

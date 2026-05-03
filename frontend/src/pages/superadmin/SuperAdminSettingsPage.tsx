@@ -47,6 +47,23 @@ const CODE_OPTIONS = [
   { value: 'enterprise', label: 'Enterprise' },
 ]
 
+function formatApiError(data: unknown, fallback: string): string {
+  if (typeof data === 'string') return data
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>
+    if (typeof obj.detail === 'string') return obj.detail
+    const first = Object.entries(obj)[0]
+    if (first) {
+      const [field, value] = first
+      const msg = Array.isArray(value) ? String(value[0]) : String(value)
+      return field === 'detail' || field === 'non_field_errors'
+        ? msg
+        : `${field}: ${msg}`
+    }
+  }
+  return fallback
+}
+
 export default function SuperAdminSettingsPage() {
   const qc = useQueryClient()
   const [editing, setEditing] = useState<PlanForm | null>(null)
@@ -82,12 +99,8 @@ export default function SuperAdminSettingsPage() {
       setEditing(null)
     },
     onError: (err) => {
-      const detail = (err as { response?: { data?: unknown } })?.response?.data
-      toast.error(
-        typeof detail === 'string'
-          ? detail
-          : 'Saqlashda xatolik yuz berdi',
-      )
+      const data = (err as { response?: { data?: unknown } })?.response?.data
+      toast.error(formatApiError(data, 'Saqlashda xatolik yuz berdi'))
     },
   })
 
@@ -128,7 +141,19 @@ export default function SuperAdminSettingsPage() {
               Platforma tariflari (Plans). Markaz yaratganda tanlanadi.
             </p>
           </div>
-          <Button onClick={() => setEditing({ ...EMPTY })}>
+          <Button
+            onClick={() => {
+              const used = new Set((query.data ?? []).map((p) => p.code))
+              const free = CODE_OPTIONS.find((o) => !used.has(o.value))
+              if (!free) {
+                toast.error(
+                  'Barcha 4 ta plan kodi (trial/starter/pro/enterprise) band. Mavjud planni tahrirlang.',
+                )
+                return
+              }
+              setEditing({ ...EMPTY, code: free.value })
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Yangi plan
           </Button>
@@ -217,6 +242,13 @@ export default function SuperAdminSettingsPage() {
             onClose={() => setEditing(null)}
             onSave={() => upsert.mutate(editing)}
             saving={upsert.isPending}
+            usedCodes={
+              new Set(
+                (query.data ?? [])
+                  .filter((p) => p.id !== editing.id)
+                  .map((p) => p.code),
+              )
+            }
           />
         )}
       </div>
@@ -225,13 +257,14 @@ export default function SuperAdminSettingsPage() {
 }
 
 function PlanModal({
-  form, onChange, onClose, onSave, saving,
+  form, onChange, onClose, onSave, saving, usedCodes,
 }: {
   form: PlanForm
   onChange: (form: PlanForm) => void
   onClose: () => void
   onSave: () => void
   saving: boolean
+  usedCodes: Set<string>
 }) {
   const set = <K extends keyof PlanForm>(key: K, value: PlanForm[K]) =>
     onChange({ ...form, [key]: value })
@@ -260,9 +293,12 @@ function PlanModal({
               <select
                 value={form.code}
                 onChange={(e) => set('code', e.target.value)}
-                className="w-full rounded-md border px-3 py-2 focus:border-slate-900 focus:outline-none"
+                disabled={Boolean(form.id)}
+                className="w-full rounded-md border px-3 py-2 focus:border-slate-900 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
               >
-                {CODE_OPTIONS.map((o) => (
+                {CODE_OPTIONS.filter(
+                  (o) => o.value === form.code || !usedCodes.has(o.value),
+                ).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>

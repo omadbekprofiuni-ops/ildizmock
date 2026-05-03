@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { api } from '@/lib/api'
-import { useAuth } from '@/stores/auth'
+import { roleLabel, useAuth } from '@/stores/auth'
 
 interface OrgInfo {
   slug: string
@@ -139,7 +139,9 @@ export default function CenterAdminLayout() {
               <p className="truncate text-sm font-medium">
                 {user?.first_name} {user?.last_name}
               </p>
-              <p className="truncate text-xs text-slate-500">@{user?.username}</p>
+              <p className="truncate text-xs text-slate-500">
+                {roleLabel(user?.role)} · @{user?.username}
+              </p>
             </div>
             <button
               type="button"

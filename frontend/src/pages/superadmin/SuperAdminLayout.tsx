@@ -13,7 +13,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
-import { useAuth } from '@/stores/auth'
+import { roleLabel, useAuth } from '@/stores/auth'
 import { useOrgContext } from '@/stores/orgContext'
 
 type NavItem = {
@@ -142,7 +142,9 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
               <p className="truncate text-sm font-medium">
                 {user?.first_name || user?.username}
               </p>
-              <p className="truncate text-xs text-slate-500">superadmin</p>
+              <p className="truncate text-xs text-slate-500">
+                {roleLabel(user?.role)}
+              </p>
             </div>
             <button
               type="button"

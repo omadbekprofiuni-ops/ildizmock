@@ -17,6 +17,23 @@ export type User = {
   org_slug: string | null
 }
 
+export function roleLabel(role: User['role'] | null | undefined): string {
+  switch (role) {
+    case 'superadmin':
+    case 'super_admin':
+      return 'Super Admin'
+    case 'org_admin':
+    case 'admin':
+      return 'Markaz admini'
+    case 'teacher':
+      return 'Ustoz'
+    case 'student':
+      return "O'quvchi"
+    default:
+      return ''
+  }
+}
+
 type AuthState = {
   user: User | null
   loading: boolean

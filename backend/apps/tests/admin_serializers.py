@@ -5,13 +5,31 @@ from .models import Passage, Question, Test
 
 
 class AdminQuestionSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    image_path = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
         fields = [
             'id', 'passage', 'order', 'question_type', 'text', 'options',
             'correct_answer', 'acceptable_answers', 'group_id', 'instruction',
-            'points',
+            'points', 'image', 'image_path',
         ]
+
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+        try:
+            url = obj.image.url
+        except (ValueError, AttributeError):
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url if url.startswith('http') else f'http://localhost:8000{url}'
+
+    def get_image_path(self, obj):
+        return obj.image.name if obj.image else None
 
 
 class AdminPassageSerializer(serializers.ModelSerializer):
@@ -44,11 +62,16 @@ class AdminPassageSerializer(serializers.ModelSerializer):
 
 
 class _NestedQuestionSerializer(serializers.ModelSerializer):
+    image_path = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, write_only=True,
+    )
+
     class Meta:
         model = Question
         fields = [
             'order', 'question_type', 'text', 'options', 'correct_answer',
             'acceptable_answers', 'group_id', 'instruction', 'points',
+            'image_path',
         ]
         extra_kwargs = {
             'options': {'required': False, 'default': list},
@@ -125,7 +148,11 @@ class AdminTestSerializer(serializers.ModelSerializer):
                 passage.audio_file.name = _normalize_audio_path(audio_path)
                 passage.save(update_fields=['audio_file'])
             for q_data in questions_data:
-                Question.objects.create(passage=passage, **q_data)
+                image_path = q_data.pop('image_path', None)
+                question = Question.objects.create(passage=passage, **q_data)
+                if image_path:
+                    question.image.name = _normalize_media_path(image_path)
+                    question.save(update_fields=['image'])
 
 
 def _normalize_audio_path(value: str) -> str:
@@ -134,15 +161,17 @@ def _normalize_audio_path(value: str) -> str:
     Frontend ba'zan to'liq URL yuborib qo'yadi (eski data, draft, edit). Bu
     ``MEDIA_URL`` bilan birikmaydigan keraksiz prefiksni olib tashlaydi.
     """
+    return _normalize_media_path(value)
+
+
+def _normalize_media_path(value: str) -> str:
     if not value:
         return value
     s = str(value).strip()
-    # http(s)://host/...
     if '://' in s:
         s = s.split('://', 1)[1]
         s = s.split('/', 1)[1] if '/' in s else ''
         s = '/' + s
-    # Strip leading /media/ prefix
     if s.startswith('/media/'):
         s = s[len('/media/'):]
     elif s.startswith('media/'):

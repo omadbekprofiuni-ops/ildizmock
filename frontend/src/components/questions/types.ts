@@ -7,6 +7,7 @@ export type QuestionData = {
   group_id: number
   instruction: string
   points: number
+  image_url?: string | null
 }
 
 export type AnswerValue = string | null

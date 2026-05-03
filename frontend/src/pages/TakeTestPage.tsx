@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from 'react-router-dom'
 
+import { ListeningAudioPlayer } from '@/components/ListeningAudioPlayer'
 import { LockedAudio } from '@/components/LockedAudio'
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
@@ -562,13 +563,20 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
             attempt.test.module === 'reading' ? 'w-3/5' : 'w-1/2'
           } overflow-y-auto border-r bg-white p-6`}
         >
+          {attempt.test.module === 'listening' && (() => {
+            const tracks = sections
+              .filter((p) => !!p.audio_file)
+              .map((p) => ({ partNumber: p.part_number, src: p.audio_file as string }))
+            return tracks.length > 0 ? <ListeningAudioPlayer tracks={tracks} /> : null
+          })()}
+
           {sections.map((p) => (
             <article key={p.id} className="mb-10">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Part {p.part_number}
               </h2>
               <h3 className="mb-4 text-xl font-bold text-slate-900">{p.title}</h3>
-              {p.audio_file && attempt.test.module === 'listening' && (
+              {p.audio_file && attempt.test.module !== 'listening' && (
                 <LockedAudio src={p.audio_file} />
               )}
               <div className="prose prose-slate max-w-none whitespace-pre-line text-[15px] leading-relaxed text-slate-800">
