@@ -3,7 +3,9 @@ import {
   ArrowLeft,
   BookOpen,
   Loader2,
+  Music,
   Trash2,
+  Upload,
   Wand2,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -40,6 +42,10 @@ type Passage = {
   title: string
   content: string
   bulk: string
+  // Listening only — uploaded audio file metadata
+  audio_file_path: string | null
+  audio_url: string | null
+  audio_uploading: boolean
 }
 
 const SHORTHAND_TO_TYPE: Record<string, QType> = {
@@ -194,7 +200,14 @@ function parseBulk(text: string): ParseResult {
   return { ok: true, questions: out }
 }
 
-const blankPassage = (): Passage => ({ title: '', content: '', bulk: '' })
+const blankPassage = (): Passage => ({
+  title: '',
+  content: '',
+  bulk: '',
+  audio_file_path: null,
+  audio_url: null,
+  audio_uploading: false,
+})
 
 const SAMPLE = `# Format: Number|Type|Text|Answer
 # Types: tfng, mcq, fill, short
@@ -243,9 +256,12 @@ export default function BulkTestCreatePage() {
     )
   }
 
+  const sectionWord = module === 'listening' ? 'part' : 'passage'
+  const maxSections = module === 'listening' ? 4 : 4
+
   const addPassage = () => {
-    if (passages.length >= 4) {
-      toast.info('Up to 4 passages.')
+    if (passages.length >= maxSections) {
+      toast.info(`Up to ${maxSections} ${sectionWord}s.`)
       return
     }
     setPassages((prev) => [...prev, blankPassage()])
@@ -253,13 +269,35 @@ export default function BulkTestCreatePage() {
 
   const removePassage = async (idx: number) => {
     const ok = await confirm({
-      title: 'Remove this passage?',
-      description: 'Questions in this passage will be lost.',
+      title: `Remove this ${sectionWord}?`,
+      description: `Questions in this ${sectionWord} will be lost.`,
       confirmText: 'Remove',
       tone: 'danger',
     })
     if (!ok) return
     setPassages((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const uploadAudio = async (idx: number, file: File) => {
+    updatePassage(idx, { audio_uploading: true })
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await api.post<{ path: string; url: string }>(
+        '/admin/upload/audio',
+        fd,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      updatePassage(idx, {
+        audio_file_path: res.data.path,
+        audio_url: res.data.url,
+      })
+      toast.success('Audio uploaded')
+    } catch {
+      toast.error('Failed to upload audio')
+    } finally {
+      updatePassage(idx, { audio_uploading: false })
+    }
   }
 
   const onSave = async () => {
@@ -275,34 +313,63 @@ export default function BulkTestCreatePage() {
       toast.error('At least one question is required.')
       return
     }
-    for (const p of passages) {
+    for (const [i, p] of passages.entries()) {
       if (!p.title.trim() || !p.content.trim()) {
-        toast.error('Each passage needs a title and content.')
+        toast.error(
+          module === 'listening'
+            ? `Part ${i + 1}: title and transcript are required.`
+            : `Passage ${i + 1}: title and content are required.`,
+        )
+        return
+      }
+      if (module === 'listening' && !p.audio_file_path) {
+        toast.error(`Part ${i + 1}: audio file is required for Listening.`)
         return
       }
     }
 
     setSaving(true)
     try {
-      const payload = {
+      // Reading and Listening have different payload shapes in easy-create:
+      //   reading  -> passages[]
+      //   listening -> listening_parts[] (audio_file_path, transcript, ...)
+      const sections = passages.map((p, i) => {
+        const parseRes = parsed[i]
+        if (!parseRes.ok) throw new Error('unreachable: parse error')
+        if (module === 'listening') {
+          return {
+            part_number: i + 1,
+            audio_file_path: p.audio_file_path,
+            transcript: p.content,
+            instructions: '',
+            questions: parseRes.questions,
+            // Reuse `title` as a hint inside instructions field-equivalent;
+            // listening parts have no title field — fold into transcript header.
+          }
+        }
+        return {
+          part_number: i + 1,
+          title: p.title,
+          content: p.content,
+          instructions: '',
+          questions: parseRes.questions,
+        }
+      })
+
+      const payload: Record<string, unknown> = {
         name,
         module,
         test_type: 'academic',
         difficulty,
         duration_minutes: duration,
         is_published: true,
-        passages: passages.map((p, i) => {
-          const parseRes = parsed[i]
-          if (!parseRes.ok) throw new Error('unreachable: parse error')
-          return {
-            part_number: i + 1,
-            title: p.title,
-            content: p.content,
-            instructions: '',
-            questions: parseRes.questions,
-          }
-        }),
       }
+      if (module === 'listening') {
+        payload.listening_parts = sections
+      } else {
+        payload.passages = sections
+      }
+
       await api.post(`/center/${slug}/tests/easy-create/`, payload)
       toast.success(`Test created with ${totalQuestions} questions`)
       navigate(`/${slug}/admin/tests`)
@@ -363,11 +430,17 @@ export default function BulkTestCreatePage() {
           <Field label="Module">
             <select
               value={module}
-              onChange={(e) => setModule(e.target.value as typeof module)}
+              onChange={(e) => {
+                const m = e.target.value as typeof module
+                setModule(m)
+                // Sensible defaults per module — user can still override.
+                if (m === 'listening' && duration === 60) setDuration(30)
+                if (m === 'reading' && duration === 30) setDuration(60)
+              }}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               <option value="reading">Reading</option>
-              <option value="listening">Listening (transcript only)</option>
+              <option value="listening">Listening (audio + transcript)</option>
             </select>
           </Field>
           <Field label="Difficulty">
@@ -431,7 +504,7 @@ export default function BulkTestCreatePage() {
               <div className="mb-4 flex items-start justify-between">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
                   <BookOpen size={18} className="text-red-600" />
-                  Passage {idx + 1}
+                  {module === 'listening' ? `Part ${idx + 1}` : `Passage ${idx + 1}`}
                   {parseRes.ok && (
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
                       ✓ {parseRes.questions.length} questions parsed
@@ -450,24 +523,90 @@ export default function BulkTestCreatePage() {
               </div>
 
               <div className="mb-4 space-y-4">
-                <Field label="Passage title">
+                {/* Audio upload — listening only */}
+                {module === 'listening' && (
+                  <Field
+                    label={`Audio file (Part ${idx + 1}) — required for Listening`}
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-red-300 hover:bg-red-50">
+                        {p.audio_uploading ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Upload size={14} />
+                        )}
+                        {p.audio_uploading
+                          ? 'Uploading…'
+                          : p.audio_file_path
+                            ? 'Replace audio'
+                            : 'Upload audio (.mp3/.wav/.m4a)'}
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          disabled={p.audio_uploading}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) uploadAudio(idx, f)
+                            e.target.value = ''
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                      {p.audio_url && (
+                        <div className="flex flex-1 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                          <Music size={14} className="text-emerald-700" />
+                          <audio
+                            src={p.audio_url}
+                            controls
+                            className="h-8 max-w-xs"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {!p.audio_file_path && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        ⚠ Listening parts need an audio file. Upload before saving.
+                      </p>
+                    )}
+                  </Field>
+                )}
+
+                <Field
+                  label={
+                    module === 'listening' ? 'Part title (internal label)' : 'Passage title'
+                  }
+                >
                   <input
                     value={p.title}
                     onChange={(e) =>
                       updatePassage(idx, { title: e.target.value })
                     }
-                    placeholder="e.g. The Origins of Coffee"
+                    placeholder={
+                      module === 'listening'
+                        ? 'e.g. Hotel Booking Inquiry'
+                        : 'e.g. The Origins of Coffee'
+                    }
                     className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </Field>
-                <Field label="Passage content">
+                <Field
+                  label={
+                    module === 'listening'
+                      ? 'Audio transcript (full text — used for review and grading)'
+                      : 'Passage content'
+                  }
+                >
                   <textarea
                     value={p.content}
                     onChange={(e) =>
                       updatePassage(idx, { content: e.target.value })
                     }
                     rows={6}
-                    placeholder="Paste the passage text…"
+                    placeholder={
+                      module === 'listening'
+                        ? 'Paste the audio transcript…'
+                        : 'Paste the passage text…'
+                    }
                     className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </Field>
@@ -498,13 +637,13 @@ export default function BulkTestCreatePage() {
           )
         })}
 
-        {passages.length < 4 && (
+        {passages.length < maxSections && (
           <button
             type="button"
             onClick={addPassage}
             className={btnOutline + ' w-full justify-center'}
           >
-            + Add passage ({passages.length} / 4)
+            + Add {sectionWord} ({passages.length} / {maxSections})
           </button>
         )}
       </div>
