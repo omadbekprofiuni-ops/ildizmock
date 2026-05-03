@@ -197,8 +197,6 @@ export default function AdminTestEditPage({
     : slug
       ? `/${slug}/admin/${basePath}`
       : `/${basePath}`
-  const isCenter = !!slug && !basePath.startsWith('/')
-
   const [draft, setDraft] = useState<TestDraft>(blankTest)
 
   const query = useQuery({

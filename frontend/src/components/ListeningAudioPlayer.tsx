@@ -26,7 +26,6 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
     'loading',
   )
   const [progress, setProgress] = useState(0)
-  const [preloadProgress, setPreloadProgress] = useState<Record<number, number>>({})
 
   const currentTrack = tracks[currentIdx]
 
@@ -43,26 +42,10 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
       const a = new Audio()
       a.preload = 'auto'
       a.src = track.src
-      const onProgress = () => {
-        if (a.duration > 0 && a.buffered.length > 0) {
-          const buffered = a.buffered.end(a.buffered.length - 1)
-          setPreloadProgress((p) => ({
-            ...p,
-            [track.partNumber]: Math.min(100, (buffered / a.duration) * 100),
-          }))
-        }
-      }
-      const onCanPlay = () => {
-        setPreloadProgress((p) => ({ ...p, [track.partNumber]: 100 }))
-      }
-      a.addEventListener('progress', onProgress)
-      a.addEventListener('canplaythrough', onCanPlay)
       // Mobile Safari'ni preload qila boshlatish uchun load() chaqirish kerak
       a.load()
       preloaders.push(a)
       cleanup.push(() => {
-        a.removeEventListener('progress', onProgress)
-        a.removeEventListener('canplaythrough', onCanPlay)
         a.src = ''
       })
     })
