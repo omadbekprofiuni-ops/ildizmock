@@ -505,6 +505,7 @@ class Command(BaseCommand):
             difficulty=difficulty, duration_minutes=duration,
             description=f'IELTS Reading — {difficulty} level',
             is_published=True,
+            status='published',
         )
         p = Passage.objects.create(
             test=t, part_number=1, title=name, content=passage, order=1,
@@ -520,6 +521,7 @@ class Command(BaseCommand):
             difficulty=difficulty, duration_minutes=duration,
             description=f'IELTS Listening — {difficulty} level',
             is_published=True,
+            status='published',
         )
         p = Passage.objects.create(
             test=t, part_number=1, title=name, content=transcript, order=1,

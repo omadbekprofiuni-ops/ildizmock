@@ -218,6 +218,10 @@ function CreateSessionDialog({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!form.listening_test) {
+      setError('Listening test tanlang — sessiyani Listening bilan boshlanadi.')
+      return
+    }
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/`, {

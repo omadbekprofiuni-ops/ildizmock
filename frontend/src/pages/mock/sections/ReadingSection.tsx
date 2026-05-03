@@ -48,6 +48,10 @@ export function ReadingSection({
     try {
       await api.post(`/mock/submit/reading/${bsid}/`, { answers })
       onSubmit()
+    } catch (err) {
+      submittedRef.current = false
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      alert(detail || 'Reading yuborishda xatolik. Internetni tekshiring va qayta urining.')
     } finally {
       setSubmitting(false)
     }

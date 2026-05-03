@@ -45,3 +45,6 @@ Thumbs.db
 
 # Docker
 *.pid
+
+# Backup nusxasi (duplicate)
+mock_exam 2/

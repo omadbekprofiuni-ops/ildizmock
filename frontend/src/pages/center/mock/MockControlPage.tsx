@@ -1,6 +1,6 @@
 import { ArrowLeft, CheckCircle2, Copy, Play, Plus, RotateCcw, Trash2, UserPlus, XOctagon } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import {
   Chip,
@@ -9,7 +9,24 @@ import {
   btnOutline,
   btnPrimary,
 } from '@/components/admin-shell'
+import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
+
+function extractErrorDetail(err: unknown, fallback: string): string {
+  const e = err as {
+    response?: { status?: number; data?: { detail?: string } | Record<string, unknown> }
+    message?: string
+  }
+  const data = e.response?.data
+  if (data && typeof data === 'object') {
+    if ('detail' in data && typeof data.detail === 'string') return data.detail
+    const first = Object.values(data as Record<string, unknown>)[0]
+    if (Array.isArray(first) && first.length) return String(first[0])
+    if (typeof first === 'string') return first
+  }
+  if (e.response?.status) return `${fallback} (HTTP ${e.response.status})`
+  return e.message || fallback
+}
 
 interface Participant {
   id: number
@@ -68,6 +85,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function MockControlPage() {
   const { slug, sessionId } = useParams<{ slug: string; sessionId: string }>()
+  const navigate = useNavigate()
   const [session, setSession] = useState<SessionDetail | null>(null)
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -111,7 +129,10 @@ export default function MockControlPage() {
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/start/`)
+      toast.success('Sessiya boshlandi — Listening')
       load()
+    } catch (err) {
+      toast.error(extractErrorDetail(err, 'Sessiyani boshlab bo‘lmadi'))
     } finally {
       setBusy(false)
     }
@@ -128,7 +149,10 @@ export default function MockControlPage() {
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/advance/`)
+      toast.success(`${next} bosqichiga o‘tildi`)
       load()
+    } catch (err) {
+      toast.error(extractErrorDetail(err, 'Bosqichni o‘zgartirib bo‘lmadi'))
     } finally {
       setBusy(false)
     }
@@ -139,7 +163,10 @@ export default function MockControlPage() {
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/cancel/`)
-      load()
+      toast.success('Sessiya bekor qilindi')
+      navigate(`/${slug}/admin/mock`)
+    } catch (err) {
+      toast.error(extractErrorDetail(err, 'Sessiyani bekor qilib bo‘lmadi'))
     } finally {
       setBusy(false)
     }
@@ -248,23 +275,37 @@ export default function MockControlPage() {
       <SurfaceCard className="mb-6">
         <h2 className="mb-4 text-base font-semibold text-slate-900">Boshqaruv</h2>
 
-        {session.status === 'waiting' && (
-          <>
-            <button
-              type="button"
-              disabled={busy || session.participants.length === 0}
-              onClick={start}
-              className={btnPrimary + ' !px-8 !py-3 text-base'}
-            >
-              <Play size={18} /> START — Listening
-            </button>
-            <p className="mt-2 text-sm text-slate-600">
-              {session.participants.length} ta talaba qo'shilgan
-              {session.participants.length === 0 &&
-                ' — talabalar qo\'shilishini kuting'}
-            </p>
-          </>
-        )}
+        {session.status === 'waiting' && (() => {
+          const noParticipants = session.participants.length === 0
+          const noListeningTest = !session.listening_test
+          const blockReason = noListeningTest
+            ? 'Listening test biriktirilmagan — sessiyani tahrirlab Listening test tanlang.'
+            : noParticipants
+              ? 'Avval talaba qo‘shing yoki link orqali kirishlarini kuting.'
+              : ''
+          const disabled = busy || noParticipants || noListeningTest
+          return (
+            <>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={start}
+                title={blockReason || undefined}
+                className={btnPrimary + ' !px-8 !py-3 text-base disabled:cursor-not-allowed disabled:opacity-50'}
+              >
+                <Play size={18} /> START — Listening
+              </button>
+              <p className="mt-2 text-sm text-slate-600">
+                {session.participants.length} ta talaba qo'shilgan
+              </p>
+              {blockReason && (
+                <p className="mt-1 text-sm font-medium text-amber-700">
+                  ⚠ {blockReason}
+                </p>
+              )}
+            </>
+          )
+        })()}
 
         {(session.status === 'listening' ||
           session.status === 'reading' ||

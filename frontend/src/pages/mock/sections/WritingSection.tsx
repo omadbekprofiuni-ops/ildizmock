@@ -53,6 +53,10 @@ export function WritingSection({
         task2,
       })
       onSubmit()
+    } catch (err) {
+      submittedRef.current = false
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      alert(detail || 'Writing yuborishda xatolik. Internetni tekshiring va qayta urining.')
     } finally {
       setSubmitting(false)
     }

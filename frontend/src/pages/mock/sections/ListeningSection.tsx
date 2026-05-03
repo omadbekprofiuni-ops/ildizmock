@@ -146,6 +146,10 @@ export function ListeningSection({
     try {
       await api.post(`/mock/submit/listening/${bsid}/`, { answers })
       onSubmit()
+    } catch (err) {
+      submittedRef.current = false
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      alert(detail || 'Listening yuborishda xatolik. Internetni tekshiring va qayta urining.')
     } finally {
       setSubmitting(false)
     }

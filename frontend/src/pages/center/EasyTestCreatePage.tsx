@@ -272,7 +272,7 @@ export default function EasyTestCreatePage() {
   const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert'>('intermediate')
   const [duration, setDuration] = useState(60)
-  const [isPublished, setIsPublished] = useState(false)
+  const [isPublished, setIsPublished] = useState(true)
 
   const [sections, setSections] = useState<SectionDraft[]>([blankSection(1)])
   const [writingTasks, setWritingTasks] = useState<WritingTaskDraft[]>([
@@ -750,7 +750,12 @@ export default function EasyTestCreatePage() {
                     onChange={(e) => setIsPublished(e.target.checked)}
                     className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
                   />
-                  <span className="text-slate-700">Darhol e‘lon qilish</span>
+                  <span className="text-slate-700">
+                    Darhol e‘lon qilish{' '}
+                    <span className="text-xs text-slate-500">
+                      (Mock sessiyada faqat <b>published</b> testlar ko‘rinadi)
+                    </span>
+                  </span>
                 </label>
               </Field>
             </div>
