@@ -22,6 +22,9 @@ def _auto_migrate() -> None:
     try:
         from django.core.management import call_command
         call_command('migrate', '--noinput', verbosity=0)
+        # django_migrations 'applied' desa-da real ustun yetishmasa,
+        # heal_schema model bilan solishtirib qo'shadi (idempotent).
+        call_command('heal_schema', '--apply', verbosity=0)
     except Exception as exc:  # noqa: BLE001 — startup xatoni shunchaki log qilamiz
         logging.getLogger(__name__).warning('auto-migrate skipped: %s', exc)
 

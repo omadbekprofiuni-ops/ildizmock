@@ -42,6 +42,12 @@ def _ensure_migrated() -> None:
                     'auto-migrate: %d pending migration qo\'llanyapti', len(plan),
                 )
                 call_command('migrate', '--noinput', verbosity=0)
+            # django_migrations jadvali "applied" desa-da, ba'zi serverlarda
+            # haqiqiy ustun yo'q (--fake migrate yoki DB snapshot tiklanishi
+            # sabab). schema'ni model bilan solishtirib yetishmaganlarni
+            # qo'shamiz.
+            from django.core.management import call_command
+            call_command('heal_schema', '--apply', verbosity=0)
         except Exception as exc:  # noqa: BLE001
             logger.warning('auto-migrate middleware skipped: %s', exc)
         finally:

@@ -107,18 +107,20 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             data = MockSessionDetailSerializer(session).data
             return Response(data, status=status.HTTP_201_CREATED)
         except (OperationalError, ProgrammingError) as exc:
-            # DB schema'da ustun yetishmaydi — migrationlar qo'llanmagan.
-            # Avtomatik migrate ishga tushiramiz va qaytadan urinamiz.
-            log.warning('mock create DB error, attempting migrate: %s', exc)
+            # DB schema'da ustun yetishmaydi. Migrate va heal_schema'ni
+            # ishga tushiramiz. heal_schema django_migrations 'applied' desa-da
+            # real ustunlar yo'q bo'lsa ham yordam beradi.
+            log.warning('mock create DB error, attempting migrate+heal: %s', exc)
             try:
                 from django.core.management import call_command
                 call_command('migrate', '--noinput', verbosity=0)
+                call_command('heal_schema', '--apply', verbosity=0)
             except Exception as migrate_exc:  # noqa: BLE001
-                log.error('migrate failed: %s', migrate_exc)
+                log.error('migrate/heal failed: %s', migrate_exc)
                 return Response(
                     {'detail': (
                         f'DB schema xatosi: {exc}. '
-                        f'Migrate ham ishlamadi: {migrate_exc}. '
+                        f'Migrate/heal ham ishlamadi: {migrate_exc}. '
                         'Server adminiga ushbu xabarni ko‘rsating.'
                     )},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
