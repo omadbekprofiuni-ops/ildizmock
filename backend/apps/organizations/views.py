@@ -295,6 +295,137 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         admin.save(update_fields=['password'])
         return Response({'message': f'Password reset for {admin.username}'})
 
+    @action(detail=True, methods=['get'])
+    def students(self, request, pk=None):
+        """SuperAdmin uchun markazning talabalar ro'yxati."""
+        org = self.get_object()
+        students = User.objects.filter(
+            org_memberships__organization=org,
+            org_memberships__role='student',
+        ).distinct().order_by('-id')
+        rows = []
+        for s in students:
+            full = f'{(s.first_name or "").strip()} {(s.last_name or "").strip()}'.strip()
+            rows.append({
+                'id': s.id,
+                'username': s.username,
+                'full_name': full or s.username,
+                'phone': s.phone or '',
+                'is_active': s.is_active,
+                'last_login': s.last_login,
+                'created_at': s.created_at,
+            })
+        return Response(rows)
+
+    @action(detail=True, methods=['get'])
+    def teachers(self, request, pk=None):
+        """SuperAdmin uchun markazning o'qituvchilar ro'yxati."""
+        org = self.get_object()
+        teachers = User.objects.filter(
+            org_memberships__organization=org,
+            org_memberships__role='teacher',
+        ).distinct().order_by('-id')
+        rows = []
+        for t in teachers:
+            full = f'{(t.first_name or "").strip()} {(t.last_name or "").strip()}'.strip()
+            rows.append({
+                'id': t.id,
+                'username': t.username,
+                'full_name': full or t.username,
+                'phone': t.phone or '',
+                'is_active': t.is_active,
+                'last_login': t.last_login,
+                'created_at': t.created_at,
+            })
+        return Response(rows)
+
+    @action(detail=True, methods=['get'])
+    def writings(self, request, pk=None):
+        """SuperAdmin uchun markazning writing topshiriqlar ro'yxati."""
+        from apps.attempts.models import WritingSubmission
+        org = self.get_object()
+        subs = WritingSubmission.objects.filter(
+            attempt__organization=org,
+        ).select_related('attempt', 'attempt__user', 'attempt__test', 'graded_by').order_by('-submitted_at')[:200]
+        rows = []
+        for s in subs:
+            user = s.attempt.user
+            full = ''
+            if user:
+                full = f'{(user.first_name or "").strip()} {(user.last_name or "").strip()}'.strip()
+                if not full:
+                    full = user.username
+            rows.append({
+                'id': s.id,
+                'attempt_id': str(s.attempt.id),
+                'student_name': full or 'Guest',
+                'test_name': s.attempt.test.name if s.attempt.test_id else '',
+                'word_count': s.word_count,
+                'status': s.status,
+                'teacher_band': str(s.teacher_band) if s.teacher_band is not None else None,
+                'graded_by': (
+                    s.graded_by.get_full_name() or s.graded_by.username
+                    if s.graded_by_id else None
+                ),
+                'submitted_at': s.submitted_at,
+                'graded_at': s.graded_at,
+            })
+        return Response(rows)
+
+    @action(detail=True, methods=['get'])
+    def statistics(self, request, pk=None):
+        """SuperAdmin uchun markazning umumiy statistikasi."""
+        from django.db.models import Avg, Count, Sum
+        from apps.attempts.models import Attempt
+        from apps.mock.models import MockSession, MockParticipant
+        org = self.get_object()
+
+        students_count = User.objects.filter(
+            org_memberships__organization=org,
+            org_memberships__role='student',
+        ).distinct().count()
+        teachers_count = User.objects.filter(
+            org_memberships__organization=org,
+            org_memberships__role='teacher',
+        ).distinct().count()
+
+        attempts = Attempt.objects.filter(organization=org)
+        attempts_total = attempts.count()
+        attempts_graded = attempts.filter(status='graded').count()
+        avg_band = attempts.filter(
+            band_score__isnull=False,
+        ).aggregate(v=Avg('band_score'))['v']
+
+        sessions = MockSession.objects.filter(organization=org)
+        mock_total = sessions.count()
+        mock_finished = sessions.filter(status='finished').count()
+
+        participants = MockParticipant.objects.filter(session__organization=org)
+        participants_total = participants.count()
+
+        # Billing
+        try:
+            from apps.billing.models import MockSessionCharge
+            charges = MockSessionCharge.objects.filter(session__organization=org)
+            total_revenue = charges.filter(is_charged=True).aggregate(v=Sum('amount'))['v'] or 0
+            unpaid_charges = charges.filter(is_charged=False).count()
+        except Exception:
+            total_revenue = 0
+            unpaid_charges = 0
+
+        return Response({
+            'students_count': students_count,
+            'teachers_count': teachers_count,
+            'attempts_total': attempts_total,
+            'attempts_graded': attempts_graded,
+            'avg_band_score': float(avg_band) if avg_band else None,
+            'mock_sessions_total': mock_total,
+            'mock_sessions_finished': mock_finished,
+            'mock_participants_total': participants_total,
+            'total_revenue_uzs': float(total_revenue),
+            'unpaid_charges_count': unpaid_charges,
+        })
+
 
 class SuperAdminPlanViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdmin]

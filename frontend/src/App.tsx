@@ -33,9 +33,12 @@ import SuperTestsListPage from './pages/super/SuperTestsListPage'
 import TestWizardPage from './pages/super/TestWizardPage'
 import CenterDetailPage from './pages/superadmin/CenterDetailPage'
 import OrgContextRedirect from './pages/superadmin/OrgContextRedirect'
+import OrgStatisticsPage from './pages/superadmin/OrgStatisticsPage'
+import OrgStudentsPage from './pages/superadmin/OrgStudentsPage'
+import OrgTeachersPage from './pages/superadmin/OrgTeachersPage'
+import OrgWritingsPage from './pages/superadmin/OrgWritingsPage'
 import SuperAdminAudioPage from './pages/superadmin/SuperAdminAudioPage'
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
-import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
 import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
@@ -135,7 +138,7 @@ export default function App() {
           {/* TROUBLESHOOTING — /super/org/:id/stats alias */}
           <Route path="/super/org/:id/stats" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
 
-          {/* SuperAdmin org context links (sidebar nav) — orgContext'dan id olib redirect */}
+          {/* SuperAdmin org context links (sidebar nav) — context'dan id orqali */}
           <Route
             path="/super/org/dashboard"
             element={
@@ -145,53 +148,53 @@ export default function App() {
             }
           />
           <Route
-            path="/super/org/billing"
-            element={
-              <SuperAdminRoute>
-                <OrgContextRedirect to={() => `/super/payments`} />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
-            path="/super/org/stats"
-            element={
-              <SuperAdminRoute>
-                <OrgContextRedirect to={() => `/super/stats`} />
-              </SuperAdminRoute>
-            }
+            path="/super/org/students"
+            element={<SuperAdminRoute><OrgStudentsPage /></SuperAdminRoute>}
           />
           <Route
             path="/super/org/teachers"
-            element={
-              <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Teachers"
-                  subtitle="Tanlangan markazning o'qituvchilari ro'yxati tez orada qo'shiladi."
-                />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
-            path="/super/org/students"
-            element={
-              <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Students"
-                  subtitle="Tanlangan markazning talabalari ro'yxati tez orada qo'shiladi."
-                />
-              </SuperAdminRoute>
-            }
+            element={<SuperAdminRoute><OrgTeachersPage /></SuperAdminRoute>}
           />
           <Route
             path="/super/org/writings"
-            element={
-              <SuperAdminRoute>
-                <SuperAdminComingSoonPage
-                  title="Writing submissions"
-                  subtitle="Markaz writing topshiriqlari tez orada qo'shiladi."
-                />
-              </SuperAdminRoute>
-            }
+            element={<SuperAdminRoute><OrgWritingsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/statistics"
+            element={<SuperAdminRoute><OrgStatisticsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/stats"
+            element={<SuperAdminRoute><OrgStatisticsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/payment"
+            element={<SuperAdminRoute><SuperAdminBillingPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/billing"
+            element={<SuperAdminRoute><SuperAdminBillingPage /></SuperAdminRoute>}
+          />
+          {/* :orgId-based aliases */}
+          <Route
+            path="/super/org/:orgId/students"
+            element={<SuperAdminRoute><OrgStudentsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/teachers"
+            element={<SuperAdminRoute><OrgTeachersPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/writings"
+            element={<SuperAdminRoute><OrgWritingsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/statistics"
+            element={<SuperAdminRoute><OrgStatisticsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/payment"
+            element={<SuperAdminRoute><SuperAdminBillingPage /></SuperAdminRoute>}
           />
           <Route
             path="/super/tests"
