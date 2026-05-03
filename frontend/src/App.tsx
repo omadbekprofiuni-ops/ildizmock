@@ -16,6 +16,7 @@ import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import AttendancePage from './pages/center/AttendancePage'
 import AITestCreatePage from './pages/center/AITestCreatePage'
+import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import ExcelImportPage from './pages/center/ExcelImportPage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
@@ -307,6 +308,7 @@ function AppRoutes() {
               <Route path="tests" element={<CenterTestsPage />} />
               <Route path="tests/new" element={<TestCreateHubPage />} />
               <Route path="tests/new/ai" element={<AITestCreatePage />} />
+              <Route path="tests/new/bulk" element={<BulkTestCreatePage />} />
               <Route path="tests/new/excel" element={<ExcelImportPage />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
