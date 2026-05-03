@@ -2,11 +2,8 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Copy,
-  FileSpreadsheet,
   Headphones,
   PenLine,
-  Sparkles,
   Zap,
 } from 'lucide-react'
 import { useEffect } from 'react'
@@ -87,70 +84,6 @@ export default function TestCreateHubPage() {
           </div>
         </div>
       </Link>
-
-      {/* Other quick options */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* Template Catalog */}
-        <Link
-          to={`/${slug}/admin/tests`}
-          className="group relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
-        >
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-            ⚡ 2 min
-          </div>
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow">
-            <Copy className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Clone a template</h3>
-          <p className="mt-1 text-sm text-slate-700">
-            Pick a Cambridge-style test from the catalog. One click → ready.
-          </p>
-          <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 group-hover:underline">
-            Browse catalog <ArrowRight size={14} />
-          </div>
-        </Link>
-
-        {/* AI-Assisted */}
-        <Link
-          to={`/${slug}/admin/tests/new/ai`}
-          className="group relative overflow-hidden rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
-        >
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-            ⚡ 10 min
-          </div>
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow">
-            <Sparkles className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">AI-Assisted</h3>
-          <p className="mt-1 text-sm text-slate-700">
-            Paste a Reading passage — Claude drafts IELTS-quality questions.
-          </p>
-          <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-red-700 group-hover:underline">
-            Start <ArrowRight size={14} />
-          </div>
-        </Link>
-
-        {/* Excel Import */}
-        <Link
-          to={`/${slug}/admin/tests/new/excel`}
-          className="group relative overflow-hidden rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
-        >
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-            ⚡ 15 min
-          </div>
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 text-white shadow">
-            <FileSpreadsheet className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Excel import</h3>
-          <p className="mt-1 text-sm text-slate-700">
-            Download the template, fill it in Excel, upload. Best for bulk
-            imports from existing materials.
-          </p>
-          <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-700 group-hover:underline">
-            Download template <ArrowRight size={14} />
-          </div>
-        </Link>
-      </div>
 
       <div className="mb-3 flex items-center gap-3">
         <div className="h-px flex-1 bg-slate-200" />
