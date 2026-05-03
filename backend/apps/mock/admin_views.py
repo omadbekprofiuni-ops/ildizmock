@@ -76,13 +76,20 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         return ctx
 
     def create(self, request, *args, **kwargs):
+        import logging
+        import traceback
+
+        from django.db import OperationalError, ProgrammingError
+
+        log = logging.getLogger(__name__)
+
         org = self.get_organization()
         ser = MockSessionCreateSerializer(
             data=request.data, context={'organization': org, 'request': request},
         )
         ser.is_valid(raise_exception=True)
 
-        # Unique access_code yaratish (3 marta urinish)
+        # Unique access_code yaratish (5 marta urinish)
         for _ in range(5):
             code = generate_access_code()
             if not MockSession.objects.filter(access_code=code).exists():
@@ -90,16 +97,59 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         else:
             raise ValidationError('Access code yaratib bo‘lmadi, qayta urinib ko‘ring.')
 
-        session = MockSession.objects.create(
-            organization=org,
-            created_by=request.user,
-            access_code=code,
-            **ser.validated_data,
-        )
-        return Response(
-            MockSessionDetailSerializer(session).data,
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            session = MockSession.objects.create(
+                organization=org,
+                created_by=request.user,
+                access_code=code,
+                **ser.validated_data,
+            )
+            data = MockSessionDetailSerializer(session).data
+            return Response(data, status=status.HTTP_201_CREATED)
+        except (OperationalError, ProgrammingError) as exc:
+            # DB schema'da ustun yetishmaydi — migrationlar qo'llanmagan.
+            # Avtomatik migrate ishga tushiramiz va qaytadan urinamiz.
+            log.warning('mock create DB error, attempting migrate: %s', exc)
+            try:
+                from django.core.management import call_command
+                call_command('migrate', '--noinput', verbosity=0)
+            except Exception as migrate_exc:  # noqa: BLE001
+                log.error('migrate failed: %s', migrate_exc)
+                return Response(
+                    {'detail': (
+                        f'DB schema xatosi: {exc}. '
+                        f'Migrate ham ishlamadi: {migrate_exc}. '
+                        'Server adminiga ushbu xabarni ko‘rsating.'
+                    )},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            # Migrate o'tdi — qaytadan urinamiz
+            try:
+                session = MockSession.objects.create(
+                    organization=org,
+                    created_by=request.user,
+                    access_code=code,
+                    **ser.validated_data,
+                )
+                data = MockSessionDetailSerializer(session).data
+                return Response(data, status=status.HTTP_201_CREATED)
+            except Exception as retry_exc:  # noqa: BLE001
+                log.error('mock create retry failed: %s\n%s',
+                          retry_exc, traceback.format_exc())
+                return Response(
+                    {'detail': (
+                        f'Migrate o‘tdi, lekin qayta urinish ham xato qaytardi: '
+                        f'{type(retry_exc).__name__}: {retry_exc}'
+                    )},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        except Exception as exc:  # noqa: BLE001
+            log.error('mock create unexpected error: %s\n%s',
+                      exc, traceback.format_exc())
+            return Response(
+                {'detail': f'{type(exc).__name__}: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @action(detail=False, methods=['get'], url_path='available-tests')
     def available_tests(self, request, org_slug=None):
