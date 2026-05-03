@@ -565,6 +565,25 @@ class CenterTestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        # Xavfsizlik: agar testda talaba urinishlari bo'lsa, struktura
+        # o'zgarishini rad etamiz — Answer.question CASCADE qiladi va
+        # mavjud javoblar yo'qolib ketadi. Bu holatda foydalanuvchi
+        # testni klonlashi va keyin o'zgartirishi kerak.
+        will_change_structure = (
+            'passages' in d or 'listening_parts' in d or 'writing_tasks' in d
+        )
+        if will_change_structure and test.attempts.exists():
+            return Response(
+                {
+                    'detail': (
+                        "Bu testda talaba urinishlari bor. Savol/passage tuzilmasini "
+                        "o'zgartirsangiz mavjud natijalar yo'qoladi. Iltimos, testni "
+                        "klonlang va klonni tahrirlang."
+                    ),
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
         new_module = d.get('module', test.module)
         if new_module not in (
             'listening', 'reading', 'writing', 'speaking', 'full_mock',
