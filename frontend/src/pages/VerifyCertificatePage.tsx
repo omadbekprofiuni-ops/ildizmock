@@ -36,7 +36,7 @@ export default function VerifyCertificatePage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    document.title = 'IELTSation — Sertifikatni tekshirish'
+    document.title = 'ILDIZmock — Sertifikatni tekshirish'
     if (!code) return
     api
       .get<VerifyResponse>(`/verify/${code}/`)
@@ -107,7 +107,7 @@ function ValidCertificate({ data }: { data: VerifyResponse }) {
           <div>
             <h1 className="text-xl font-bold">Sertifikat haqiqiy</h1>
             <p className="text-sm text-emerald-50">
-              IELTSation Mock Test sertifikati tasdiqlandi
+              ILDIZmock Test sertifikati tasdiqlandi
             </p>
           </div>
         </div>
