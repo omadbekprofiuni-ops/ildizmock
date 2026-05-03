@@ -104,9 +104,150 @@ const blankWriting = (n: number): WritingTaskDraft => ({
   chart_image_url: null,
 })
 
+// ============= Server response shapes (edit rejimi uchun) =============
+
+type ServerQuestion = {
+  id?: number
+  question_number?: number
+  question_type: string
+  prompt?: string
+  text?: string
+  options?: unknown
+  correct_answer?: unknown
+  alt_answers?: unknown
+  acceptable_answers?: unknown
+  points?: number
+  instruction?: string
+}
+
+type ServerPassage = {
+  id?: number
+  section_number?: number
+  part_number?: number
+  title?: string
+  subtitle?: string
+  body_text?: string
+  content?: string
+  instructions?: string
+  image_url?: string | null
+  image_path?: string | null
+  questions?: ServerQuestion[]
+}
+
+type ServerListeningPart = {
+  id?: number
+  part_number: number
+  audio_url?: string | null
+  audio_file_path?: string | null
+  image_url?: string | null
+  image_path?: string | null
+  transcript?: string
+  instructions?: string
+  questions?: ServerQuestion[]
+}
+
+type ServerWritingTask = {
+  id?: number
+  task_number: number
+  prompt?: string
+  chart_image_url?: string | null
+  chart_image_path?: string | null
+  min_words?: number
+  suggested_minutes?: number
+  requirements?: string
+}
+
+type TestDetailResponse = {
+  id: string
+  name: string
+  module: string
+  difficulty?: string
+  duration_minutes?: number
+  description?: string
+  status?: string
+  passages?: ServerPassage[]
+  listening_parts?: ServerListeningPart[]
+  writing_tasks?: ServerWritingTask[]
+}
+
+const ALLOWED_QTYPES: ReadonlySet<QType> = new Set([
+  'mcq', 'tfng', 'fill', 'matching', 'matching_headings', 'short_answer',
+])
+
+function questionFromServer(q: ServerQuestion, fallbackOrder: number): QDraft {
+  const qt = (ALLOWED_QTYPES.has(q.question_type as QType)
+    ? (q.question_type as QType)
+    : 'fill') as QType
+  const options = Array.isArray(q.options) ? (q.options as string[]) : []
+  const correct =
+    typeof q.correct_answer === 'string'
+      ? q.correct_answer
+      : q.correct_answer == null
+        ? ''
+        : JSON.stringify(q.correct_answer)
+  return {
+    order: q.question_number ?? fallbackOrder,
+    question_type: qt,
+    text: q.prompt ?? q.text ?? '',
+    options,
+    correct_answer: correct,
+    instruction: q.instruction ?? '',
+    points: q.points ?? 1,
+  }
+}
+
+function passageFromServer(p: ServerPassage, idx?: number): SectionDraft {
+  const partNumber = p.section_number ?? p.part_number ?? (idx ?? 0) + 1
+  return {
+    part_number: partNumber,
+    title: p.title ?? '',
+    content: p.body_text ?? p.content ?? '',
+    instructions: p.instructions ?? '',
+    audio_file_path: null,
+    audio_url: null,
+    image_path: p.image_path ?? null,
+    image_url: p.image_url ?? null,
+    questions: (p.questions ?? []).map((q, i) => questionFromServer(q, i + 1)),
+  }
+}
+
+function listeningPartFromServer(
+  lp: ServerListeningPart,
+  idx?: number,
+): SectionDraft {
+  return {
+    part_number: lp.part_number ?? (idx ?? 0) + 1,
+    title: '', // ListeningPart'da title yo'q — UI'da bo'sh qoldiriladi
+    content: lp.transcript ?? '',
+    instructions: lp.instructions ?? '',
+    audio_file_path: lp.audio_file_path ?? null,
+    audio_url: lp.audio_url ?? null,
+    image_path: lp.image_path ?? null,
+    image_url: lp.image_url ?? null,
+    questions: (lp.questions ?? []).map((q, i) => questionFromServer(q, i + 1)),
+  }
+}
+
+function writingTaskFromServer(t: ServerWritingTask): WritingTaskDraft {
+  return {
+    task_number: t.task_number,
+    prompt: t.prompt ?? '',
+    min_words: t.min_words ?? (t.task_number === 1 ? 150 : 250),
+    suggested_minutes: t.suggested_minutes ?? (t.task_number === 1 ? 20 : 40),
+    requirements: t.requirements ?? '',
+    chart_image_path: t.chart_image_path ?? null,
+    chart_image_url: t.chart_image_url ?? null,
+  }
+}
+
 export default function EasyTestCreatePage() {
-  const { slug, module: moduleParam } = useParams<{ slug: string; module?: string }>()
+  const { slug, module: moduleParam, testId } = useParams<{
+    slug: string
+    module?: string
+    testId?: string
+  }>()
   const navigate = useNavigate()
+  const isEdit = !!testId
 
   // URL'dan module aniqlanadi — hub'dan kelgan bo'lsa oldindan tanlanadi.
   const initialModule: Module =
@@ -114,12 +255,17 @@ export default function EasyTestCreatePage() {
       : moduleParam === 'writing' ? 'writing'
         : moduleParam === 'reading' ? 'reading'
           : 'reading'
-  const moduleLocked = !!moduleParam
+  // Edit rejimida modul testdan keladi — selectorni yashiramiz.
+  const moduleLocked = !!moduleParam || isEdit
 
   useEffect(() => {
-    const mod = moduleParam ? `(${moduleParam})` : ''
-    document.title = `ILDIZmock — Yangi test ${mod}`.trim()
-  }, [moduleParam])
+    if (isEdit) {
+      document.title = 'ILDIZmock — Test tahrirlash'
+    } else {
+      const mod = moduleParam ? `(${moduleParam})` : ''
+      document.title = `ILDIZmock — Yangi test ${mod}`.trim()
+    }
+  }, [moduleParam, isEdit])
 
   const [module, setModule] = useState<Module>(initialModule)
   const [name, setName] = useState('')
@@ -135,6 +281,60 @@ export default function EasyTestCreatePage() {
   ])
 
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(isEdit)
+
+  // Edit rejimida testni yuklab, draft state'ga aylantiramiz.
+  useEffect(() => {
+    if (!isEdit || !slug || !testId) return
+    let cancelled = false
+    setLoading(true)
+    api
+      .get<TestDetailResponse>(`/center/${slug}/tests/${testId}/`)
+      .then((r) => {
+        if (cancelled) return
+        const t = r.data
+        setName(t.name || '')
+        setDescription(t.description || '')
+        setDifficulty(
+          (t.difficulty as typeof difficulty) || 'intermediate',
+        )
+        setDuration(t.duration_minutes || 60)
+        setIsPublished(t.status === 'published')
+        const mod: Module =
+          t.module === 'listening'
+            ? 'listening'
+            : t.module === 'writing'
+              ? 'writing'
+              : 'reading'
+        setModule(mod)
+
+        if (mod === 'reading') {
+          const passages = (t.passages || []).map(passageFromServer)
+          setSections(passages.length ? passages : [blankSection(1)])
+        } else if (mod === 'listening') {
+          const parts = (t.listening_parts || []).map(listeningPartFromServer)
+          setSections(parts.length ? parts : [blankSection(1)])
+        } else if (mod === 'writing') {
+          const tasks = (t.writing_tasks || []).map(writingTaskFromServer)
+          // Writing har doim 2 ta task — yetishmasa to'ldirib qo'yamiz
+          while (tasks.length < 2) {
+            tasks.push(blankWriting(tasks.length + 1))
+          }
+          setWritingTasks(tasks)
+        }
+      })
+      .catch(() => {
+        if (cancelled) return
+        toast.error("Testni yuklashda xato — orqaga qayting")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, slug, testId])
 
   // ETAP 18 — Question count validation indicators
   const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0)
@@ -297,15 +497,38 @@ export default function EasyTestCreatePage() {
         }))
       }
 
-      await api.post(`/center/${slug}/tests/easy-create/`, payload)
-      toast.success('Test yaratildi')
+      if (isEdit && testId) {
+        await api.put(`/center/${slug}/tests/${testId}/easy-update/`, payload)
+        toast.success("Test yangilandi")
+      } else {
+        await api.post(`/center/${slug}/tests/easy-create/`, payload)
+        toast.success('Test yaratildi')
+      }
       navigate(`/${slug}/admin/tests`)
     } catch (err) {
-      const data = (err as { response?: { data?: unknown } })?.response?.data
-      toast.error('Xatolik: ' + JSON.stringify(data).slice(0, 200))
+      const resp = (err as { response?: { data?: unknown; status?: number } })
+        ?.response
+      const data = resp?.data
+      let msg = ''
+      if (typeof data === 'string') msg = data.slice(0, 200)
+      else if (data && typeof data === 'object') {
+        const d = data as { detail?: string }
+        msg = d.detail ?? JSON.stringify(data).slice(0, 200)
+      }
+      toast.error('Xatolik: ' + (msg || `HTTP ${resp?.status ?? '?'}`))
     } finally {
       setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <PageShell maxWidth="max-w-5xl">
+        <div className="flex items-center justify-center py-20 text-slate-500">
+          <Loader2 size={20} className="mr-2 animate-spin" /> Yuklanmoqda…
+        </div>
+      </PageShell>
+    )
   }
 
   return (
@@ -318,8 +541,12 @@ export default function EasyTestCreatePage() {
       </Link>
 
       <PageHeader
-        title="Yangi test yaratish"
-        subtitle="Bir sahifada section/passage va savollarni qo‘shing — oxirida bir martalik saqlanadi"
+        title={isEdit ? 'Testni tahrirlash' : 'Yangi test yaratish'}
+        subtitle={
+          isEdit
+            ? "Section/passage va savollarni o'zgartiring — saqlash bosilganda atomar yangilanadi"
+            : "Bir sahifada section/passage va savollarni qo‘shing — oxirida bir martalik saqlanadi"
+        }
         actions={
           <>
             <button

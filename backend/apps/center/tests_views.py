@@ -543,6 +543,119 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    @action(detail=True, methods=['put', 'patch'], url_path='easy-update')
+    def easy_update(self, request, pk=None, org_slug=None):
+        """ETAP 22 — easy-create payload formati bilan testni yangilash.
+
+        Frontend EasyTestCreatePage edit rejimida ham xuddi shu payloadni
+        jo'natadi: { name, module, ..., passages | listening_parts | writing_tasks }.
+
+        Eski passages/listening_parts/writing_tasks butunlay o'chiriladi va
+        yangilari atomar tarzda yaratilib qo'yiladi (cascade qilib savollarni
+        ham olib tashlaydi). Faqat o'sha modulga taalluqli kolleksiya
+        almashtiriladi — masalan reading test yangilansa listening_parts ga
+        tegmaymiz.
+        """
+        test = self.get_object()
+        d = request.data
+
+        if test.is_global:
+            return Response(
+                {'detail': "Global testni markazdan tahrirlab bo'lmaydi."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        new_module = d.get('module', test.module)
+        if new_module not in (
+            'listening', 'reading', 'writing', 'speaking', 'full_mock',
+        ):
+            return Response({'detail': 'Noto‘g‘ri module qiymati.'}, status=400)
+        new_name = (d.get('name') or test.name or '').strip()
+        if not new_name:
+            return Response({'name': 'Test nomini kiriting.'}, status=400)
+
+        with transaction.atomic():
+            # Asosiy fieldlar
+            test.name = new_name
+            test.module = new_module
+            test.test_type = d.get('test_type', test.test_type)
+            test.difficulty = d.get('difficulty', test.difficulty)
+            test.duration_minutes = int(
+                d.get('duration_minutes') or test.duration_minutes or 60,
+            )
+            test.description = d.get('description', test.description) or ''
+            test.category = d.get('category', test.category) or ''
+            if 'is_published' in d:
+                test.is_published = bool(d.get('is_published'))
+                test.status = 'published' if test.is_published else 'draft'
+            test.save()
+
+            # Modulga qarab eskilarini o'chirib, yangidan yaratamiz
+            if 'passages' in d:
+                test.passages.all().delete()
+                for p_data in (d.get('passages') or []):
+                    p = Passage.objects.create(
+                        test=test,
+                        part_number=int(p_data.get('part_number') or 1),
+                        title=(p_data.get('title') or '').strip(),
+                        subtitle=(p_data.get('subtitle') or '').strip(),
+                        content=p_data.get('content', '') or '',
+                        instructions=p_data.get('instructions', '') or '',
+                        min_words=p_data.get('min_words') or None,
+                        order=int(
+                            p_data.get('order') or p_data.get('part_number') or 1,
+                        ),
+                    )
+                    for q_data in (p_data.get('questions') or []):
+                        _create_question(passage=p, q=q_data)
+
+            if 'listening_parts' in d:
+                test.listening_parts.all().delete()
+                for lp_data in (d.get('listening_parts') or []):
+                    lp = ListeningPart.objects.create(
+                        test=test,
+                        part_number=int(lp_data.get('part_number') or 1),
+                        transcript=lp_data.get('transcript', '') or '',
+                        instructions=lp_data.get('instructions', '') or '',
+                    )
+                    audio_path = lp_data.get('audio_file_path')
+                    if audio_path:
+                        lp.audio_file.name = _normalize_path(audio_path)
+                        lp.save(update_fields=['audio_file'])
+                    image_path = lp_data.get('image_path')
+                    if image_path:
+                        lp.image.name = _normalize_path(image_path)
+                        lp.save(update_fields=['image'])
+                    for q_data in (lp_data.get('questions') or []):
+                        _create_question(listening_part=lp, q=q_data)
+
+            if 'writing_tasks' in d:
+                test.writing_tasks.all().delete()
+                for wt_data in (d.get('writing_tasks') or []):
+                    wt = WritingTask.objects.create(
+                        test=test,
+                        task_number=int(wt_data.get('task_number') or 1),
+                        prompt=wt_data.get('prompt', '') or '',
+                        min_words=int(wt_data.get('min_words') or 150),
+                        suggested_minutes=int(
+                            wt_data.get('suggested_minutes') or 20,
+                        ),
+                        requirements=wt_data.get('requirements', '') or '',
+                    )
+                    chart_path = wt_data.get('chart_image_path')
+                    if chart_path and wt.task_number == 1:
+                        wt.chart_image.name = _normalize_path(chart_path)
+                        wt.save(update_fields=['chart_image'])
+
+            # Edit'da strict struktura validatsiyasi qilmaymiz (easy-create
+            # da bor). Aks holda foydalanuvchi mavjud published testni
+            # tahrirlay olmasdi. Strict cheklov publish endpoint'da.
+
+        return Response(
+            SuperTestDetailSerializer(test, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
+
     @action(
         detail=False, methods=['post'],
         url_path=r'clone-from-global/(?P<global_id>[^/.]+)',

@@ -48,19 +48,25 @@ class WizardQuestionSerializer(serializers.ModelSerializer):
 class ListeningPartSerializer(serializers.ModelSerializer):
     questions = WizardQuestionSerializer(many=True, read_only=True)
     audio_url = serializers.SerializerMethodField()
+    audio_file_path = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    image_path = serializers.SerializerMethodField()
 
     class Meta:
         model = ListeningPart
         fields = [
             'id', 'part_number',
-            'audio_url', 'audio_duration_seconds', 'audio_bitrate_kbps',
+            'audio_url', 'audio_file_path',
+            'audio_duration_seconds', 'audio_bitrate_kbps',
             'audio_size_bytes',
-            'image_url', 'transcript', 'instructions', 'questions',
+            'image_url', 'image_path',
+            'transcript', 'instructions', 'questions',
         ]
         read_only_fields = [
-            'audio_url', 'audio_duration_seconds',
-            'audio_bitrate_kbps', 'audio_size_bytes', 'image_url',
+            'audio_url', 'audio_file_path',
+            'audio_duration_seconds',
+            'audio_bitrate_kbps', 'audio_size_bytes',
+            'image_url', 'image_path',
         ]
 
     def get_audio_url(self, obj):
@@ -70,12 +76,18 @@ class ListeningPartSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url) if request else url
         return None
 
+    def get_audio_file_path(self, obj):
+        return obj.audio_file.name if obj.audio_file else None
+
     def get_image_url(self, obj):
         if obj.image:
             request = self.context.get('request')
             url = obj.image.url
             return request.build_absolute_uri(url) if request else url
         return None
+
+    def get_image_path(self, obj):
+        return obj.image.name if obj.image else None
 
 
 class WizardPassageSerializer(serializers.ModelSerializer):
@@ -103,17 +115,22 @@ class WizardPassageSerializer(serializers.ModelSerializer):
 
 class WritingTaskSerializer(serializers.ModelSerializer):
     chart_image_url = serializers.SerializerMethodField()
+    chart_image_path = serializers.SerializerMethodField()
 
     class Meta:
         model = WritingTask
         fields = [
-            'id', 'task_number', 'prompt', 'chart_image_url',
+            'id', 'task_number', 'prompt',
+            'chart_image_url', 'chart_image_path',
             'min_words', 'suggested_minutes', 'requirements',
         ]
-        read_only_fields = ['chart_image_url']
+        read_only_fields = ['chart_image_url', 'chart_image_path']
 
     def get_chart_image_url(self, obj):
         return obj.chart_image.url if obj.chart_image else None
+
+    def get_chart_image_path(self, obj):
+        return obj.chart_image.name if obj.chart_image else None
 
 
 class SuperTestListSerializer(serializers.ModelSerializer):
