@@ -103,9 +103,14 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='available-tests')
     def available_tests(self, request, org_slug=None):
-        """Sessiya yaratish uchun: markazning published testlari (modul bo'yicha)."""
+        """Sessiya yaratish uchun: markazning + published global testlar."""
+        from django.db.models import Q
+
         org = self.get_organization()
-        qs = Test.objects.filter(organization=org, status='published').order_by('name')
+        qs = Test.objects.filter(
+            Q(organization=org) | Q(is_global=True, organization__isnull=True),
+            status='published',
+        ).order_by('name')
         return Response({
             'listening': TestPickSerializer(qs.filter(module='listening'), many=True).data,
             'reading': TestPickSerializer(qs.filter(module='reading'), many=True).data,

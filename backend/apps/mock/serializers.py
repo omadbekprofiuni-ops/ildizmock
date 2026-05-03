@@ -41,7 +41,12 @@ class MockSessionCreateSerializer(serializers.ModelSerializer):
         org = self.context['organization']
         for field in ('listening_test', 'reading_test', 'writing_test', 'speaking_test'):
             test = attrs.get(field)
-            if test and test.organization_id != org.id:
+            if not test:
+                continue
+            # Markazning o'z testi yoki published global test bo'lishi kerak
+            is_own = test.organization_id == org.id
+            is_global = test.organization_id is None and test.is_global
+            if not (is_own or is_global):
                 raise serializers.ValidationError({
                     field: 'Bu test sizning markazingizga tegishli emas.',
                 })
