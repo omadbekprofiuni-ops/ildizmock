@@ -1,4 +1,4 @@
-import { Award, ArrowLeft, BadgeCheck, Download, Trash2 } from 'lucide-react'
+import { Award, ArrowLeft, BadgeCheck, Download, Mic, PenLine, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -166,16 +166,44 @@ export default function MockResultsPage() {
                       {p.reading_score ?? '—'}
                     </td>
                     <td className={adminTable.td + ' text-center'}>
-                      <ScoreInput
-                        value={p.writing_score}
-                        onSave={(v) => updateScore(p.id, 'writing', v)}
-                      />
+                      <div className="flex flex-col items-center gap-1">
+                        <ScoreInput
+                          value={p.writing_score}
+                          onSave={(v) => updateScore(p.id, 'writing', v)}
+                        />
+                        <Link
+                          to={`/teacher/mock/writing/${p.id}`}
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                            p.writing_status === 'graded'
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          }`}
+                          title="To'liq baholash (kriteriyalar + feedback)"
+                        >
+                          <PenLine size={11} />
+                          {p.writing_status === 'graded' ? 'Tahrirlash' : 'Baholash'}
+                        </Link>
+                      </div>
                     </td>
                     <td className={adminTable.td + ' text-center'}>
-                      <ScoreInput
-                        value={p.speaking_score}
-                        onSave={(v) => updateScore(p.id, 'speaking', v)}
-                      />
+                      <div className="flex flex-col items-center gap-1">
+                        <ScoreInput
+                          value={p.speaking_score}
+                          onSave={(v) => updateScore(p.id, 'speaking', v)}
+                        />
+                        <Link
+                          to={`/teacher/mock/speaking/${p.id}`}
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                            p.speaking_status === 'graded'
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          }`}
+                          title="To'liq baholash (kriteriyalar + audio)"
+                        >
+                          <Mic size={11} />
+                          {p.speaking_status === 'graded' ? 'Tahrirlash' : 'Baholash'}
+                        </Link>
+                      </div>
                     </td>
                     <td className={adminTable.td + ' text-center'}>
                       {p.overall_band_score ? (
