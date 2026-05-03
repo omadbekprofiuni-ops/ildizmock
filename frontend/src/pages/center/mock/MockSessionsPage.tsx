@@ -232,13 +232,24 @@ function CreateSessionDialog({
       })
       onCreated()
     } catch (e: unknown) {
-      const err = e as { response?: { data?: Record<string, unknown> } }
+      const err = e as {
+        response?: { status?: number; data?: unknown }
+        message?: string
+      }
+      const status = err.response?.status
       const data = err.response?.data
       if (data && typeof data === 'object') {
-        const first = Object.values(data)[0]
+        const first = Object.values(data as Record<string, unknown>)[0]
         setError(Array.isArray(first) ? String(first[0]) : String(first))
+      } else if (status && status >= 500) {
+        setError(
+          `Server xatosi (${status}). Server adminiga ayting: backend'da ` +
+          "'python manage.py migrate' ishga tushirilsin va gunicorn restart qilinsin.",
+        )
+      } else if (status) {
+        setError(`So'rov bajarilmadi (HTTP ${status}). Qayta urinib ko'ring.`)
       } else {
-        setError('Xatolik yuz berdi')
+        setError(err.message || "Tarmoqda xatolik. Internetni tekshiring.")
       }
     } finally {
       setBusy(false)
