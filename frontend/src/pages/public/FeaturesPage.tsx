@@ -57,10 +57,10 @@ export default function FeaturesPage() {
     document.title = 'Features — ILDIZmock'
   }, [])
 
-  const modules = t('featuresPage.modules.items', { returnObjects: true }) as ModuleItem[]
-  const platform = t('featuresPage.platform.items', {
-    returnObjects: true,
-  }) as PlatformItem[]
+  const modulesRaw = t('featuresPage.modules.items', { returnObjects: true })
+  const platformRaw = t('featuresPage.platform.items', { returnObjects: true })
+  const modules: ModuleItem[] = Array.isArray(modulesRaw) ? (modulesRaw as ModuleItem[]) : []
+  const platform: PlatformItem[] = Array.isArray(platformRaw) ? (platformRaw as PlatformItem[]) : []
 
   return (
     <PublicLayout>
@@ -104,7 +104,7 @@ export default function FeaturesPage() {
                     {mod.description}
                   </p>
                   <ul className="mt-5 space-y-2">
-                    {mod.highlights.map((h) => (
+                    {Array.isArray(mod.highlights) && mod.highlights.map((h) => (
                       <li key={h} className="flex items-start gap-2 text-sm text-gray-700">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
                         {h}

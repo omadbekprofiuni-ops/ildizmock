@@ -22,8 +22,10 @@ export default function PricingPage() {
     document.title = 'Pricing — ILDIZmock'
   }, [])
 
-  const features = t('pricing.card.features', { returnObjects: true }) as PricingFeature[]
-  const faqItems = t('pricing.faq.items', { returnObjects: true }) as FaqItem[]
+  const featuresRaw = t('pricing.card.features', { returnObjects: true })
+  const faqRaw = t('pricing.faq.items', { returnObjects: true })
+  const features: PricingFeature[] = Array.isArray(featuresRaw) ? (featuresRaw as PricingFeature[]) : []
+  const faqItems: FaqItem[] = Array.isArray(faqRaw) ? (faqRaw as FaqItem[]) : []
 
   return (
     <PublicLayout>

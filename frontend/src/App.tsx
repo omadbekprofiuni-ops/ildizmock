@@ -130,6 +130,8 @@ export default function App() {
           <Route path="/super/organizations/:id" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
           {/* ETAP 22 — /super/org/:id/dashboard alias */}
           <Route path="/super/org/:id/dashboard" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
+          {/* TROUBLESHOOTING — /super/org/:id/stats alias */}
+          <Route path="/super/org/:id/stats" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
           <Route
             path="/super/tests"
             element={
