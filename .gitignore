@@ -38,6 +38,7 @@ build/
 .vscode/
 .idea/
 .DS_Store
+__MACOSX/
 Thumbs.db
 *.swp
 *.swo
