@@ -58,6 +58,28 @@ export function ListeningSection({
       .finally(() => setLoading(false))
   }, [bsid])
 
+  // Barcha part audiolarini fonda preload qilamiz, shunda partlar orasida
+  // network kechikishi bo'lmaydi. Active part audioRef'da o'ynaydi, qolganlari
+  // hidden Audio() obyektlari orqali browser cache'iga tushiriladi.
+  useEffect(() => {
+    if (parts.length === 0) return
+    const preloaders: HTMLAudioElement[] = []
+    parts.forEach((p, idx) => {
+      if (idx === 0 || !p.audio_url) return
+      const a = new Audio()
+      a.preload = 'auto'
+      a.src = p.audio_url
+      a.load()
+      preloaders.push(a)
+    })
+    return () => {
+      preloaders.forEach((a) => {
+        try { a.pause() } catch { /* ignore */ }
+        a.src = ''
+      })
+    }
+  }, [parts])
+
   // Audio nazorati — har bir part o'z navbatida o'ynaydi
   useEffect(() => {
     const el = audioRef.current

@@ -12,10 +12,11 @@ interface ListeningAudioPlayerProps {
 
 /**
  * Real IELTS Listening kabi: 4 ta part audiosi ketma-ket o'ynaydi.
- * - Birinchi part avtomatik boshlanadi (mount paytida)
- * - Tugagach keyingi part avtomatik boshlanadi
+ * - Mount paytida BARCHA partlar fonda preload qilinadi (browser cache'ga
+ *   tushadi), shunda partlar orasida network kechikishi bo'lmaydi
+ * - Birinchi part avtomatik boshlanadi
+ * - Tugagach keyingi part avtomatik boshlanadi (cache'dan darhol)
  * - Pause / rewind / skip yo'q
- * - Talaba qaysi part hozir o'ynayotganini ko'radi
  */
 export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -25,8 +26,55 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
     'loading',
   )
   const [progress, setProgress] = useState(0)
+  const [preloadProgress, setPreloadProgress] = useState<Record<number, number>>({})
 
   const currentTrack = tracks[currentIdx]
+
+  // Mount paytida BARCHA partlarni fonda yuklab, browser cache'iga tushiramiz.
+  // Active player'dan tashqari hidden Audio() obyektlari bilan parallel
+  // download boshlanadi.
+  useEffect(() => {
+    const preloaders: HTMLAudioElement[] = []
+    const cleanup: Array<() => void> = []
+
+    tracks.forEach((track, idx) => {
+      // Active track'ni alohida audioRef boshqaradi — preloader kerak emas
+      if (idx === 0) return
+      const a = new Audio()
+      a.preload = 'auto'
+      a.src = track.src
+      const onProgress = () => {
+        if (a.duration > 0 && a.buffered.length > 0) {
+          const buffered = a.buffered.end(a.buffered.length - 1)
+          setPreloadProgress((p) => ({
+            ...p,
+            [track.partNumber]: Math.min(100, (buffered / a.duration) * 100),
+          }))
+        }
+      }
+      const onCanPlay = () => {
+        setPreloadProgress((p) => ({ ...p, [track.partNumber]: 100 }))
+      }
+      a.addEventListener('progress', onProgress)
+      a.addEventListener('canplaythrough', onCanPlay)
+      // Mobile Safari'ni preload qila boshlatish uchun load() chaqirish kerak
+      a.load()
+      preloaders.push(a)
+      cleanup.push(() => {
+        a.removeEventListener('progress', onProgress)
+        a.removeEventListener('canplaythrough', onCanPlay)
+        a.src = ''
+      })
+    })
+
+    return () => {
+      cleanup.forEach((fn) => fn())
+      preloaders.forEach((a) => {
+        try { a.pause() } catch { /* ignore */ }
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const el = audioRef.current
