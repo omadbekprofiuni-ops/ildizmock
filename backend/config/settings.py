@@ -9,6 +9,9 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='dev-secret-change-me')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
+# AI question generation (Claude API) — passage text -> IELTS questions
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
