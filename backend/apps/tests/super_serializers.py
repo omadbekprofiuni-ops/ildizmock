@@ -127,6 +127,7 @@ class SuperTestListSerializer(serializers.ModelSerializer):
             'description', 'category', 'duration_minutes',
             'is_global', 'organization', 'cloned_from',
             'questions_count', 'is_cloned',
+            'is_practice_enabled', 'practice_time_limit',
             'created_at', 'published_at',
         ]
 

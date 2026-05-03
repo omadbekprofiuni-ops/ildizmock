@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from 'react-router-dom'
 
+import { LockedAudio } from '@/components/LockedAudio'
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
 import { TestStartDialog } from '@/components/TestStartDialog'
@@ -38,6 +39,26 @@ type Passage = {
   questions: QuestionData[]
 }
 
+type ListeningPart = {
+  id: number
+  part_number: number
+  audio_url: string | null
+  image_url: string | null
+  audio_duration_seconds: number | null
+  instructions: string
+  questions: QuestionData[]
+}
+
+type WritingTaskFromApi = {
+  id: number
+  task_number: number
+  prompt: string
+  chart_image_url: string | null
+  min_words: number
+  suggested_minutes: number
+  requirements: string
+}
+
 type Attempt = {
   id: string
   status: 'in_progress' | 'submitted' | 'graded' | 'expired'
@@ -50,6 +71,8 @@ type Attempt = {
     module: 'listening' | 'reading' | 'writing' | 'speaking'
     duration_minutes: number
     passages: Passage[]
+    listening_parts?: ListeningPart[]
+    writing_tasks?: WritingTaskFromApi[]
   }
   answers_saved: Record<string, AnswerValue>
   essay_text: string
@@ -100,9 +123,34 @@ function ReviewView({ result }: { result: Result }) {
     for (const a of result.answers) m.set(a.question, a)
     return m
   }, [result])
+  // Wizard listening testlar — listening_parts'dan passage-shaped sektsiyalar.
+  const sections = useMemo<Passage[]>(() => {
+    if (
+      result.test.module === 'listening' &&
+      result.test.listening_parts &&
+      result.test.listening_parts.length > 0
+    ) {
+      return result.test.listening_parts
+        .slice()
+        .sort((a, b) => a.part_number - b.part_number)
+        .map((lp) => ({
+          id: lp.id,
+          part_number: lp.part_number,
+          title: `Part ${lp.part_number}`,
+          content: lp.instructions ?? '',
+          audio_file: lp.audio_url,
+          audio_duration_seconds: lp.audio_duration_seconds,
+          min_words: null,
+          order: lp.part_number,
+          questions: lp.questions,
+        }))
+    }
+    return result.test.passages
+  }, [result.test.module, result.test.listening_parts, result.test.passages])
+
   const allQuestions = useMemo(
-    () => result.test.passages.flatMap((p) => p.questions),
-    [result.test.passages],
+    () => sections.flatMap((p) => p.questions),
+    [sections],
   )
 
   const scrollToQuestion = (qid: number) => {
@@ -140,7 +188,7 @@ function ReviewView({ result }: { result: Result }) {
 
       <main className="test-body flex min-h-0 flex-1 overflow-hidden">
         <section className="w-1/2 overflow-y-auto border-r bg-white p-6">
-          {result.test.passages.map((p) => (
+          {sections.map((p) => (
             <article key={p.id} className="mb-10">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Part {p.part_number}
@@ -157,8 +205,8 @@ function ReviewView({ result }: { result: Result }) {
         </section>
 
         <section className="w-1/2 overflow-y-auto bg-white p-6">
-          {result.test.passages.map((p) => {
-            let numberCursor = result.test.passages
+          {sections.map((p) => {
+            let numberCursor = sections
               .filter((pp) => pp.order < p.order)
               .reduce((sum, pp) => sum + pp.questions.length, 0)
             return (
@@ -336,8 +384,10 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
         !submitMutation.isPending &&
         !submitMutation.isSuccess
       ) {
-        toast.warning('Test must be in fullscreen mode.')
-        setTimeout(() => ieltsRules.enterFullscreen(), 100)
+        toast.warning(
+          'Test fullscreen rejimida bajarilishi kerak — qayta to\'liq ekranga o\'tkazildi.',
+        )
+        setTimeout(() => ieltsRules.enterFullscreen(), 50)
       }
     })
 
@@ -390,9 +440,35 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     }
   }, [timeUp, submitMutation])
 
+  // Listening testlar yangi modelda — listening_parts'ni passage-shaped qilamiz
+  // shunda quyidagi JSX ikkala model bilan ishlay oladi.
+  const sections = useMemo<Passage[]>(() => {
+    if (
+      attempt.test.module === 'listening' &&
+      attempt.test.listening_parts &&
+      attempt.test.listening_parts.length > 0
+    ) {
+      return attempt.test.listening_parts
+        .slice()
+        .sort((a, b) => a.part_number - b.part_number)
+        .map((lp) => ({
+          id: lp.id,
+          part_number: lp.part_number,
+          title: `Part ${lp.part_number}`,
+          content: lp.instructions ?? '',
+          audio_file: lp.audio_url,
+          audio_duration_seconds: lp.audio_duration_seconds,
+          min_words: null,
+          order: lp.part_number,
+          questions: lp.questions,
+        }))
+    }
+    return attempt.test.passages
+  }, [attempt.test.module, attempt.test.listening_parts, attempt.test.passages])
+
   const allQuestions = useMemo(
-    () => attempt.test.passages.flatMap((p) => p.questions),
-    [attempt.test.passages],
+    () => sections.flatMap((p) => p.questions),
+    [sections],
   )
 
   const handleAnswer = (qid: number, value: AnswerValue) => {
@@ -432,8 +508,12 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
               <Home className="h-4 w-4" />
             </Button>
           </a>
+          {/* ETAP 18 — IELTS badge (red) */}
+          <span className="rounded-md bg-brand-500 px-2 py-1 text-[11px] font-bold tracking-wider text-white">
+            IELTS
+          </span>
           <span className="text-xs uppercase tracking-wider text-slate-400">
-            Test ID
+            ID
           </span>
           <span className="font-mono text-xs text-slate-300">
             {attempt.id.slice(0, 8)}
@@ -477,15 +557,19 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
       </header>
 
       <main className="test-body flex min-h-0 flex-1 overflow-hidden">
-        <section className="w-1/2 overflow-y-auto border-r bg-white p-6">
-          {attempt.test.passages.map((p) => (
+        <section
+          className={`${
+            attempt.test.module === 'reading' ? 'w-3/5' : 'w-1/2'
+          } overflow-y-auto border-r bg-white p-6`}
+        >
+          {sections.map((p) => (
             <article key={p.id} className="mb-10">
               <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Part {p.part_number}
               </h2>
               <h3 className="mb-4 text-xl font-bold text-slate-900">{p.title}</h3>
               {p.audio_file && attempt.test.module === 'listening' && (
-                <audio controls src={p.audio_file} className="mb-4 w-full" />
+                <LockedAudio src={p.audio_file} />
               )}
               <div className="prose prose-slate max-w-none whitespace-pre-line text-[15px] leading-relaxed text-slate-800">
                 {p.content}
@@ -494,9 +578,13 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
           ))}
         </section>
 
-        <section className="w-1/2 overflow-y-auto bg-white p-6">
-          {attempt.test.passages.map((p) => {
-            let numberCursor = attempt.test.passages
+        <section
+          className={`${
+            attempt.test.module === 'reading' ? 'w-2/5' : 'w-1/2'
+          } overflow-y-auto bg-white p-6`}
+        >
+          {sections.map((p) => {
+            let numberCursor = sections
               .filter((pp) => pp.order < p.order)
               .reduce((sum, pp) => sum + pp.questions.length, 0)
 
@@ -722,9 +810,38 @@ function TestGate({ attempt }: { attempt: Attempt }) {
 
 // ====== WRITING ATTEMPT ======
 
+// ETAP 14 BUG #2 multi-task — combined essay format
+const TASK_DELIMITER_PATTERN = /=== TASK (\d+) ===\n([\s\S]*?)(?=(?:\n*=== TASK \d+ ===)|$)/g
+
+function parseCombinedEssay(combined: string): Record<number, string> {
+  const out: Record<number, string> = {}
+  if (!combined) return out
+  let m: RegExpExecArray | null
+  TASK_DELIMITER_PATTERN.lastIndex = 0
+  while ((m = TASK_DELIMITER_PATTERN.exec(combined))) {
+    const num = Number(m[1])
+    if (!Number.isNaN(num)) out[num] = m[2].trim()
+  }
+  return out
+}
+
+function combineAnswers(
+  tasks: { id: number; task_number: number }[],
+  answers: Record<number, string>,
+): string {
+  return tasks
+    .slice()
+    .sort((a, b) => a.task_number - b.task_number)
+    .map((t) => `=== TASK ${t.task_number} ===\n${answers[t.id] || ''}`)
+    .join('\n\n')
+}
+
+function getWordCount(text: string): number {
+  return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0
+}
+
 function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const navigate = useNavigate()
-  const [essay, setEssay] = useState(attempt.essay_text || '')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [isFullscreen, setIsFullscreen] = useState(() => ieltsRules.isFullscreen())
@@ -732,9 +849,45 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const dirtyRef = useRef(false)
   const initialisedRef = useRef(false)
 
+  // Multi-task support — har task uchun alohida javob
+  const writingTasks = attempt.test.writing_tasks ?? []
+  const legacyTask = attempt.test.passages[0]
+  const hasWizardTasks = writingTasks.length > 0
+
+  // Synthetic single-task — agar legacy passage'dan kelgan bo'lsa
+  const tasks = hasWizardTasks
+    ? writingTasks
+    : legacyTask
+      ? [{
+          id: -1,
+          task_number: legacyTask.part_number ?? 1,
+          prompt: legacyTask.content,
+          chart_image_url: null,
+          min_words: legacyTask.min_words ?? 150,
+          suggested_minutes: 60,
+          requirements: '',
+        }]
+      : []
+
+  const [taskAnswers, setTaskAnswers] = useState<Record<number, string>>(
+    () => {
+      const parsed = parseCombinedEssay(attempt.essay_text || '')
+      // Agar parsing bermasa, butun matnni birinchi taskka beramiz
+      if (Object.keys(parsed).length === 0 && attempt.essay_text && tasks[0]) {
+        return { [tasks[0].id]: attempt.essay_text }
+      }
+      // task_number key'ni task.id ga aylantiramiz
+      const byId: Record<number, string> = {}
+      for (const t of tasks) {
+        if (parsed[t.task_number]) byId[t.id] = parsed[t.task_number]
+      }
+      return byId
+    },
+  )
+  const [activeTaskId, setActiveTaskId] = useState<number>(tasks[0]?.id ?? -1)
+
   useEffect(() => {
     if (!initialisedRef.current) {
-      setEssay(attempt.essay_text || '')
       initialisedRef.current = true
     }
   }, [attempt])
@@ -744,6 +897,11 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     return () => clearInterval(id)
   }, [])
 
+  const combinedEssay = useMemo(
+    () => combineAnswers(tasks, taskAnswers),
+    [tasks, taskAnswers],
+  )
+
   const saveMutation = useMutation({
     mutationFn: async (essay_text: string) =>
       api.patch(`/attempts/${attempt.id}/essay/`, { essay_text }),
@@ -751,7 +909,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
 
   const submitMutation = useMutation({
     mutationFn: async () =>
-      api.post(`/attempts/${attempt.id}/submit-writing/`, { essay_text: essay }),
+      api.post(`/attempts/${attempt.id}/submit-writing/`, { essay_text: combinedEssay }),
     onSuccess: () => navigate('/writing/sent', { replace: true }),
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
@@ -787,8 +945,10 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
         !submitMutation.isPending &&
         !submitMutation.isSuccess
       ) {
-        toast.warning('Test must be in fullscreen mode.')
-        setTimeout(() => ieltsRules.enterFullscreen(), 100)
+        toast.warning(
+          'Test fullscreen rejimida bajarilishi kerak — qayta to\'liq ekranga o\'tkazildi.',
+        )
+        setTimeout(() => ieltsRules.enterFullscreen(), 50)
       }
     })
 
@@ -816,12 +976,12 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   useEffect(() => {
     if (!dirtyRef.current) return
     const handle = setTimeout(() => {
-      saveMutation.mutate(essay)
+      saveMutation.mutate(combinedEssay)
       dirtyRef.current = false
     }, 2000)
     return () => clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [essay])
+  }, [combinedEssay])
 
   const startedAtMs = new Date(attempt.started_at).getTime()
   const totalSec = attempt.test.duration_minutes * 60
@@ -836,10 +996,25 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     }
   }, [timeUp, submitMutation])
 
-  const task = attempt.test.passages[0]
-  const minWords = task?.min_words ?? 150
-  const wordCount = essay.trim() ? essay.trim().split(/\s+/).length : 0
+  // Faol task ma'lumotlari
+  const activeTask = tasks.find((t) => t.id === activeTaskId) ?? tasks[0]
+  const taskTitle = activeTask ? `Task ${activeTask.task_number}` : 'Writing task'
+  const taskPrompt = activeTask?.prompt ?? ''
+  const taskRequirements = activeTask?.requirements ?? ''
+  const chartImageUrl = activeTask?.chart_image_url ?? null
+  const minWords = activeTask?.min_words ?? 150
+  const activeAnswer = activeTask ? (taskAnswers[activeTask.id] || '') : ''
+  const wordCount = getWordCount(activeAnswer)
   const reachedMin = wordCount >= minWords
+
+  // Submit modal uchun — har task uchun word count
+  const totalWords = tasks.reduce(
+    (sum, t) => sum + getWordCount(taskAnswers[t.id] || ''),
+    0,
+  )
+  const allTasksMet = tasks.every(
+    (t) => getWordCount(taskAnswers[t.id] || '') >= (t.min_words ?? 150),
+  )
 
   const saveStatus = saveMutation.isPending
     ? 'Saving…'
@@ -906,20 +1081,67 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
         </div>
       </header>
 
+      {/* Multi-task tab bar — faqat bir nechta task bo'lsa */}
+      {tasks.length > 1 && (
+        <div className="flex items-center gap-1 border-b bg-white px-4">
+          {tasks
+            .slice()
+            .sort((a, b) => a.task_number - b.task_number)
+            .map((t) => {
+              const ans = taskAnswers[t.id] || ''
+              const wc = getWordCount(ans)
+              const ok = wc >= (t.min_words ?? 150)
+              const isActive = t.id === activeTaskId
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTaskId(t.id)}
+                  className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'border-slate-900 text-slate-900'
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Task {t.task_number}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${
+                      ok
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {wc}/{t.min_words ?? 150}
+                  </span>
+                </button>
+              )
+            })}
+        </div>
+      )}
+
       <main className="test-body flex min-h-0 flex-1 overflow-hidden">
         <section className="w-1/2 overflow-y-auto border-r bg-white p-6">
           <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Task {task?.part_number ?? 1}
+            {taskTitle}
           </h2>
           <h3 className="mb-4 text-xl font-bold text-slate-900">
-            {task?.title ?? 'Writing task'}
+            {activeTask ? `Task ${activeTask.task_number}` : 'Writing task'}
           </h3>
-          <div className="rounded-md bg-slate-100 p-4 text-center text-xs text-slate-500">
-            [chart / image placeholder]
-          </div>
+          {chartImageUrl ? (
+            <img
+              src={chartImageUrl}
+              alt={`Task ${activeTask?.task_number ?? 1} chart`}
+              className="mb-4 max-h-72 w-full rounded-md border border-slate-200 object-contain"
+            />
+          ) : null}
           <div className="prose prose-slate mt-4 max-w-none whitespace-pre-line text-[15px] leading-relaxed text-slate-800">
-            {task?.content}
+            {taskPrompt}
           </div>
+          {taskRequirements && (
+            <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+              {taskRequirements}
+            </p>
+          )}
           <p className="mt-4 text-sm text-slate-500">
             Write at least <strong>{minWords}</strong> words.
           </p>
@@ -927,18 +1149,33 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
 
         <section className="flex w-1/2 flex-col bg-white">
           <div className="flex items-center justify-between border-b px-6 py-2 text-sm">
-            <span className={reachedMin ? 'text-emerald-700' : 'text-slate-600'}>
-              {wordCount} words {reachedMin ? '✓' : `(${minWords - wordCount} more needed)`}
+            <span
+              className={`font-semibold ${
+                reachedMin ? 'text-emerald-700' : 'text-rose-600'
+              }`}
+            >
+              {wordCount}
+              <span className="ml-1 font-normal text-slate-500">
+                / {minWords} min words
+              </span>
+              {reachedMin ? (
+                <span className="ml-2">✓</span>
+              ) : wordCount > 0 ? (
+                <span className="ml-2 text-xs font-normal text-rose-600">
+                  ({minWords - wordCount} so'z yetishmaydi)
+                </span>
+              ) : null}
             </span>
-            <span className="text-xs text-slate-500">Auto-save 2s</span>
+            <span className="text-xs text-slate-500">{saveStatus || 'Auto-save 2s'}</span>
           </div>
           <textarea
-            value={essay}
+            value={activeAnswer}
             onChange={(e) => {
+              if (!activeTask) return
               dirtyRef.current = true
-              setEssay(e.target.value)
+              setTaskAnswers((prev) => ({ ...prev, [activeTask.id]: e.target.value }))
             }}
-            placeholder="Write your essay here…"
+            placeholder={`Write your Task ${activeTask?.task_number ?? 1} answer here…`}
             className="flex-1 resize-none border-0 p-6 text-[15px] leading-relaxed text-slate-900 focus:outline-none"
           />
         </section>
@@ -947,15 +1184,41 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Submit your essay??</DialogTitle>
+            <DialogTitle>Yuborishni tasdiqlaysizmi?</DialogTitle>
             <DialogDescription>
-              You have written {wordCount} words (minimum {minWords}).
-              Once submitted, no changes allowed. AI grading is in the next phase.
+              Yuborilgandan keyin o'zgartirib bo'lmaydi. Ustoz qo'lda baholaydi.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2 py-2">
+            {tasks.map((t) => {
+              const wc = getWordCount(taskAnswers[t.id] || '')
+              const need = t.min_words ?? 150
+              const ok = wc >= need
+              return (
+                <div
+                  key={t.id}
+                  className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
+                    ok ? 'bg-emerald-50' : 'bg-rose-50'
+                  }`}
+                >
+                  <span className="font-medium text-slate-900">
+                    Task {t.task_number}
+                  </span>
+                  <span
+                    className={ok ? 'text-emerald-700' : 'text-rose-700'}
+                  >
+                    {wc} / {need} so'z {ok ? '✓' : `(${need - wc} kerak)`}
+                  </span>
+                </div>
+              )
+            })}
+            <p className="pt-2 text-xs text-slate-500">
+              Jami: <strong>{totalWords}</strong> so'z
+            </p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
+              Bekor
             </Button>
             <Button
               onClick={() => {
@@ -963,8 +1226,13 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
                 submitMutation.mutate()
               }}
               disabled={submitMutation.isPending}
+              className={!allTasksMet ? 'bg-amber-600 hover:bg-amber-700' : ''}
             >
-              {submitMutation.isPending ? 'Submitting…' : 'Submit'}
+              {submitMutation.isPending
+                ? 'Yuborilmoqda…'
+                : allTasksMet
+                  ? 'Yuborish'
+                  : "Baribir yuborish"}
             </Button>
           </DialogFooter>
         </DialogContent>

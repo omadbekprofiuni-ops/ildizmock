@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { LockedAudio } from '@/components/LockedAudio'
 import { api } from '@/lib/api'
 
 import { FullscreenGate } from './FullscreenGate'
@@ -83,11 +84,7 @@ export function ListeningSection({
             {part.instructions && (
               <p className="mb-3 text-sm text-slate-600">{part.instructions}</p>
             )}
-            {part.audio_url && (
-              <audio controls className="mb-4 w-full">
-                <source src={part.audio_url} />
-              </audio>
-            )}
+            {part.audio_url && <LockedAudio src={part.audio_url} />}
             <div className="space-y-4">
               {part.questions.map((q, i) => (
                 <QuestionRenderer

@@ -40,6 +40,75 @@ def _normalize_path(value: str) -> str:
     return s.lstrip('/')
 
 
+def _validate_test_structure(test: Test) -> None:
+    """ETAP 18 — Published testlar uchun struktura validatsiyasi.
+
+    Reading: 3 passage, jami 40 savol
+    Listening: 4 part, jami 40 savol
+    Writing: 2 task
+
+    Draft testlarda enforcement yo'q — teacher to'liq tugatmaguncha
+    saqlay oladi. Faqat publishga o'tganda strict tekshiramiz.
+    Xatolik bo'lsa rest_framework ValidationError ko'tariladi va
+    chaqiruvchi `easy_create` transaction'i rollback qiladi.
+    """
+    from rest_framework.exceptions import ValidationError
+
+    if not test.is_published:
+        return
+
+    module = test.module
+    if module == 'reading':
+        passages = list(test.passages.all())
+        if len(passages) != 3:
+            raise ValidationError({
+                'passages': (
+                    f'Reading test uchun aynan 3 ta passage kerak. '
+                    f'Hozir: {len(passages)}'
+                ),
+            })
+        total_qs = sum(p.questions.count() for p in passages)
+        if total_qs != 40:
+            raise ValidationError({
+                'questions': (
+                    f'Reading test uchun jami 40 ta savol kerak. '
+                    f'Hozir: {total_qs}'
+                ),
+            })
+    elif module == 'listening':
+        parts = list(test.listening_parts.all())
+        if len(parts) != 4:
+            raise ValidationError({
+                'listening_parts': (
+                    f'Listening test uchun aynan 4 ta part kerak. '
+                    f'Hozir: {len(parts)}'
+                ),
+            })
+        total_qs = sum(p.questions.count() for p in parts)
+        if total_qs != 40:
+            raise ValidationError({
+                'questions': (
+                    f'Listening test uchun jami 40 ta savol kerak. '
+                    f'Hozir: {total_qs}'
+                ),
+            })
+        # Har bir partda audio bo'lishi shart
+        for p in parts:
+            if not p.audio_file:
+                raise ValidationError({
+                    'audio': f'Part {p.part_number} uchun audio fayl yuklang.',
+                })
+    elif module == 'writing':
+        tasks = list(test.writing_tasks.all())
+        if len(tasks) != 2:
+            raise ValidationError({
+                'writing_tasks': (
+                    f'Writing test uchun aynan 2 ta task kerak. '
+                    f'Hozir: {len(tasks)}'
+                ),
+            })
+
+
 def _create_question(*, passage=None, listening_part=None, q):
     """Easy-create endpointi uchun savol yaratish helperi."""
     return Question.objects.create(
@@ -103,6 +172,22 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             {'detail': "Test arxivga o'tkazildi."},
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=True, methods=['patch'], url_path='toggle-practice')
+    def toggle_practice(self, request, pk=None, org_slug=None):
+        """ETAP 14 BUG #9 — Markaz testi practice mode toggle."""
+        test = self.get_object()
+        test.is_practice_enabled = not test.is_practice_enabled
+        if 'practice_time_limit' in request.data:
+            val = request.data.get('practice_time_limit')
+            test.practice_time_limit = int(val) if val else None
+        test.save(update_fields=[
+            'is_practice_enabled', 'practice_time_limit', 'updated_at',
+        ])
+        return Response({
+            'is_practice_enabled': test.is_practice_enabled,
+            'practice_time_limit': test.practice_time_limit,
+        })
 
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None, org_slug=None):
@@ -391,6 +476,10 @@ class CenterTestViewSet(viewsets.ModelViewSet):
                 if chart_path and wt.task_number == 1:
                     wt.chart_image.name = _normalize_path(chart_path)
                     wt.save(update_fields=['chart_image'])
+
+            # ETAP 18 — published bo'lsa struktura validatsiyasi
+            # (transaction.atomic ichida — invalid bo'lsa rollback)
+            _validate_test_structure(test)
 
         return Response(
             SuperTestDetailSerializer(test, context={'request': request}).data,

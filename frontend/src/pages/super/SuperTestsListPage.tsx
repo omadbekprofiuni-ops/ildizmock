@@ -24,6 +24,7 @@ interface SuperTestRow {
   questions_count: number
   created_at: string
   published_at: string | null
+  is_practice_enabled: boolean
 }
 
 const MODULE_LABEL: Record<string, string> = {
@@ -54,6 +55,11 @@ export default function SuperTestsListPage() {
     load()
   }
 
+  const togglePractice = async (id: string) => {
+    await api.patch(`/super/tests/${id}/toggle-practice/`)
+    load()
+  }
+
   return (
     <SuperAdminLayout>
       <PageShell>
@@ -76,19 +82,20 @@ export default function SuperTestsListPage() {
                 <th className={adminTable.th}>Qiyinlik</th>
                 <th className={adminTable.th}>Savollar</th>
                 <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th}>Practice</th>
                 <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
             </thead>
             <tbody className={adminTable.tbody}>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
                     Yuklanmoqda…
                   </td>
                 </tr>
               ) : tests.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
                     Hali test yo'q. "+ Yangi test" tugmasi bilan boshlang.
                   </td>
                 </tr>
@@ -114,6 +121,20 @@ export default function SuperTestsListPage() {
                       ) : (
                         <Chip tone="amber">draft</Chip>
                       )}
+                    </td>
+                    <td className={adminTable.td}>
+                      <button
+                        type="button"
+                        onClick={() => togglePractice(t.id)}
+                        className={
+                          t.is_practice_enabled
+                            ? 'inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200'
+                            : 'inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200'
+                        }
+                        title="Practice mode"
+                      >
+                        {t.is_practice_enabled ? '✓ Yoqilgan' : 'O\'chiq'}
+                      </button>
                     </td>
                     <td className={adminTable.td + ' text-right'}>
                       <div className="inline-flex items-center gap-1">

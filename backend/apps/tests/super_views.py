@@ -63,6 +63,22 @@ class SuperTestViewSet(viewsets.ModelViewSet):
         test.save(update_fields=['status', 'is_published', 'updated_at'])
         return Response({'detail': 'Test draft qilindi', 'status': 'draft'})
 
+    @action(detail=True, methods=['patch'], url_path='toggle-practice')
+    def toggle_practice(self, request, pk=None):
+        """ETAP 14 BUG #9 — Practice mode'ni yoqish/o'chirish."""
+        test = self.get_object()
+        test.is_practice_enabled = not test.is_practice_enabled
+        if 'practice_time_limit' in request.data:
+            val = request.data.get('practice_time_limit')
+            test.practice_time_limit = int(val) if val else None
+        test.save(update_fields=[
+            'is_practice_enabled', 'practice_time_limit', 'updated_at',
+        ])
+        return Response({
+            'is_practice_enabled': test.is_practice_enabled,
+            'practice_time_limit': test.practice_time_limit,
+        })
+
     @action(detail=True, methods=['post'], url_path='add-listening-part')
     def add_listening_part(self, request, pk=None):
         test = self.get_object()

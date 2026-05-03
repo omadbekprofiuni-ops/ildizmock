@@ -5,17 +5,27 @@ import { api } from '@/lib/api'
 
 import { ListeningSection } from './sections/ListeningSection'
 import { ReadingSection } from './sections/ReadingSection'
+import { SpeakingSection } from './sections/SpeakingSection'
 import { WritingSection } from './sections/WritingSection'
+
+type SessionStatus =
+  | 'waiting'
+  | 'listening'
+  | 'reading'
+  | 'writing'
+  | 'speaking'
+  | 'finished'
+  | 'cancelled'
 
 interface MockState {
   session: {
     id: number
     name: string
-    status: 'waiting' | 'listening' | 'reading' | 'writing' | 'finished'
+    status: SessionStatus
     access_code: string
   }
   participant: { id: number; full_name: string }
-  current_section: 'listening' | 'reading' | 'writing' | null
+  current_section: 'listening' | 'reading' | 'writing' | 'speaking' | null
   seconds_remaining: number
   submitted_for_current: boolean
   scores: {
@@ -76,7 +86,13 @@ export default function MockSessionPage() {
     return <FinishedScreen state={state} />
   }
 
-  if (state.submitted_for_current) {
+  if (
+    state.submitted_for_current &&
+    (state.session.status === 'listening'
+      || state.session.status === 'reading'
+      || state.session.status === 'writing'
+      || state.session.status === 'speaking')
+  ) {
     return (
       <BetweenScreen
         section={state.session.status}
@@ -118,6 +134,17 @@ export default function MockSessionPage() {
     )
   }
 
+  if (state.session.status === 'speaking') {
+    return (
+      <SpeakingSection
+        bsid={bsid!}
+        name={state.participant.full_name}
+        secondsRemaining={state.seconds_remaining}
+        onSubmit={fetchState}
+      />
+    )
+  }
+
   return null
 }
 
@@ -140,14 +167,20 @@ function BetweenScreen({
   section,
   onTick,
 }: {
-  section: 'listening' | 'reading' | 'writing'
+  section: 'listening' | 'reading' | 'writing' | 'speaking'
   onTick: () => void
 }) {
   useEffect(() => {
     onTick()
   }, [onTick])
   const next =
-    section === 'listening' ? 'Reading' : section === 'reading' ? 'Writing' : 'natijalar'
+    section === 'listening'
+      ? 'Reading'
+      : section === 'reading'
+        ? 'Writing'
+        : section === 'writing'
+          ? 'Speaking'
+          : 'natijalar'
   return (
     <Center>
       <div className="w-full max-w-lg rounded-2xl bg-white p-12 text-center shadow-xl">

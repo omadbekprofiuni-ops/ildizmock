@@ -136,6 +136,18 @@ export default function EasyTestCreatePage() {
 
   const [saving, setSaving] = useState(false)
 
+  // ETAP 18 — Question count validation indicators
+  const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0)
+  const requiredQuestions = module === 'writing' ? 0 : 40
+  const requiredSections = module === 'reading' ? 3 : module === 'listening' ? 4 : 0
+  const requiredTasks = module === 'writing' ? 2 : 0
+  const structureValid = (() => {
+    if (module === 'writing') {
+      return writingTasks.length === requiredTasks
+    }
+    return sections.length === requiredSections && totalQuestions === requiredQuestions
+  })()
+
   const updateSection = (i: number, patch: Partial<SectionDraft>) => {
     setSections((s) => s.map((x, idx) => (idx === i ? { ...x, ...patch } : x)))
   }
@@ -200,6 +212,25 @@ export default function EasyTestCreatePage() {
   const onSave = async () => {
     if (!name.trim()) {
       toast.error('Test nomini kiriting')
+      return
+    }
+    // ETAP 18 — published test struktura validatsiyasi
+    if (isPublished && !structureValid) {
+      if (module === 'reading') {
+        toast.error(
+          `Reading test 3 passage va aynan 40 savoldan iborat bo'lishi kerak. ` +
+          `Hozir: ${sections.length} passage, ${totalQuestions} savol. ` +
+          `Draft sifatida saqlash mumkin.`,
+        )
+      } else if (module === 'listening') {
+        toast.error(
+          `Listening test 4 part va aynan 40 savoldan iborat bo'lishi kerak. ` +
+          `Hozir: ${sections.length} part, ${totalQuestions} savol. ` +
+          `Draft sifatida saqlash mumkin.`,
+        )
+      } else if (module === 'writing') {
+        toast.error('Writing test 2 ta task talab qiladi.')
+      }
       return
     }
     if (module === 'writing') {
@@ -314,6 +345,91 @@ export default function EasyTestCreatePage() {
           </>
         }
       />
+
+      {/* ETAP 18 — Struktura ko'rsatkichi (Reading/Listening/Writing) */}
+      {module !== 'writing' ? (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 px-5 py-4 ${
+            structureValid
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-amber-200 bg-amber-50'
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-6">
+            <div>
+              <div
+                className={`text-3xl font-extrabold ${
+                  sections.length === requiredSections
+                    ? 'text-emerald-700'
+                    : 'text-amber-700'
+                }`}
+              >
+                {sections.length}/{requiredSections}
+              </div>
+              <div className="text-xs font-medium text-slate-600">
+                {module === 'reading' ? 'Passage' : 'Part'}
+              </div>
+            </div>
+            <div>
+              <div
+                className={`text-3xl font-extrabold ${
+                  totalQuestions === requiredQuestions
+                    ? 'text-emerald-700'
+                    : 'text-amber-700'
+                }`}
+              >
+                {totalQuestions}/{requiredQuestions}
+              </div>
+              <div className="text-xs font-medium text-slate-600">Savollar</div>
+            </div>
+          </div>
+          <div className="text-sm">
+            {structureValid ? (
+              <span className="inline-flex items-center gap-2 font-semibold text-emerald-700">
+                ✓ Publishga tayyor
+              </span>
+            ) : (
+              <span className="font-medium text-amber-700">
+                {sections.length !== requiredSections
+                  ? `${
+                      module === 'reading' ? 'Passage' : 'Part'
+                    } sonini ${requiredSections} qilib qo'ying`
+                  : totalQuestions < requiredQuestions
+                    ? `Yana ${requiredQuestions - totalQuestions} ta savol qo'shing`
+                    : `${totalQuestions - requiredQuestions} ta savolni olib tashlang`}
+                <br />
+                <span className="text-xs text-slate-500">
+                  Draft sifatida saqlash mumkin
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 px-5 py-4 ${
+            writingTasks.length === requiredTasks
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-amber-200 bg-amber-50'
+          }`}
+        >
+          <div>
+            <div
+              className={`text-3xl font-extrabold ${
+                writingTasks.length === requiredTasks
+                  ? 'text-emerald-700'
+                  : 'text-amber-700'
+              }`}
+            >
+              {writingTasks.length}/{requiredTasks}
+            </div>
+            <div className="text-xs font-medium text-slate-600">Task</div>
+          </div>
+          <div className="text-sm font-semibold text-emerald-700">
+            {writingTasks.length === requiredTasks ? '✓ Publishga tayyor' : ''}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Module selector — faqat URL'dan modul aniq emas bo'lsa ko'rinadi */}
