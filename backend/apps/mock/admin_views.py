@@ -29,13 +29,31 @@ from .serializers import (
 
 User = get_user_model()
 
-# Listening → Reading → Writing → (Speaking, ixtiyoriy) → Finished
-NEXT_STATUS = {
-    'listening': 'reading',
-    'reading': 'writing',
-    'writing': 'speaking',
-    'speaking': 'finished',
-}
+# Bo'limlar tartibi. `start()` va `advance()` shu tartibda yurib,
+# faqat sessiyada biriktirilgan testlari bor bo'limlarga o'tadi —
+# masalan, faqat Writing testi tanlangan sessiya to'g'ridan-to'g'ri
+# 'writing' statusidan boshlanadi va keyin 'finished' ga o'tadi.
+SECTION_ORDER = ('listening', 'reading', 'writing', 'speaking')
+
+
+def _next_configured_section(session, after=None):
+    """Sessiyada testi bor keyingi bo'limni qaytaradi.
+
+    `after=None` bo'lsa — birinchi biriktirilgan bo'limni qaytaradi
+    (start() uchun). `after='listening'` bo'lsa — listening'dan keyingi
+    biriktirilgan bo'limni qaytaradi (advance() uchun). Hech qaysi bo'lim
+    biriktirilmagan bo'lsa, None qaytaradi.
+    """
+    start_idx = 0
+    if after is not None:
+        try:
+            start_idx = SECTION_ORDER.index(after) + 1
+        except ValueError:
+            return None
+    for sec in SECTION_ORDER[start_idx:]:
+        if getattr(session, f'{sec}_test_id', None):
+            return sec
+    return None
 
 
 class CenterMockSessionViewSet(viewsets.ModelViewSet):
@@ -47,13 +65,13 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         slug = self.kwargs['org_slug']
         org = get_object_or_404(Organization, slug=slug)
         if org.status != 'active':
-            raise PermissionDenied('Markaz faol holatda emas.')
+            raise PermissionDenied('This center is not active.')
         if self.request.user.role != 'superadmin':
             if not OrganizationMembership.objects.filter(
                 user=self.request.user, organization=org,
                 role__in=['admin', 'owner'],
             ).exists():
-                raise PermissionDenied('Siz bu markaz admini emassiz.')
+                raise PermissionDenied('You are not an admin of this center.')
         return org
 
     def get_queryset(self):
@@ -119,9 +137,9 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 log.error('migrate/heal failed: %s', migrate_exc)
                 return Response(
                     {'detail': (
-                        f'DB schema xatosi: {exc}. '
-                        f'Migrate/heal ham ishlamadi: {migrate_exc}. '
-                        'Server adminiga ushbu xabarni ko‘rsating.'
+                        f'DB schema error: {exc}. '
+                        f'Migrate/heal also failed: {migrate_exc}. '
+                        'Show this message to the server admin.'
                     )},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
@@ -140,7 +158,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                           retry_exc, traceback.format_exc())
                 return Response(
                     {'detail': (
-                        f'Migrate o‘tdi, lekin qayta urinish ham xato qaytardi: '
+                        f'Migrate succeeded but retry still failed: '
                         f'{type(retry_exc).__name__}: {retry_exc}'
                     )},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -172,61 +190,51 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def start(self, request, pk=None, org_slug=None):
-        """Birinchi bo'lim (Listening) ni boshlash."""
+        """Sessiyani boshlash — qaysi bo'limning testi biriktirilgan bo'lsa,
+        o'sha bo'limdan boshlaydi. Masalan, faqat Writing test biriktirilgan
+        sessiya to'g'ridan-to'g'ri 'writing' statusidan boshlanadi.
+        """
         session = self.get_object()
         if session.status != 'waiting':
             return Response(
-                {'detail': 'Sessiya allaqachon boshlangan yoki tugagan.'},
+                {'detail': 'Session has already started or finished.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not session.listening_test_id:
+
+        first = _next_configured_section(session)
+        if first is None:
             return Response(
-                {'detail': 'Listening test tanlanmagan.'},
+                {'detail': 'No test attached. '
+                           'Edit the session and pick at least one test.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         now = timezone.now()
-        session.status = 'listening'
+        session.status = first
         session.started_at = now
         session.section_started_at = now
         session.save(update_fields=['status', 'started_at', 'section_started_at'])
 
         MockStateLog.objects.create(
-            session=session, action='start_listening', triggered_by=request.user,
+            session=session, action=f'start_{first}', triggered_by=request.user,
         )
         return Response(MockSessionDetailSerializer(session).data)
 
     @action(detail=True, methods=['post'])
     def advance(self, request, pk=None, org_slug=None):
-        """Keyingi bo'limga o'tish (Listening → Reading → Writing → Finished)."""
+        """Keyingi biriktirilgan bo'limga o'tish. Boshqa biriktirilgan bo'lim
+        qolmagan bo'lsa — sessiyani 'finished' qilib yakunlaydi.
+        """
         session = self.get_object()
-        if session.status not in NEXT_STATUS:
+        if session.status not in SECTION_ORDER:
             return Response(
-                {'detail': 'Sessiyani davom ettirib bo‘lmaydi.'},
+                {'detail': 'Cannot continue this session.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        nxt = NEXT_STATUS[session.status]
-
-        # Keyingi bo'lim uchun test biriktirilganligini tekshirish.
-        # Reading va Writing — majburiy. Speaking ixtiyoriy: agar
-        # speaking_test yo'q bo'lsa, to'g'ridan-to'g'ri finished'ga o'tamiz.
-        next_test_field = {
-            'reading': 'reading_test_id',
-            'writing': 'writing_test_id',
-            'speaking': 'speaking_test_id',
-        }.get(nxt)
-        if next_test_field and not getattr(session, next_test_field):
-            if nxt == 'speaking':
-                # Speaking yo'q — sessiyani yakunlaymiz
-                nxt = 'finished'
-            else:
-                module_label = nxt.capitalize()
-                return Response(
-                    {'detail': f'{module_label} test biriktirilmagan. '
-                               'Sessiyani Yakunlash tugmasi orqali tugatishingiz mumkin.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        nxt = _next_configured_section(session, after=session.status)
+        if nxt is None:
+            nxt = 'finished'
 
         now = timezone.now()
         session.status = nxt
@@ -264,7 +272,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         if session.status == 'finished':
             return Response(
-                {'detail': 'Tugagan sessiyani bekor qilib bo‘lmaydi.'},
+                {'detail': 'Cannot cancel a finished session.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if session.status == 'cancelled':
@@ -286,7 +294,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         if session.status not in ('finished', 'cancelled', 'waiting'):
             return Response(
-                {'detail': "Faol sessiyani avval bekor qiling, keyin o'chirish mumkin."},
+                {'detail': "Cancel the active session first, then you can delete it."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().destroy(request, *args, **kwargs)
@@ -299,12 +307,12 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         if session.status not in ('finished', 'cancelled'):
             return Response(
-                {'detail': 'Faqat tugagan yoki bekor qilingan sessiyani qayta ochish mumkin.'},
+                {'detail': 'Only finished or cancelled sessions can be reopened.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if session.finished_at and (timezone.now() - session.finished_at) > timedelta(hours=24):
             return Response(
-                {'detail': 'Bu sessiyani qayta ochib bo‘lmaydi (24 soatdan ko‘p vaqt o‘tdi).'},
+                {'detail': 'This session can no longer be reopened (more than 24 hours have passed).'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -334,10 +342,10 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         try:
             score = float(request.data.get('score'))
         except (TypeError, ValueError):
-            return Response({'detail': 'Score raqam bo‘lishi kerak.'},
+            return Response({'detail': 'Score must be a number.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if not (0 <= score <= 9):
-            return Response({'detail': 'Score 0–9 oralig‘ida bo‘lishi kerak.'},
+            return Response({'detail': 'Score must be between 0 and 9.'},
                             status=status.HTTP_400_BAD_REQUEST)
         participant = get_object_or_404(
             MockParticipant, id=participant_id, session=session,
@@ -365,10 +373,10 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         try:
             score = float(request.data.get('score'))
         except (TypeError, ValueError):
-            return Response({'detail': 'Score raqam bo‘lishi kerak.'},
+            return Response({'detail': 'Score must be a number.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if not (0 <= score <= 9):
-            return Response({'detail': 'Score 0–9 oralig‘ida bo‘lishi kerak.'},
+            return Response({'detail': 'Score must be between 0 and 9.'},
                             status=status.HTTP_400_BAD_REQUEST)
         participant = get_object_or_404(
             MockParticipant, id=participant_id, session=session,
@@ -432,14 +440,14 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
         if session.status not in ('waiting',):
             return Response(
-                {'detail': 'Faqat boshlanmagan sessiyaga talaba qo\'shish mumkin.'},
+                {'detail': 'Students can only be added to sessions that have not started.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         user_ids = request.data.get('user_ids') or []
         if not isinstance(user_ids, list) or not user_ids:
             return Response(
-                {'detail': 'user_ids ro\'yxati majburiy.'},
+                {'detail': 'user_ids list is required.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -501,7 +509,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         )
         if participant.has_joined:
             return Response(
-                {'detail': 'Talaba allaqachon sessiyaga kirgan, o\'chirib bo\'lmaydi.'},
+                {'detail': 'The student has already joined the session and cannot be removed.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         participant.delete()
@@ -529,7 +537,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
         if hasattr(participant, 'certificate') and not participant.certificate.is_revoked:
             return Response(
-                {'detail': 'Bu talabaga allaqachon sertifikat berilgan.'},
+                {'detail': 'This student has already been issued a certificate.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -545,7 +553,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             missing.append('Speaking')
         if missing:
             return Response(
-                {'detail': f'Quyidagi modullar baholanmagan: {", ".join(missing)}'},
+                {'detail': f'The following modules have not been graded yet: {", ".join(missing)}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -603,7 +611,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         certificate = getattr(participant, 'certificate', None)
         if certificate is None:
             return Response(
-                {'detail': 'Bu talabada sertifikat yo\'q.'},
+                {'detail': 'This student does not have a certificate.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
         if certificate.is_revoked:

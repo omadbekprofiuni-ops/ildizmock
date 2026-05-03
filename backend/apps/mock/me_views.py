@@ -110,7 +110,7 @@ def my_mock_certificate(request, participant_id):
     p = get_object_or_404(qs, pk=participant_id)
     if p.overall_band_score is None:
         return Response(
-            {'detail': 'Sertifikat tayyor emas — barcha sectionlar baholanishini kuting.'},
+            {'detail': 'Certificate not ready yet — wait for all sections to be graded.'},
             status=400,
         )
     pdf = generate_certificate(p)
@@ -180,7 +180,7 @@ def my_certificate_download(request, certificate_id):
     qs = _student_certificates_qs(request.user)
     cert = get_object_or_404(qs, pk=certificate_id)
     if not cert.pdf_file:
-        return Response({'detail': 'PDF fayl topilmadi.'}, status=404)
+        return Response({'detail': 'PDF file not found.'}, status=404)
     return FileResponse(
         cert.pdf_file.open('rb'),
         as_attachment=True,
@@ -200,7 +200,7 @@ def verify_certificate(request, verification_code):
     except Certificate.DoesNotExist:
         return Response({
             'valid': False,
-            'detail': 'Sertifikat topilmadi.',
+            'detail': 'Certificate not found.',
         }, status=404)
 
     if cert.is_revoked:
@@ -208,7 +208,7 @@ def verify_certificate(request, verification_code):
             'valid': False,
             'revoked': True,
             'certificate_number': cert.certificate_number,
-            'detail': 'Bu sertifikat bekor qilingan.',
+            'detail': 'This certificate has been revoked.',
             'revoked_at': cert.revoked_at.isoformat() if cert.revoked_at else None,
         })
 

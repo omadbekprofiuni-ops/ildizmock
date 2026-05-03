@@ -43,9 +43,9 @@ def join_view(request, access_code):
         if session.status in ('finished', 'cancelled'):
             msg = 'Sessiya tugagan, qo‘shilib bo‘lmaydi.'
         elif session.link_expires_at and timezone.now() > session.link_expires_at:
-            msg = 'Linkning amal qilish muddati tugagan.'
+            msg = 'This link has expired.'
         else:
-            msg = 'Sessiya allaqachon boshlangan, qo‘shilib bo‘lmaydi.'
+            msg = 'Session has already started, joining is no longer allowed.'
         return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
 
     participant_id = request.data.get('participant_id')
@@ -57,7 +57,7 @@ def join_view(request, access_code):
         )
         if participant.has_joined:
             return Response(
-                {'detail': 'Bu ism bilan allaqachon kirilgan.'},
+                {'detail': 'Someone has already joined under this name.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         participant.has_joined = True
@@ -72,17 +72,17 @@ def join_view(request, access_code):
     # ----- Variant 2: guest sifatida ism kiritib qo'shilish -----
     if not session.allow_guests:
         return Response(
-            {'detail': 'Ro\'yxatdan o\'z ismingizni tanlang. Yangi nom qo\'shilmaydi.'},
+            {'detail': 'Pick your name from the list. New names cannot be added.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     full_name = (request.data.get('full_name') or '').strip()
     if len(full_name) < 2:
-        return Response({'detail': 'Ism va familiya kiriting.'},
+        return Response({'detail': 'Enter your first and last name.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     if MockParticipant.objects.filter(session=session, full_name=full_name).exists():
-        return Response({'detail': 'Bu ism bilan kimdir allaqachon qo‘shilgan.'},
+        return Response({'detail': 'Someone has already joined under this name.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     user = request.user if request.user.is_authenticated else None
@@ -165,7 +165,7 @@ def section_data_view(request, browser_session_id):
     session = participant.session
     test = session.current_test
     if not test:
-        return Response({'detail': 'Joriy bo‘lim test bilan bog‘lanmagan.'},
+        return Response({'detail': 'No test attached to the current section.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     payload = {
@@ -200,7 +200,7 @@ def section_data_view(request, browser_session_id):
             test.writing_tasks.all(), many=True, context=ctx,
         ).data
     else:
-        return Response({'detail': 'Sessiya hali boshlanmagan.'},
+        return Response({'detail': 'The session has not started yet.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     return Response(payload)
@@ -209,7 +209,7 @@ def section_data_view(request, browser_session_id):
 def _check_section(participant: MockParticipant, expected: str):
     if participant.session.status != expected:
         return Response(
-            {'detail': f'Sessiya {expected} bosqichida emas.'},
+            {'detail': f'Session is not in the {expected} stage.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
     return None
@@ -225,13 +225,13 @@ def submit_listening(request, browser_session_id):
     if err:
         return err
     if participant.listening_submitted_at:
-        return Response({'detail': 'Allaqachon yuborilgan.'},
+        return Response({'detail': 'Already submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     answers = request.data.get('answers') or {}
     test = participant.session.listening_test
     if not test:
-        return Response({'detail': 'Listening test biriktirilmagan.'},
+        return Response({'detail': 'No Listening test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     correct, total, band = grade_listening(test, answers)
@@ -257,13 +257,13 @@ def submit_reading(request, browser_session_id):
     if err:
         return err
     if participant.reading_submitted_at:
-        return Response({'detail': 'Allaqachon yuborilgan.'},
+        return Response({'detail': 'Already submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     answers = request.data.get('answers') or {}
     test = participant.session.reading_test
     if not test:
-        return Response({'detail': 'Reading test biriktirilmagan.'},
+        return Response({'detail': 'No Reading test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     correct, total, band = grade_reading(test, answers)
@@ -289,7 +289,7 @@ def submit_writing(request, browser_session_id):
     if err:
         return err
     if participant.writing_submitted_at:
-        return Response({'detail': 'Allaqachon yuborilgan.'},
+        return Response({'detail': 'Already submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     participant.writing_task1_text = (request.data.get('task1') or '').strip()
@@ -298,7 +298,7 @@ def submit_writing(request, browser_session_id):
     participant.save(update_fields=[
         'writing_task1_text', 'writing_task2_text', 'writing_submitted_at',
     ])
-    return Response({'detail': 'Yozma ishlar saqlandi. Ustoz baholashni kutadi.'})
+    return Response({'detail': 'Your writing has been saved. Awaiting teacher review.'})
 
 
 from rest_framework.decorators import throttle_classes  # noqa: E402
@@ -321,12 +321,12 @@ def submit_speaking(request, browser_session_id):
     if err:
         return err
     if participant.speaking_audio:
-        return Response({'detail': 'Allaqachon yuborilgan.'},
+        return Response({'detail': 'Already submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     audio = request.FILES.get('audio')
     if not audio:
-        return Response({'detail': 'Audio fayl yuborilmadi.'},
+        return Response({'detail': 'No audio file submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
     # Faqat audio formatlar
@@ -336,13 +336,13 @@ def submit_speaking(request, browser_session_id):
     )
     if audio.content_type not in allowed:
         return Response(
-            {'detail': f"Yo'l qo'yilmagan format: {audio.content_type}"},
+            {'detail': f"Unsupported audio format: {audio.content_type}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
     # 50 MB limit
     if audio.size > 50 * 1024 * 1024:
         return Response(
-            {'detail': 'Fayl 50 MB dan oshmasligi kerak.'},
+            {'detail': 'File must not exceed 50 MB.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -359,7 +359,7 @@ def submit_speaking(request, browser_session_id):
         'speaking_audio', 'speaking_uploaded_at', 'speaking_duration_seconds',
     ])
     return Response({
-        'detail': 'Audio qabul qilindi. Ustoz baholashni kutadi.',
+        'detail': 'Audio received. Awaiting teacher review.',
         'uploaded_at': participant.speaking_uploaded_at,
     }, status=status.HTTP_201_CREATED)
 
@@ -372,6 +372,6 @@ def my_result(request, browser_session_id):
         MockParticipant, browser_session_id=browser_session_id,
     )
     if participant.session.status != 'finished':
-        return Response({'detail': 'Sessiya hali tugamagan.'},
+        return Response({'detail': 'Session has not finished yet.'},
                         status=status.HTTP_400_BAD_REQUEST)
     return Response(MockParticipantListSerializer(participant).data)
