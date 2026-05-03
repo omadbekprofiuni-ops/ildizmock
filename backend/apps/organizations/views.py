@@ -373,6 +373,75 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         return Response(rows)
 
     @action(detail=True, methods=['get'])
+    def tests(self, request, pk=None):
+        """SuperAdmin uchun markazning testlari ro'yxati."""
+        from apps.tests.models import Test
+        org = self.get_object()
+        tests = Test.objects.filter(
+            organization=org, is_deleted=False,
+        ).select_related('created_by').order_by('-created_at')
+        rows = []
+        for t in tests:
+            rows.append({
+                'id': str(t.id),
+                'name': t.name,
+                'module': t.module,
+                'test_type': t.test_type,
+                'difficulty': t.difficulty,
+                'status': t.status,
+                'is_published': t.is_published,
+                'is_practice_enabled': t.is_practice_enabled,
+                'category': t.category,
+                'duration_minutes': t.duration_minutes,
+                'attempts_count': t.attempts.count(),
+                'created_by': (
+                    t.created_by.get_full_name() or t.created_by.username
+                    if t.created_by_id else ''
+                ),
+                'created_at': t.created_at,
+            })
+        return Response(rows)
+
+    @action(
+        detail=True, methods=['get'],
+        url_path=r'tests/(?P<test_id>[0-9a-f-]+)/results',
+    )
+    def test_results(self, request, pk=None, test_id=None):
+        """Bitta testning barcha urinishlari ro'yxati."""
+        from apps.tests.models import Test
+        from apps.attempts.models import Attempt
+        org = self.get_object()
+        try:
+            test = Test.objects.get(pk=test_id, organization=org)
+        except Test.DoesNotExist:
+            return Response({'detail': 'Test topilmadi.'}, status=404)
+
+        attempts = Attempt.objects.filter(test=test).select_related('user').order_by('-started_at')
+        rows = []
+        for a in attempts:
+            full = ''
+            if a.user_id:
+                full = f'{(a.user.first_name or "").strip()} {(a.user.last_name or "").strip()}'.strip()
+            rows.append({
+                'id': str(a.id),
+                'user_id': a.user_id,
+                'username': a.user.username if a.user_id else None,
+                'full_name': full or None,
+                'status': a.status,
+                'raw_score': a.raw_score,
+                'total_questions': a.total_questions,
+                'band_score': str(a.band_score) if a.band_score is not None else None,
+                'started_at': a.started_at,
+                'submitted_at': a.submitted_at,
+            })
+        return Response({
+            'id': str(test.id),
+            'name': test.name,
+            'module': test.module,
+            'attempts': rows,
+        })
+
+    @action(detail=True, methods=['get'])
     def statistics(self, request, pk=None):
         """SuperAdmin uchun markazning umumiy statistikasi."""
         from django.db.models import Avg, Count, Sum

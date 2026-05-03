@@ -36,6 +36,8 @@ import OrgContextRedirect from './pages/superadmin/OrgContextRedirect'
 import OrgStatisticsPage from './pages/superadmin/OrgStatisticsPage'
 import OrgStudentsPage from './pages/superadmin/OrgStudentsPage'
 import OrgTeachersPage from './pages/superadmin/OrgTeachersPage'
+import OrgTestResultsPage from './pages/superadmin/OrgTestResultsPage'
+import OrgTestsPage from './pages/superadmin/OrgTestsPage'
 import OrgWritingsPage from './pages/superadmin/OrgWritingsPage'
 import SuperAdminAudioPage from './pages/superadmin/SuperAdminAudioPage'
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
@@ -195,6 +197,19 @@ export default function App() {
           <Route
             path="/super/org/:orgId/payment"
             element={<SuperAdminRoute><SuperAdminBillingPage /></SuperAdminRoute>}
+          />
+          {/* Org tests va test results */}
+          <Route
+            path="/super/org/tests"
+            element={<SuperAdminRoute><OrgTestsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/tests"
+            element={<SuperAdminRoute><OrgTestsPage /></SuperAdminRoute>}
+          />
+          <Route
+            path="/super/org/:orgId/tests/:testId/results"
+            element={<SuperAdminRoute><OrgTestResultsPage /></SuperAdminRoute>}
           />
           <Route
             path="/super/tests"
