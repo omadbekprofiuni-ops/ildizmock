@@ -140,10 +140,12 @@ class Question(models.Model):
         ('fill', 'Fill in the Blank'),
         ('gap_fill', 'Gap Fill'),
         ('matching', 'Matching'),
+        ('matching_headings', 'Matching Headings'),
         ('short_answer', 'Short Answer'),
         ('form_completion', 'Form Completion'),
         ('map_labeling', 'Map Labeling'),
         ('summary_completion', 'Summary Completion'),
+        ('sentence_completion', 'Sentence Completion'),
     ]
 
     passage = models.ForeignKey(

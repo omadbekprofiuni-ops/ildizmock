@@ -107,6 +107,20 @@ export default function TestsPage() {
     }
   }
 
+  const extractError = (e: unknown): string => {
+    const err = e as {
+      response?: { data?: { detail?: string } | string; status?: number }
+      message?: string
+    }
+    const data = err.response?.data
+    if (typeof data === 'string') return data.slice(0, 200)
+    if (data?.detail) return data.detail
+    if (err.response?.status === 404) return "Test topilmadi (404)."
+    if (err.response?.status === 403) return "Sizda bu amalga ruxsat yo'q."
+    if (err.response?.status === 500) return 'Server xatoligi (500). Adminga xabar bering.'
+    return err.message ?? 'Xatolik yuz berdi.'
+  }
+
   const publishTest = async (id: string, name: string) => {
     if (!slug) return
     if (!window.confirm(`"${name}" testini nashr qilasizmi? Talabalar uchun ko'rinadigan bo'ladi.`)) return
@@ -116,8 +130,7 @@ export default function TestsPage() {
       setMessage('Test nashr qilindi.')
       loadMine()
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { detail?: string } } }
-      setMessage(err.response?.data?.detail ?? 'Xatolik yuz berdi.')
+      setMessage(extractError(e))
     } finally {
       setBusy(null)
     }
@@ -131,6 +144,8 @@ export default function TestsPage() {
       await api.post(`/center/${slug}/tests/${id}/unpublish/`)
       setMessage('Test draft holatiga qaytarildi.')
       loadMine()
+    } catch (e: unknown) {
+      setMessage(extractError(e))
     } finally {
       setBusy(null)
     }

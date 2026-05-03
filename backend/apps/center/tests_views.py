@@ -178,17 +178,43 @@ class CenterTestViewSet(viewsets.ModelViewSet):
         """Markaz testini draft -> published holatga o'tkazish."""
         from django.utils import timezone
         test = self.get_object()
-        # Validation: testda savollar bo'lishi kerak
-        has_questions = (
-            test.passages.filter(questions__isnull=False).exists()
-            or test.listening_parts.filter(questions__isnull=False).exists()
-            or test.writing_tasks.exists()
-        )
-        if not has_questions:
+
+        # Module-specific validation: testda mazmun bo'lishi kerak
+        module = test.module
+        detail = None
+        if module == 'reading':
+            passages = list(test.passages.all())
+            total_qs = sum(p.questions.count() for p in passages)
+            if not passages:
+                detail = "Reading test uchun kamida 1 ta passage qo'shing."
+            elif total_qs == 0:
+                detail = "Reading test uchun kamida 1 ta savol qo'shing."
+        elif module == 'listening':
+            parts = list(test.listening_parts.all())
+            total_qs = sum(p.questions.count() for p in parts)
+            if not parts:
+                detail = "Listening test uchun kamida 1 ta part qo'shing."
+            elif total_qs == 0:
+                detail = "Listening test uchun kamida 1 ta savol qo'shing."
+        elif module == 'writing':
+            if not test.writing_tasks.exists():
+                detail = "Writing test uchun kamida 1 ta task qo'shing."
+        elif module == 'full_mock':
+            has_any = (
+                test.passages.exists()
+                or test.listening_parts.exists()
+                or test.writing_tasks.exists()
+            )
+            if not has_any:
+                detail = "Full Mock uchun passage, listening part yoki writing task qo'shing."
+        # speaking — savol/topshiriqsiz ham nashr qilinadi (live format)
+
+        if detail:
             return Response(
-                {'detail': "Test savol/topshiriqsiz nashr qilib bo'lmaydi."},
+                {'detail': detail},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         test.status = 'published'
         test.is_published = True
         test.published_at = timezone.now()

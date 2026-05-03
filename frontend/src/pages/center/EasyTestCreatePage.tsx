@@ -27,7 +27,7 @@ import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 type Module = 'listening' | 'reading' | 'writing'
-type QType = 'mcq' | 'tfng' | 'fill' | 'matching' | 'short_answer'
+type QType = 'mcq' | 'tfng' | 'fill' | 'matching' | 'matching_headings' | 'short_answer'
 
 type QDraft = {
   order: number
@@ -205,6 +205,7 @@ export default function EasyTestCreatePage() {
     let options: string[] = []
     if (t === 'mcq') options = ['', '', '', '']
     else if (t === 'tfng') options = ['True', 'False', 'Not Given']
+    else if (t === 'matching_headings') options = ['', '', '', '']
     else options = []
     updateQuestion(si, qi, { question_type: t, options, correct_answer: '' })
   }
@@ -791,6 +792,7 @@ function QuestionEditor({
           <option value="fill">Fill in the blank</option>
           <option value="short_answer">Short answer</option>
           <option value="matching">Matching</option>
+          <option value="matching_headings">Matching Headings</option>
         </select>
         <button
           type="button"
@@ -868,6 +870,58 @@ function QuestionEditor({
           placeholder="To'g'ri javob (kichik harflarda yozing)"
           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
         />
+      )}
+
+      {question.question_type === 'matching_headings' && (
+        <div className="space-y-2">
+          <p className="text-xs text-slate-500">
+            Sarlavhalar ro'yxati (List of Headings) — to'g'ri sarlavhani tanlang:
+          </p>
+          {question.options.map((opt, oi) => (
+            <div key={oi} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name={`q-${index}-mhead`}
+                checked={question.correct_answer === opt && opt !== ''}
+                onChange={() => onChange({ correct_answer: opt })}
+                className="h-4 w-4 border-slate-300 text-red-600"
+              />
+              <span className="w-6 text-sm text-slate-500">
+                {String.fromCharCode(0x2160 + oi)}
+              </span>
+              <input
+                value={opt}
+                onChange={(e) => {
+                  const newOpts = [...question.options]
+                  newOpts[oi] = e.target.value
+                  const patch: Partial<QDraft> = { options: newOpts }
+                  if (question.correct_answer === opt) patch.correct_answer = e.target.value
+                  onChange(patch)
+                }}
+                placeholder="Heading…"
+                className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm"
+              />
+              {question.options.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({ options: question.options.filter((_, k) => k !== oi) })
+                  }
+                  className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onChange({ options: [...question.options, ''] })}
+            className="text-xs text-red-600 hover:underline"
+          >
+            + Heading qo'shish
+          </button>
+        </div>
       )}
 
       {question.question_type === 'matching' && (

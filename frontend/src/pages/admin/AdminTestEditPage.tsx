@@ -20,7 +20,7 @@ type Props = {
   basePath?: string
 }
 
-type QType = 'mcq' | 'tfng' | 'fill' | 'matching'
+type QType = 'mcq' | 'tfng' | 'fill' | 'matching' | 'matching_headings'
 
 type QDraft = {
   order: number
@@ -111,6 +111,8 @@ function normaliseOnChangeType(q: QDraft, newType: QType): QDraft {
   if (newType === 'mcq') return { ...q, question_type: 'mcq', options: ['', '', '', ''], correct_answer: '' }
   if (newType === 'tfng') return { ...q, question_type: 'tfng', options: ['True', 'False', 'Not Given'], correct_answer: '' }
   if (newType === 'fill') return { ...q, question_type: 'fill', options: [], correct_answer: '' }
+  if (newType === 'matching_headings')
+    return { ...q, question_type: 'matching_headings', options: q.options.length ? q.options : ['', '', '', ''], correct_answer: '' }
   return { ...q, question_type: 'matching', options: q.options.length ? q.options : ['', ''], correct_answer: '' }
 }
 
@@ -176,10 +178,20 @@ export default function AdminTestEditPage({
   Layout = AdminLayout,
   basePath = '/admin/tests',
 }: Props = {}) {
-  const { testId } = useParams<{ testId?: string }>()
+  const { testId, slug } = useParams<{ testId?: string; slug?: string }>()
   const isNew = !testId || testId === 'new'
   const navigate = useNavigate()
   const qc = useQueryClient()
+
+  // basePath bo'lsa "/" bilan boshlanmasa — center context (slug). Absolyut
+  // yo'lga aylantiramiz, aks holda navigate(basePath) joriy URL ga qo'shilib
+  // ketadi va 404 bo'ladi (masalan: /uniqueacademy/admin/tests/<id>/edit/tests).
+  const listPath = basePath.startsWith('/')
+    ? basePath
+    : slug
+      ? `/${slug}/admin/${basePath}`
+      : `/${basePath}`
+  const isCenter = !!slug && !basePath.startsWith('/')
 
   const [draft, setDraft] = useState<TestDraft>(blankTest)
 
@@ -205,7 +217,7 @@ export default function AdminTestEditPage({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-tests'] })
       toast.success(isNew ? 'Test created' : 'Changes saved')
-      navigate(basePath)
+      navigate(listPath)
     },
     onError: (err) => {
       const data = (err as { response?: { data?: unknown } })?.response?.data
@@ -221,7 +233,7 @@ export default function AdminTestEditPage({
     )
   }
   if (!isNew && query.isError) {
-    return <Navigate to={basePath} replace />
+    return <Navigate to={listPath} replace />
   }
 
   const updatePassage = (pi: number, patch: Partial<PDraft>) => {
@@ -363,7 +375,7 @@ export default function AdminTestEditPage({
       <div className="mx-auto max-w-5xl p-6 lg:p-10">
         {/* Breadcrumb */}
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
-          <Link to={basePath} className="hover:text-red-600">Testlar</Link>
+          <Link to={listPath} className="hover:text-red-600">Testlar</Link>
           <span>/</span>
           <span className="text-slate-900">{isNew ? 'Yangi' : 'Tahrirlash'}</span>
         </div>
@@ -382,7 +394,7 @@ export default function AdminTestEditPage({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link to={basePath}>
+            <Link to={listPath}>
               <Button variant="outline" className="rounded-xl">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
               </Button>
@@ -649,6 +661,7 @@ function QuestionBuilder({
             <option value="tfng">True/False/NG</option>
             <option value="fill">Fill in blank</option>
             <option value="matching">Matching</option>
+            <option value="matching_headings">Matching Headings</option>
           </select>
           <Button
             variant="ghost"
@@ -738,6 +751,49 @@ function QuestionBuilder({
                 rows={2}
                 className="w-full rounded-md border border-input bg-background p-2 text-sm"
               />
+            </div>
+          </div>
+        )}
+
+        {q.question_type === 'matching_headings' && (
+          <div className="space-y-2">
+            <Label className="text-xs">List of Headings</Label>
+            {q.options.map((opt, oi) => (
+              <div key={oi} className="flex items-center gap-2">
+                <span className="w-8 text-sm text-slate-500">
+                  {String.fromCharCode(0x2160 + oi)}
+                </span>
+                <Input
+                  value={opt}
+                  onChange={(e) => onOption(oi, e.target.value)}
+                  placeholder={`Heading ${oi + 1}`}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveMatchingOption(oi)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={onAddMatchingOption}>
+              <Plus className="mr-1 h-4 w-4" /> Heading
+            </Button>
+            <div className="mt-2 space-y-1">
+              <Label className="text-xs">Correct heading</Label>
+              <select
+                value={q.correct_answer}
+                onChange={(e) => onCorrect(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-white px-2 text-sm"
+              >
+                <option value="">— select —</option>
+                {q.options.filter(Boolean).map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         )}
