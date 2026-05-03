@@ -305,6 +305,10 @@ export default function App() {
               <Route path="tests/new" element={<TestCreateHubPage />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
+              <Route
+                path="tests/:testId/edit"
+                element={<AdminTestEditPage basePath="tests" />}
+              />
               <Route path="tests/:testId/preview" element={<TestPreviewPage />} />
               <Route path="mock" element={<MockSessionsPage />} />
               <Route path="mock/:sessionId" element={<MockControlPage />} />

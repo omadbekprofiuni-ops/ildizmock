@@ -173,6 +173,37 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=['post'])
+    def publish(self, request, pk=None, org_slug=None):
+        """Markaz testini draft -> published holatga o'tkazish."""
+        from django.utils import timezone
+        test = self.get_object()
+        # Validation: testda savollar bo'lishi kerak
+        has_questions = (
+            test.passages.filter(questions__isnull=False).exists()
+            or test.listening_parts.filter(questions__isnull=False).exists()
+            or test.writing_tasks.exists()
+        )
+        if not has_questions:
+            return Response(
+                {'detail': "Test savol/topshiriqsiz nashr qilib bo'lmaydi."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        test.status = 'published'
+        test.is_published = True
+        test.published_at = timezone.now()
+        test.save(update_fields=['status', 'is_published', 'published_at', 'updated_at'])
+        return Response({'detail': 'Test nashr qilindi', 'status': 'published'})
+
+    @action(detail=True, methods=['post'])
+    def unpublish(self, request, pk=None, org_slug=None):
+        """Markaz testini published -> draft holatga qaytarish."""
+        test = self.get_object()
+        test.status = 'draft'
+        test.is_published = False
+        test.save(update_fields=['status', 'is_published', 'updated_at'])
+        return Response({'detail': 'Test draft holatiga qaytarildi', 'status': 'draft'})
+
     @action(detail=True, methods=['patch'], url_path='toggle-practice')
     def toggle_practice(self, request, pk=None, org_slug=None):
         """ETAP 14 BUG #9 — Markaz testi practice mode toggle."""

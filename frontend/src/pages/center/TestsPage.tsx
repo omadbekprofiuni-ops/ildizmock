@@ -1,4 +1,4 @@
-import { Archive, Copy, Eye, FileText, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { Archive, CheckCircle, Copy, Edit2, Eye, FileText, Plus, RotateCcw, Trash2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -102,6 +102,35 @@ export default function TestsPage() {
       await api.post(`/center/${slug}/tests/${id}/restore/`)
       setMessage('Test arxivdan qaytarildi.')
       loadArchived()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const publishTest = async (id: string, name: string) => {
+    if (!slug) return
+    if (!window.confirm(`"${name}" testini nashr qilasizmi? Talabalar uchun ko'rinadigan bo'ladi.`)) return
+    setBusy(id)
+    try {
+      await api.post(`/center/${slug}/tests/${id}/publish/`)
+      setMessage('Test nashr qilindi.')
+      loadMine()
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } }
+      setMessage(err.response?.data?.detail ?? 'Xatolik yuz berdi.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const unpublishTest = async (id: string, name: string) => {
+    if (!slug) return
+    if (!window.confirm(`"${name}" testini draft holatiga qaytarasizmi? Talabalar uchun ko'rinmaydi.`)) return
+    setBusy(id)
+    try {
+      await api.post(`/center/${slug}/tests/${id}/unpublish/`)
+      setMessage('Test draft holatiga qaytarildi.')
+      loadMine()
     } finally {
       setBusy(null)
     }
@@ -337,29 +366,59 @@ export default function TestsPage() {
                         </button>
                       </div>
                     ) : (
-                      <div className="inline-flex items-center gap-1">
+                      <div className="inline-flex flex-wrap items-center gap-1">
                         <Link
                           to={`/${slug}/admin/tests/${t.id}/preview`}
-                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          title="Preview"
                         >
-                          <Eye size={14} /> Preview
+                          <Eye size={14} />
                         </Link>
+                        <Link
+                          to={`/${slug}/admin/tests/${t.id}/edit`}
+                          className="inline-flex items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-2 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                          title="Tahrirlash"
+                        >
+                          <Edit2 size={14} />
+                        </Link>
+                        {t.status === 'draft' ? (
+                          <button
+                            type="button"
+                            disabled={busy === t.id}
+                            onClick={() => publishTest(t.id, t.name)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            title="Nashr qilish"
+                          >
+                            <CheckCircle size={14} /> Nashr
+                          </button>
+                        ) : t.status === 'published' ? (
+                          <button
+                            type="button"
+                            disabled={busy === t.id}
+                            onClick={() => unpublishTest(t.id, t.name)}
+                            className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                            title="Draftga qaytarish"
+                          >
+                            <XCircle size={14} />
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           disabled={busy === t.id}
                           onClick={() => cloneOwnTest(t.id)}
-                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-2 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                          title="Klon qilish"
                         >
-                          <Copy size={14} /> {busy === t.id ? '…' : 'Clone'}
+                          <Copy size={14} />
                         </button>
                         <button
                           type="button"
                           disabled={busy === t.id}
                           onClick={() => archiveTest(t.id, t.name)}
-                          className="inline-flex items-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
                           title="Arxivga o'tkazish"
                         >
-                          <Archive size={14} /> Arxiv
+                          <Archive size={14} />
                         </button>
                       </div>
                     )}
