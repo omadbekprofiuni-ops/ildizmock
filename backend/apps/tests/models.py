@@ -135,6 +135,7 @@ class Passage(models.Model):
 class Question(models.Model):
     TYPE_CHOICES = [
         ('mcq', 'Multiple Choice'),
+        ('multi_choice', 'Multiple Choice (Multi-Select)'),
         ('tfng', 'True/False/Not Given'),
         ('ynng', 'Yes/No/Not Given'),
         ('fill', 'Fill in the Blank'),

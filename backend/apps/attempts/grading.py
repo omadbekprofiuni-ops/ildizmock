@@ -44,6 +44,15 @@ def grade_answer(question, user_answer) -> bool:
     qtype = question.question_type
     if qtype in ('mcq', 'tfng', 'matching'):
         return _normalise(user_answer) == _normalise(question.correct_answer)
+    if qtype == 'multi_choice':
+        # IELTS "Choose TWO/THREE" — set equality on normalised values.
+        # correct_answer must be a list; user submits a list of selected options.
+        correct = question.correct_answer
+        if not isinstance(correct, list):
+            return False
+        if not isinstance(user_answer, list):
+            return False
+        return {_normalise(x) for x in user_answer} == {_normalise(x) for x in correct}
     if qtype == 'fill':
         return _matches(question.correct_answer, question.acceptable_answers, user_answer)
     return False

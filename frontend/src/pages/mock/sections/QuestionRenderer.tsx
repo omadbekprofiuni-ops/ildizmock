@@ -54,6 +54,47 @@ export function QuestionRenderer({
     )
   }
 
+  if (question.question_type === 'multi_choice') {
+    // "Choose TWO/THREE" — checkboxes, value is a list of selected options
+    const selected: string[] = Array.isArray(value)
+      ? (value as string[])
+      : []
+    const toggle = (opt: string) => {
+      const next = selected.includes(opt)
+        ? selected.filter((s) => s !== opt)
+        : [...selected, opt]
+      onChange(next)
+    }
+    return (
+      <div>
+        <p className="mb-2 font-medium">
+          <span className="mr-2 inline-block min-w-[24px] rounded-full bg-amber-200 px-2 text-center text-sm font-bold">
+            {label}
+          </span>
+          {text}
+          <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+            choose multiple
+          </span>
+        </p>
+        <div className="space-y-1 pl-8">
+          {(question.options || []).map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-2 rounded p-1 hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(opt)}
+                onChange={() => toggle(opt)}
+              />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (
     question.question_type === 'tfng' ||
     question.question_type === 'ynng'

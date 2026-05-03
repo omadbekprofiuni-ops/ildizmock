@@ -22,14 +22,15 @@ import { useConfirm } from '@/components/ConfirmDialog'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
-type QType = 'mcq' | 'tfng' | 'fill' | 'short_answer'
+type QType = 'mcq' | 'multi_choice' | 'tfng' | 'fill' | 'short_answer'
 
 type ParsedQuestion = {
   order: number
   question_type: QType
   text: string
   options: string[] | null
-  correct_answer: string
+  // Single-correct: string. Multi-correct: array of correct option texts.
+  correct_answer: string | string[]
   instruction: string
   points: number
 }
@@ -120,16 +121,24 @@ function parseBulk(text: string): ParseResult {
         return {
           ok: false,
           lineNumber: i + 1,
-          error: `Line ${i + 1}: MCQ needs options and a correct letter. Format: <n>|mcq|<text>|A) opt1, B) opt2, C) opt3, D) opt4|B`,
+          error: `Line ${i + 1}: MCQ needs options and a correct letter. Format: <n>|mcq|<text>|A) opt1, B) opt2, C) opt3, D) opt4|B (or "BD" / "B,D" for multi-select)`,
         }
       }
       const optionsRaw = parts[3]
-      const correctLetter = parts[4].toUpperCase()
-      // Split on commas, but preserve commas inside option text by relying on letter prefix.
-      // Simple heuristic: split by /,(?=\s*[A-Z]\))/.
+      // Parse correct letters: "B" → ["B"]; "BD" → ["B","D"]; "B,D" → ["B","D"]
+      const correctRaw = parts[4].toUpperCase().replace(/[\s,]+/g, '')
+      const correctLetters = correctRaw.split('').filter((c) => /[A-Z]/.test(c))
+      if (correctLetters.length === 0) {
+        return {
+          ok: false,
+          lineNumber: i + 1,
+          error: `Line ${i + 1}: correct answer must be at least one letter (e.g. "B" or "BD").`,
+        }
+      }
+      // Split options on commas that are followed by a letter+")" prefix.
       const optParts = optionsRaw.split(/,(?=\s*[A-Z]\))/g)
       const options: string[] = []
-      let correctAnswer = ''
+      const letterToText: Record<string, string> = {}
       for (const opt of optParts) {
         const o = opt.trim()
         const m = o.match(/^([A-Z])\)\s*(.+)$/)
@@ -141,24 +150,42 @@ function parseBulk(text: string): ParseResult {
           }
         }
         options.push(m[2].trim())
-        if (m[1] === correctLetter) correctAnswer = m[2].trim()
+        letterToText[m[1]] = m[2].trim()
       }
-      if (!correctAnswer) {
-        return {
-          ok: false,
-          lineNumber: i + 1,
-          error: `Line ${i + 1}: correct letter "${correctLetter}" doesn't match any option.`,
+      const matchedAnswers: string[] = []
+      for (const letter of correctLetters) {
+        const t = letterToText[letter]
+        if (!t) {
+          return {
+            ok: false,
+            lineNumber: i + 1,
+            error: `Line ${i + 1}: correct letter "${letter}" doesn't match any option.`,
+          }
         }
+        matchedAnswers.push(t)
       }
-      out.push({
-        order: num,
-        question_type: 'mcq',
-        text,
-        options,
-        correct_answer: correctAnswer,
-        instruction: '',
-        points: 1,
-      })
+      // Multiple correct → multi_choice. Single correct → mcq (radio button).
+      if (matchedAnswers.length > 1) {
+        out.push({
+          order: num,
+          question_type: 'multi_choice',
+          text,
+          options,
+          correct_answer: matchedAnswers,
+          instruction: '',
+          points: matchedAnswers.length,
+        })
+      } else {
+        out.push({
+          order: num,
+          question_type: 'mcq',
+          text,
+          options,
+          correct_answer: matchedAnswers[0],
+          instruction: '',
+          points: 1,
+        })
+      }
     } else {
       const answer = parts[3]
       if (!answer) {
@@ -211,13 +238,15 @@ const blankPassage = (): Passage => ({
 
 const SAMPLE = `# Format: Number|Type|Text|Answer
 # Types: tfng, mcq, fill, short
-# MCQ: Number|mcq|Text|A) opt1, B) opt2, C) opt3, D) opt4|CorrectLetter
+# Single MCQ: Number|mcq|Text|A) opt1, B) opt2, ...|<letter>
+# Multi-select MCQ: |BD or |B,D for "choose two"
 
 1|tfng|Coffee was first discovered in Ethiopia|TRUE
 2|tfng|Kaldi was a coffee farmer|FALSE
 3|mcq|When did coffee reach Europe?|A) 13th century, B) 15th century, C) 17th century, D) 19th century|C
-4|fill|Kaldi noticed his goats became ___ after eating the berries|energetic
-5|short|What did Kaldi discover?|the coffee plant`
+4|mcq|Which TWO things became popular along with coffee?|A) tea houses, B) sugar trade, C) news pamphlets, D) cocoa drinks, E) silk imports|AC
+5|fill|Kaldi noticed his goats became ___ after eating the berries|energetic
+6|short|What did Kaldi discover?|the coffee plant`
 
 export default function BulkTestCreatePage() {
   const { slug } = useParams<{ slug: string }>()
@@ -486,6 +515,14 @@ export default function BulkTestCreatePage() {
             </code>
           </li>
           <li>
+            <strong>Choose TWO/THREE</strong> (multi-select):{' '}
+            <code className="rounded bg-white px-1">
+              N|mcq|Which TWO things…|A) opt1, B) opt2, C) opt3, D) opt4, E) opt5|BD
+            </code>
+            {' — '}or <code className="rounded bg-white px-1">B,D</code>. Auto-uses
+            checkboxes; both letters must be picked to be marked correct.
+          </li>
+          <li>
             <code className="rounded bg-white px-1">N|fill|Question with ___|answer</code>
           </li>
           <li>
@@ -631,6 +668,66 @@ export default function BulkTestCreatePage() {
                 <div className="mb-2 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />
                   <span>{parseRes.error}</span>
+                </div>
+              )}
+
+              {parseRes.ok && parseRes.questions.length > 0 && (
+                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+                  <div className="mb-3 text-sm font-semibold text-emerald-800">
+                    Parsed preview — verify correct answers before saving
+                  </div>
+                  <div className="space-y-2">
+                    {parseRes.questions.map((q, qi) => (
+                      <div
+                        key={qi}
+                        className="rounded-lg bg-white p-3 ring-1 ring-emerald-100"
+                      >
+                        <div className="mb-1 flex items-center gap-2 text-xs">
+                          <span className="rounded-full bg-slate-900 px-2 py-0.5 font-bold text-white">
+                            Q{q.order}
+                          </span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-700">
+                            {q.question_type === 'multi_choice'
+                              ? 'multi-select'
+                              : q.question_type}
+                          </span>
+                        </div>
+                        <div className="mb-1 text-sm text-slate-800">
+                          {q.text}
+                        </div>
+                        {q.options && (
+                          <ul className="mb-1 ml-4 list-disc text-xs text-slate-600">
+                            {q.options.map((opt, oi) => {
+                              const isCorrect = Array.isArray(q.correct_answer)
+                                ? q.correct_answer.includes(opt)
+                                : q.correct_answer === opt
+                              return (
+                                <li
+                                  key={oi}
+                                  className={
+                                    isCorrect
+                                      ? 'font-semibold text-emerald-700'
+                                      : ''
+                                  }
+                                >
+                                  {String.fromCharCode(65 + oi)}) {opt}
+                                  {isCorrect && ' ✓'}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        )}
+                        <div className="text-xs">
+                          <span className="text-slate-500">Correct answer:</span>{' '}
+                          <span className="font-semibold text-emerald-700">
+                            {Array.isArray(q.correct_answer)
+                              ? q.correct_answer.join(' + ')
+                              : q.correct_answer}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </SurfaceCard>
