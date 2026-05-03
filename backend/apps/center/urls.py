@@ -3,7 +3,9 @@ from rest_framework.routers import DefaultRouter
 
 from apps.mock.admin_views import CenterMockSessionViewSet
 
+from .ai_views import ai_generate_questions
 from .analytics_views import CenterAnalyticsExcelView, CenterAnalyticsView
+from .excel_import import excel_import, excel_template
 from .dashboard_views import CenterDashboardView, CenterSettingsView
 from .groups_views import CenterGroupViewSet
 from .tests_views import CenterTestViewSet
@@ -25,6 +27,15 @@ urlpatterns = router.urls + [
         CenterAnalyticsExcelView.as_view(),
         name='center-analytics-export',
     ),
+    # AI-Assisted question generation (Claude API)
+    path(
+        'tests/ai-generate-questions/',
+        ai_generate_questions,
+        name='center-tests-ai-generate',
+    ),
+    # Excel import — bulk-create a Reading test from an .xlsx file
+    path('tests/excel-template/', excel_template, name='center-tests-excel-template'),
+    path('tests/excel-import/', excel_import, name='center-tests-excel-import'),
     # ETAP 15 — Davomat tizimi
     path('', include('apps.attendance.urls')),
 ]

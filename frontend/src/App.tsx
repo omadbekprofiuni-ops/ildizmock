@@ -2,18 +2,22 @@ import { useEffect } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 
 import { AdminRoute } from '@/components/AdminRoute'
+import { ConfirmProvider } from '@/components/ConfirmDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { SuperAdminRoute } from '@/components/SuperAdminRoute'
 import { TeacherRoute } from '@/components/TeacherRoute'
 import { Toaster } from '@/components/ui/toaster'
+import { useIdleLogout } from '@/hooks/useIdleLogout'
 import { useAuth } from '@/stores/auth'
 
 import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import AttendancePage from './pages/center/AttendancePage'
+import AITestCreatePage from './pages/center/AITestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
+import ExcelImportPage from './pages/center/ExcelImportPage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
@@ -84,15 +88,13 @@ import MockWritingQueuePage from './pages/teacher/mock/MockWritingQueuePage'
 import TestListPage from './pages/TestListPage'
 import WritingSentPage from './pages/WritingSentPage'
 
-export default function App() {
-  const fetchMe = useAuth((s) => s.fetchMe)
-  useEffect(() => { fetchMe() }, [fetchMe])
-
+// useNavigate / useLocation faqat BrowserRouter ichida ishlaydi —
+// shuning uchun idle-logout hook'ini ichki komponent'da chaqiramiz.
+function AppRoutes() {
+  useIdleLogout()
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          {/* Public — guest can browse */}
+    <Routes>
+      {/* Public — guest can browse */}
           <Route path="/" element={<HomePage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/pricing" element={<PricingPage />} />
@@ -304,6 +306,8 @@ export default function App() {
               <Route path="teachers" element={<CenterTeachersPage />} />
               <Route path="tests" element={<CenterTestsPage />} />
               <Route path="tests/new" element={<TestCreateHubPage />} />
+              <Route path="tests/new/ai" element={<AITestCreatePage />} />
+              <Route path="tests/new/excel" element={<ExcelImportPage />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
               <Route
@@ -329,8 +333,21 @@ export default function App() {
           <Route path="/:slug" element={<OrgLandingPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        <Toaster />
+    </Routes>
+  )
+}
+
+export default function App() {
+  const fetchMe = useAuth((s) => s.fetchMe)
+  useEffect(() => { fetchMe() }, [fetchMe])
+
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ConfirmProvider>
+          <AppRoutes />
+          <Toaster />
+        </ConfirmProvider>
       </BrowserRouter>
     </ErrorBoundary>
   )
