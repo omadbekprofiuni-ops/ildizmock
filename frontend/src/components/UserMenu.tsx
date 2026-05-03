@@ -1,14 +1,4 @@
-import {
-  ChevronDown,
-  Dumbbell,
-  FilePen,
-  GraduationCap,
-  History,
-  LayoutDashboard,
-  LogOut,
-  User,
-  Users,
-} from 'lucide-react'
+import { ChevronDown, LogOut, User } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -32,33 +22,11 @@ export function UserMenu() {
   if (!user) return null
 
   const initial = (user.first_name || user.username || '?')[0]?.toUpperCase() || '?'
-  const isAdmin =
-    user.role === 'org_admin' ||
-    user.role === 'superadmin' ||
-    user.role === 'admin' ||
-    user.role === 'super_admin'
-  const isTeacher = user.role === 'teacher'
 
   const onLogout = async () => {
     await logout()
     navigate('/login', { replace: true })
   }
-
-  const Item = ({
-    to, Icon, children,
-  }: {
-    to: string
-    Icon: React.ComponentType<{ className?: string }>
-    children: React.ReactNode
-  }) => (
-    <Link
-      to={to}
-      onClick={() => setOpen(false)}
-      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-    >
-      <Icon className="h-4 w-4" /> {children}
-    </Link>
-  )
 
   return (
     <div ref={ref} className="relative">
@@ -81,18 +49,13 @@ export function UserMenu() {
             </div>
             <div className="font-mono text-xs text-slate-500">{user.phone}</div>
           </div>
-          {isAdmin && (
-            <Item to="/admin" Icon={LayoutDashboard}>Admin panel</Item>
-          )}
-          {isTeacher && (
-            <Item to="/teacher" Icon={Users}>Teacher panel</Item>
-          )}
-          <Item to="/dashboard" Icon={LayoutDashboard}>My Dashboard</Item>
-          <Item to="/practice" Icon={Dumbbell}>Practice</Item>
-          <Item to="/student/mock" Icon={GraduationCap}>Mock results</Item>
-          <Item to="/my-writings" Icon={FilePen}>My Writings</Item>
-          <Item to="/history" Icon={History}>History</Item>
-          <Item to="/profile" Icon={User}>Profile</Item>
+          <Link
+            to="/profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <User className="h-4 w-4" /> Profile
+          </Link>
           <button
             type="button"
             onClick={onLogout}

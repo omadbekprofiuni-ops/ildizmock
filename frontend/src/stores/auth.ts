@@ -24,11 +24,11 @@ export function roleLabel(role: User['role'] | null | undefined): string {
       return 'Super Admin'
     case 'org_admin':
     case 'admin':
-      return 'Markaz admini'
+      return 'Center Admin'
     case 'teacher':
-      return 'Ustoz'
+      return 'Teacher'
     case 'student':
-      return "O'quvchi"
+      return 'Student'
     default:
       return ''
   }

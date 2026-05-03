@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -17,9 +18,20 @@ type FormValues = z.infer<typeof schema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuth((s) => s.user)
   const login = useAuth((s) => s.login)
   const loading = useAuth((s) => s.loading)
+
+  // Idle bo'lib avto-logout bo'lganda xabar ko'rsatamiz (history state'dan).
+  const idleNotified = useRef(false)
+  useEffect(() => {
+    const state = location.state as { idle?: boolean } | null
+    if (state?.idle && !idleNotified.current) {
+      idleNotified.current = true
+      toast.info('You were signed out automatically after 10 minutes of inactivity. Please sign in again.')
+    }
+  }, [location.state])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -54,23 +66,23 @@ export default function LoginPage() {
       const data = e?.response?.data
       const status = e?.response?.status
 
-      // Tarmoq xatosi (server bilan ulana olmadik) — alohida xabar
+      // Network error — distinct message
       if (!e?.response && (e?.code === 'ERR_NETWORK' || /Network/i.test(e?.message || ''))) {
-        toast.error("Server bilan ulanib bo'lmadi. Internet aloqasini tekshiring.")
+        toast.error("Could not reach the server. Check your internet connection.")
         return
       }
 
-      // 5xx — server xatosi
+      // 5xx — server error
       if (status && status >= 500) {
-        toast.error('Serverda kutilmagan xatolik. Markaz administratoriga murojaat qiling.')
+        toast.error('Unexpected server error. Please contact your center administrator.')
         return
       }
 
-      // 4xx — backend yuborgan aniq sababni ko'rsatamiz
+      // 4xx — surface the backend's specific reason
       const msg =
         (data && typeof data === 'object' && (data.detail as string | undefined)) ||
         (data && Object.values(data).flat().join(' ')) ||
-        "Login yoki parol noto'g'ri"
+        "Incorrect username or password"
       toast.error(String(msg))
     }
   }

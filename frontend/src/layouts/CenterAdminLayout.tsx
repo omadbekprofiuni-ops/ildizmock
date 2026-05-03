@@ -31,34 +31,34 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '', label: 'Bosh sahifa', icon: LayoutDashboard, end: true,
+  { to: '', label: 'Dashboard', icon: LayoutDashboard, end: true,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'students', label: "O'quvchilar", icon: Users,
+  { to: 'students', label: "Students", icon: Users,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'teachers', label: 'Ustozlar', icon: GraduationCap,
+  { to: 'teachers', label: 'Teachers', icon: GraduationCap,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'groups', label: 'Guruhlar', icon: UsersRound },  // hammaga
-  { to: 'attendance', label: 'Davomat', icon: CalendarCheck },  // hammaga
-  { to: 'tests', label: 'Testlar', icon: BookOpen,
+  { to: 'groups', label: 'Groups', icon: UsersRound },
+  { to: 'attendance', label: 'Attendance', icon: CalendarCheck },
+  { to: 'tests', label: 'Tests', icon: BookOpen,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'mock', label: 'Mock sessiyalar', icon: BookOpen,
+  { to: 'mock', label: 'Mock sessions', icon: BookOpen,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
   { to: 'analytics', label: 'Analytics', icon: BarChart3,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'settings', label: 'Sozlamalar', icon: Settings,
+  { to: 'settings', label: 'Settings', icon: Settings,
     roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
 ]
 
 const TITLES: Record<string, { title: string; crumb?: string }> = {
-  '': { title: 'Bosh sahifa' },
-  students: { title: "O'quvchilar", crumb: 'Foydalanuvchilar' },
-  teachers: { title: 'Ustozlar', crumb: 'Foydalanuvchilar' },
-  groups: { title: 'Guruhlar', crumb: 'Monitoring' },
-  attendance: { title: 'Davomat', crumb: 'Monitoring' },
-  tests: { title: 'Testlar', crumb: 'Test bazasi' },
-  mock: { title: 'Mock sessiyalar', crumb: 'Sinov' },
-  analytics: { title: 'Analytics', crumb: 'Hisobotlar' },
-  settings: { title: 'Sozlamalar', crumb: 'Markaz' },
+  '': { title: 'Dashboard' },
+  students: { title: "Students", crumb: 'Users' },
+  teachers: { title: 'Teachers', crumb: 'Users' },
+  groups: { title: 'Groups', crumb: 'Monitoring' },
+  attendance: { title: 'Attendance', crumb: 'Monitoring' },
+  tests: { title: 'Tests', crumb: 'Test bank' },
+  mock: { title: 'Mock sessions', crumb: 'Exams' },
+  analytics: { title: 'Analytics', crumb: 'Reports' },
+  settings: { title: 'Settings', crumb: 'Center' },
 }
 
 export default function CenterAdminLayout() {
@@ -85,7 +85,7 @@ export default function CenterAdminLayout() {
   // Determine current section for breadcrumb/title
   const path = location.pathname
   const seg = path.replace(`/${slug}/admin`, '').replace(/^\//, '').split('/')[0] ?? ''
-  const meta = TITLES[seg] ?? { title: seg || 'Bosh sahifa' }
+  const meta = TITLES[seg] ?? { title: seg || 'Dashboard' }
 
   return (
     <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900">
@@ -146,7 +146,7 @@ export default function CenterAdminLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              title="Chiqish"
+              title="Logout"
               className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
             >
               <LogOut size={16} />
@@ -159,12 +159,12 @@ export default function CenterAdminLayout() {
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500">{meta.crumb || 'Markaz'}</span>
+            <span className="text-slate-500">{meta.crumb || 'Center'}</span>
             <span className="text-slate-300">/</span>
             <span className="font-medium text-slate-900">{meta.title}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="hidden sm:inline">Markaz:</span>
+            <span className="hidden sm:inline">Center:</span>
             <span className="font-medium text-slate-900">{org?.name ?? slug}</span>
           </div>
         </header>
