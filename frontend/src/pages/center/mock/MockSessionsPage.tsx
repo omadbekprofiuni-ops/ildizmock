@@ -12,6 +12,7 @@ import {
   btnOutline,
   btnPrimary,
 } from '@/components/admin-shell'
+import { useConfirm } from '@/components/ConfirmDialog'
 import { api } from '@/lib/api'
 
 interface SessionRow {
@@ -25,12 +26,12 @@ interface SessionRow {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  waiting: 'Kutilmoqda',
+  waiting: 'Waiting',
   listening: 'Listening',
   reading: 'Reading',
   writing: 'Writing',
-  finished: 'Tugagan',
-  cancelled: 'Bekor qilingan',
+  finished: 'Finished',
+  cancelled: 'Cancelled',
 }
 
 const STATUS_TONE: Record<string, 'slate' | 'blue' | 'amber' | 'rose' | 'emerald' | 'indigo'> = {
@@ -44,6 +45,7 @@ const STATUS_TONE: Record<string, 'slate' | 'blue' | 'amber' | 'rose' | 'emerald
 
 export default function MockSessionsPage() {
   const { slug } = useParams<{ slug: string }>()
+  const confirm = useConfirm()
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
@@ -65,15 +67,15 @@ export default function MockSessionsPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Mock sessiyalar"
-        subtitle="Sinxron mock testlar — talabalar bitta linkdan kirib, bir vaqtda boshlaydi."
+        title="Mock sessions"
+        subtitle="Synchronous mock tests — students join via a single link and start together."
         actions={
           <button
             type="button"
             onClick={() => setShowCreate(true)}
             className={btnPrimary}
           >
-            <Plus size={16} /> Yangi sessiya
+            <Plus size={16} /> New session
           </button>
         }
       />
@@ -82,27 +84,27 @@ export default function MockSessionsPage() {
         <StateCard
           Icon={CalendarPlus}
           tone="indigo"
-          title="Hali sessiya yaratilmagan"
-          description="“Yangi sessiya” tugmasi orqali birinchi mock sessiyani rejalashtiring."
+          title="No sessions yet"
+          description="Click “New session” to schedule your first mock session."
         />
       ) : (
         <TableCard>
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr>
-                <th className={adminTable.th}>Sessiya</th>
-                <th className={adminTable.th}>Sana</th>
-                <th className={adminTable.th}>Kod</th>
-                <th className={adminTable.th}>Talabalar</th>
-                <th className={adminTable.th}>Holat</th>
-                <th className={adminTable.th + ' text-right'}>Amal</th>
+                <th className={adminTable.th}>Session</th>
+                <th className={adminTable.th}>Date</th>
+                <th className={adminTable.th}>Code</th>
+                <th className={adminTable.th}>Students</th>
+                <th className={adminTable.th}>Status</th>
+                <th className={adminTable.th + ' text-right'}>Actions</th>
               </tr>
             </thead>
             <tbody className={adminTable.tbody}>
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Yuklanmoqda…
+                    Loading…
                   </td>
                 </tr>
               ) : (
@@ -129,21 +131,27 @@ export default function MockSessionsPage() {
                           <button
                             type="button"
                             onClick={async () => {
-                              if (!window.confirm(`"${s.name}" sessiyasini doimiy o'chirasizmi? Talabalar javoblari ham o'chiriladi.`)) return
+                              const ok = await confirm({
+                                title: 'Delete session?',
+                                description: `Permanently delete "${s.name}". Student answers will also be deleted.`,
+                                confirmText: 'Delete',
+                                tone: 'danger',
+                              })
+                              if (!ok) return
                               await api.delete(`/center/${slug}/mock/${s.id}/`)
                               load()
                             }}
                             className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
-                            title="Sessiyani doimiy o'chirish"
+                            title="Permanently delete session"
                           >
-                            <Trash2 size={12} /> O'chirish
+                            <Trash2 size={12} /> Delete
                           </button>
                         )}
                         <Link
                           to={`/${slug}/admin/mock/${s.id}`}
                           className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
                         >
-                          Boshqarish <ArrowRight size={14} />
+                          Manage <ArrowRight size={14} />
                         </Link>
                       </div>
                     </td>
@@ -218,8 +226,10 @@ function CreateSessionDialog({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!form.listening_test) {
-      setError('Listening test tanlang — sessiyani Listening bilan boshlanadi.')
+    // Kamida bitta test biriktirilishi shart — backend qaysi modul
+    // tanlangan bo'lsa o'shandan boshlaydi (Writing-only ham mumkin).
+    if (!form.listening_test && !form.reading_test && !form.writing_test) {
+      setError('Pick at least one test (Listening, Reading or Writing).')
       return
     }
     setBusy(true)
@@ -247,13 +257,13 @@ function CreateSessionDialog({
         setError(Array.isArray(first) ? String(first[0]) : String(first))
       } else if (status && status >= 500) {
         setError(
-          `Server xatosi (${status}). Server adminiga ayting: backend'da ` +
-          "'python manage.py migrate' ishga tushirilsin va gunicorn restart qilinsin.",
+          `Server error (${status}). Tell the admin to run ` +
+          "'python manage.py migrate' on the backend and restart gunicorn.",
         )
       } else if (status) {
-        setError(`So'rov bajarilmadi (HTTP ${status}). Qayta urinib ko'ring.`)
+        setError(`Request failed (HTTP ${status}). Please try again.`)
       } else {
-        setError(err.message || "Tarmoqda xatolik. Internetni tekshiring.")
+        setError(err.message || "Network error. Check your internet connection.")
       }
     } finally {
       setBusy(false)
@@ -264,7 +274,7 @@ function CreateSessionDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">Yangi mock sessiya</h2>
+          <h2 className="text-xl font-semibold text-slate-900">New mock session</h2>
           <button
             type="button"
             onClick={onClose}
@@ -275,20 +285,20 @@ function CreateSessionDialog({
         </div>
 
         {loading ? (
-          <p className="text-slate-500">Testlar yuklanmoqda…</p>
+          <p className="text-slate-500">Loading tests…</p>
         ) : (
           <form onSubmit={submit} className="space-y-4">
-            <Field label="Sessiya nomi">
+            <Field label="Session name">
               <input
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Masalan: 2026-04-27 Kechki guruh"
+                placeholder="e.g. 2026-04-27 Evening group"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
             </Field>
 
-            <Field label="Sana">
+            <Field label="Date">
               <input
                 required
                 type="date"
@@ -318,7 +328,7 @@ function CreateSessionDialog({
             />
 
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Listening (daq.)">
+              <Field label="Listening (min)">
                 <input
                   type="number"
                   min={5}
@@ -333,7 +343,7 @@ function CreateSessionDialog({
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
-              <Field label="Reading (daq.)">
+              <Field label="Reading (min)">
                 <input
                   type="number"
                   min={5}
@@ -345,7 +355,7 @@ function CreateSessionDialog({
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
-              <Field label="Writing (daq.)">
+              <Field label="Writing (min)">
                 <input
                   type="number"
                   min={5}
@@ -367,10 +377,10 @@ function CreateSessionDialog({
 
             <div className="flex justify-end gap-2 pt-2">
               <button type="button" onClick={onClose} className={btnOutline}>
-                Bekor
+                Cancel
               </button>
               <button type="submit" disabled={busy} className={btnPrimary}>
-                {busy ? 'Yaratilmoqda…' : 'Yaratish'}
+                {busy ? 'Creating…' : 'Create'}
               </button>
             </div>
           </form>
@@ -409,7 +419,7 @@ function TestSelect({
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
       >
-        <option value="">— Tanlang —</option>
+        <option value="">— Select —</option>
         {tests.map((t) => (
           <option key={t.id} value={t.id}>
             {t.name}
@@ -418,8 +428,8 @@ function TestSelect({
       </select>
       {tests.length === 0 && (
         <p className="mt-1 text-xs text-amber-600">
-          Bu modul bo'yicha published test yo'q. Avval testni global katalogdan
-          klon qiling va publish qiling.
+          No published tests for this module yet. Clone a test from the global
+          catalog and publish it first.
         </p>
       )}
     </Field>

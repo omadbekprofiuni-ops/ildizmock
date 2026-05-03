@@ -64,8 +64,8 @@ export default function MockSessionPage() {
     return (
       <Center>
         <div className="rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h1 className="mb-2 text-2xl font-bold text-red-600">Sessiya topilmadi</h1>
-          <p className="text-slate-600">Brauzeringizdan qayta kiring.</p>
+          <h1 className="mb-2 text-2xl font-bold text-red-600">Session not found</h1>
+          <p className="text-slate-600">Please re-enter from your browser.</p>
         </div>
       </Center>
     )
@@ -73,7 +73,7 @@ export default function MockSessionPage() {
   if (!state) {
     return (
       <Center>
-        <div className="text-slate-500">Yuklanmoqda…</div>
+        <div className="text-slate-500">Loading…</div>
       </Center>
     )
   }
@@ -153,10 +153,10 @@ function WaitingRoom({ name }: { name: string }) {
     <Center>
       <div className="w-full max-w-lg rounded-2xl bg-white p-12 text-center shadow-xl">
         <div className="mb-6 inline-block h-16 w-16 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        <h1 className="mb-2 text-2xl font-bold text-slate-900">Salom, {name}!</h1>
-        <p className="mb-2 text-slate-600">Mock test boshlanishini kuting…</p>
+        <h1 className="mb-2 text-2xl font-bold text-slate-900">Hello, {name}!</h1>
+        <p className="mb-2 text-slate-600">Waiting for the mock test to start…</p>
         <p className="text-sm text-slate-500">
-          O'qituvchi START tugmasini bosganda avtomatik boshlanadi.
+          It will start automatically when the teacher presses START.
         </p>
       </div>
     </Center>
@@ -180,17 +180,16 @@ function BetweenScreen({
         ? 'Writing'
         : section === 'writing'
           ? 'Speaking'
-          : 'natijalar'
+          : 'results'
   return (
     <Center>
       <div className="w-full max-w-lg rounded-2xl bg-white p-12 text-center shadow-xl">
         <div className="mb-4 text-5xl">✓</div>
         <h1 className="mb-2 text-2xl font-bold text-slate-900">
-          {section.charAt(0).toUpperCase() + section.slice(1)} qismi yuborildi
+          {section.charAt(0).toUpperCase() + section.slice(1)} section submitted
         </h1>
         <p className="text-slate-600">
-          Boshqa talabalar tugatishini va o'qituvchi {next} bosqichiga
-          o'tkazishini kuting.
+          Wait for other students to finish and the teacher to advance to {next}.
         </p>
       </div>
     </Center>
@@ -203,7 +202,7 @@ function FinishedScreen({ state }: { state: MockState }) {
     <Center>
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
         <h1 className="mb-2 text-center text-2xl font-bold text-green-700">
-          ✓ Sessiya tugadi
+          ✓ Session finished
         </h1>
         <p className="mb-6 text-center text-slate-600">
           {state.participant.full_name}
@@ -215,7 +214,7 @@ function FinishedScreen({ state }: { state: MockState }) {
           <ScoreRow label="Speaking" value={scores.speaking} pending />
         </div>
         <p className="mt-6 text-center text-xs text-slate-500">
-          Writing va Speaking ballari ustoz tekshirgandan so'ng paydo bo'ladi.
+          Writing and Speaking scores will appear after the teacher reviews.
         </p>
       </div>
     </Center>
@@ -235,7 +234,7 @@ function ScoreRow({
     <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
       <span className="font-medium text-slate-700">{label}</span>
       <span className="font-mono text-xl font-bold">
-        {value ?? (pending ? <span className="text-sm font-normal text-slate-400">kutilmoqda…</span> : '—')}
+        {value ?? (pending ? <span className="text-sm font-normal text-slate-400">pending…</span> : '—')}
       </span>
     </div>
   )

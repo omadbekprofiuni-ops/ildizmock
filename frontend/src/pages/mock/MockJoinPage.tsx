@@ -28,13 +28,13 @@ interface SessionInfo {
 const STORAGE_KEY = (code: string) => `ildizmock:mock-bsid:${code}`
 
 const STATUS_LABEL: Record<string, string> = {
-  waiting: 'Kutilmoqda',
-  listening: 'Listening jarayonda',
-  reading: 'Reading jarayonda',
-  writing: 'Writing jarayonda',
-  speaking: 'Speaking jarayonda',
-  finished: 'Tugagan',
-  cancelled: 'Bekor qilingan',
+  waiting: 'Waiting',
+  listening: 'Listening in progress',
+  reading: 'Reading in progress',
+  writing: 'Writing in progress',
+  speaking: 'Speaking in progress',
+  finished: 'Finished',
+  cancelled: 'Cancelled',
 }
 
 export default function MockJoinPage() {
@@ -86,7 +86,7 @@ export default function MockJoinPage() {
       navigate(`/mock/session/${r.data.browser_session_id}`, { replace: true })
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail ?? 'Xatolik yuz berdi')
+      setError(err.response?.data?.detail ?? 'An error occurred')
     } finally {
       setBusy(false)
     }
@@ -97,7 +97,7 @@ export default function MockJoinPage() {
     if (!code) return
     const fullName = guestName.trim()
     if (fullName.length < 2) {
-      setError('Ism va familiyangizni kiriting')
+      setError('Please enter your first and last name')
       return
     }
     setError('')
@@ -111,7 +111,7 @@ export default function MockJoinPage() {
       navigate(`/mock/session/${r.data.browser_session_id}`, { replace: true })
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail ?? 'Xatolik yuz berdi')
+      setError(err.response?.data?.detail ?? 'An error occurred')
     } finally {
       setBusy(false)
     }
@@ -121,8 +121,8 @@ export default function MockJoinPage() {
     return (
       <Center>
         <div className="rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h1 className="mb-2 text-2xl font-bold text-red-600">Sessiya topilmadi</h1>
-          <p className="text-slate-600">Linkni qayta tekshiring.</p>
+          <h1 className="mb-2 text-2xl font-bold text-red-600">Session not found</h1>
+          <p className="text-slate-600">Please re-check the link.</p>
         </div>
       </Center>
     )
@@ -131,12 +131,12 @@ export default function MockJoinPage() {
   if (!info) {
     return (
       <Center>
-        <div className="text-slate-500">Yuklanmoqda…</div>
+        <div className="text-slate-500">Loading…</div>
       </Center>
     )
   }
 
-  // Sessiya endi qo'shilish uchun ochiq emas
+  // Session no longer accepting joins
   if (!info.join_allowed) {
     return (
       <Center>
@@ -147,7 +147,7 @@ export default function MockJoinPage() {
             {STATUS_LABEL[info.status] ?? info.status}
           </div>
           <p className="mt-4 text-slate-600">
-            Bu sessiyaga endi qo‘shilib bo‘lmaydi.
+            This session is no longer accepting new participants.
           </p>
         </div>
       </Center>
@@ -168,7 +168,7 @@ export default function MockJoinPage() {
           </div>
           <h1 className="mb-1 text-2xl font-bold text-slate-900">{info.name}</h1>
           <p className="text-sm text-slate-500">
-            {info.date} · Kod:{' '}
+            {info.date} · Code:{' '}
             <code className="font-mono text-red-600">{info.access_code}</code>
           </p>
           <div className="mt-3 inline-block rounded-full bg-blue-50 px-4 py-1 text-xs font-semibold text-blue-700">
@@ -182,15 +182,15 @@ export default function MockJoinPage() {
           </div>
         )}
 
-        {/* Pre-registered ro'yxat */}
+        {/* Pre-registered list */}
         {pending.length > 0 && (
           <div className="mb-4">
             <h2 className="mb-2 text-base font-semibold text-slate-900">
-              Ismingizni tanlang
+              Select your name
             </h2>
             <p className="mb-4 text-xs text-slate-500">
-              Sessiyaga kirish uchun o‘z ismingizni bosing. Agar ro‘yxatda yo‘q
-              bo‘lsangiz, ustozingizga murojaat qiling.
+              Click on your name to join the session. If your name is not
+              listed, ask your teacher.
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {pending.map((p) => (
@@ -208,7 +208,7 @@ export default function MockJoinPage() {
                     <div className="font-medium text-slate-900">
                       {p.full_name}
                     </div>
-                    <div className="text-xs text-slate-500">Bosing →</div>
+                    <div className="text-xs text-slate-500">Click →</div>
                   </div>
                 </button>
               ))}
@@ -218,13 +218,13 @@ export default function MockJoinPage() {
 
         {pending.length === 0 && info.participants.length === 0 && (
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Sessiyaga hali hech kim qo‘shilmagan.
+            No one has joined the session yet.
           </div>
         )}
 
         {pending.length === 0 && info.participants.length > 0 && (
           <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            Barcha pre-registered talabalar allaqachon kirgan.
+            All pre-registered students have already joined.
           </div>
         )}
 
@@ -237,18 +237,18 @@ export default function MockJoinPage() {
                 onClick={() => setShowGuestForm(true)}
                 className="text-sm font-medium text-red-600 hover:text-red-700"
               >
-                Ro‘yxatda yo‘qman — yangi ism kiritaman
+                I'm not on the list — enter a new name
               </button>
             ) : (
               <form onSubmit={submitGuest} className="space-y-3">
                 <h3 className="text-sm font-semibold text-slate-900">
-                  Ism va familiyangizni kiriting
+                  Enter your first and last name
                 </h3>
                 <input
                   autoFocus
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Masalan: Aziz Karimov"
+                  placeholder="e.g. John Smith"
                   className="w-full rounded-lg border-2 border-slate-200 px-4 py-3 text-base focus:border-red-500 focus:outline-none"
                 />
                 <div className="flex gap-2">
@@ -257,7 +257,7 @@ export default function MockJoinPage() {
                     disabled={busy}
                     className="flex-1 rounded-lg bg-red-600 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                   >
-                    {busy ? 'Qo‘shilmoqda…' : 'Qo‘shilish'}
+                    {busy ? 'Joining…' : 'Join'}
                   </button>
                   <button
                     type="button"
@@ -268,7 +268,7 @@ export default function MockJoinPage() {
                     }}
                     className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
                   >
-                    Bekor
+                    Cancel
                   </button>
                 </div>
               </form>
@@ -276,11 +276,11 @@ export default function MockJoinPage() {
           </div>
         )}
 
-        {/* Allaqachon kirganlar */}
+        {/* Already joined */}
         {joined.length > 0 && (
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Sessiyada ({joined.length})
+              In session ({joined.length})
             </p>
             <div className="flex flex-wrap gap-1.5">
               {joined.map((p) => (

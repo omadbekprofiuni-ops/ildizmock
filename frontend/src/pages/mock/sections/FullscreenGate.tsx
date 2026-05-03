@@ -35,7 +35,7 @@ export function FullscreenGate({
       if (req) await req.call(el)
     } catch {
       setError(
-        'Brauzeringiz fullscreen rejimini ruxsat bermadi. Iltimos brauzer sozlamalarini tekshiring.',
+        'Your browser refused fullscreen mode. Please check your browser settings.',
       )
     }
   }
@@ -47,15 +47,15 @@ export function FullscreenGate({
           <div className="mb-4 text-6xl">🖥️</div>
           <h1 className="mb-2 text-2xl font-bold">{title}</h1>
           <p className="mb-6 text-slate-300">
-            Test faqat <strong>to'liq ekran</strong> (fullscreen) rejimida
-            ishlaydi. Tugmani bosib, ekranni kengaytiring va testni boshlang.
+            The test runs only in <strong>fullscreen</strong> mode.
+            Press the button to expand the screen and start the test.
           </p>
           <button
             type="button"
             onClick={enter}
             className="rounded-full bg-orange-500 px-8 py-3 text-lg font-semibold hover:bg-orange-600"
           >
-            ▶ To'liq ekranga o'tish
+            ▶ Enter fullscreen
           </button>
           {error && (
             <p className="mt-4 rounded bg-red-900/50 p-3 text-sm text-red-200">
@@ -63,9 +63,9 @@ export function FullscreenGate({
             </p>
           )}
           <p className="mt-6 text-xs text-slate-400">
-            <strong>Eslatma:</strong> ESC tugmasi yoki F11 — fullscreen'dan
-            chiqaradi. Chiqsangiz, test taymeri davom etadi va sahifa qayta
-            kengaytirilmasdan ko'rinmaydi.
+            <strong>Note:</strong> ESC or F11 will exit fullscreen.
+            If you exit, the test timer keeps running and the page stays
+            hidden until you re-enter fullscreen.
           </p>
         </div>
       </div>

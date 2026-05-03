@@ -56,15 +56,15 @@ export function WritingSection({
     } catch (err) {
       submittedRef.current = false
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      alert(detail || 'Writing yuborishda xatolik. Internetni tekshiring va qayta urining.')
+      alert(detail || 'Error submitting Writing. Check your internet and try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div className="p-6 text-slate-500">Yuklanmoqda…</div>
+  if (loading) return <div className="p-6 text-slate-500">Loading…</div>
   if (tasks.length === 0) {
-    return <div className="p-6 text-slate-500">Writing testda task topilmadi.</div>
+    return <div className="p-6 text-slate-500">No tasks found in the Writing test.</div>
   }
 
   const tasksByNumber = [...tasks].sort((a, b) => a.task_number - b.task_number)
@@ -108,7 +108,7 @@ export function WritingSection({
         <div className="overflow-y-auto border-r bg-white p-6">
           <h2 className="mb-1 text-xl font-bold">Task {active.task_number}</h2>
           <p className="mb-3 text-sm text-slate-500">
-            Tavsiya: {active.suggested_minutes} daqiqa · Min: {active.min_words} so'z
+            Suggested: {active.suggested_minutes} min · Min: {active.min_words} words
           </p>
           {active.chart_image_url && (
             <img
@@ -132,7 +132,7 @@ export function WritingSection({
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Yozing…"
+            placeholder="Type here…"
             className="flex-1 resize-none rounded-lg border border-slate-300 bg-white p-4 text-base leading-relaxed focus:border-slate-900 focus:outline-none"
           />
           <div className="mt-2 flex items-center justify-between text-sm">
@@ -141,9 +141,9 @@ export function WritingSection({
                 enough ? 'font-semibold text-green-700' : 'text-slate-600'
               }
             >
-              {wc} / {active.min_words} so'z
+              {wc} / {active.min_words} words
             </span>
-            <span className="text-slate-400">Auto-save brauzer xotirasiga emas</span>
+            <span className="text-slate-400">Auto-save (not in browser memory)</span>
           </div>
         </div>
       </div>
@@ -156,7 +156,7 @@ export function WritingSection({
             onClick={submit}
             className="rounded-full bg-green-600 px-8 py-2 text-base font-semibold text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {submitting ? 'Yuborilmoqda…' : 'Ikkala taskni yuborish'}
+            {submitting ? 'Submitting…' : 'Submit both tasks'}
           </button>
         </div>
       </footer>

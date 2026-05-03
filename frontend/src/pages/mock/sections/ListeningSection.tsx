@@ -149,7 +149,7 @@ export function ListeningSection({
     } catch (err) {
       submittedRef.current = false
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      alert(detail || 'Listening yuborishda xatolik. Internetni tekshiring va qayta urining.')
+      alert(detail || 'Error submitting Listening. Check your internet and try again.')
     } finally {
       setSubmitting(false)
     }
@@ -159,9 +159,9 @@ export function ListeningSection({
     if (!submittedRef.current) submit()
   }
 
-  if (loading) return <div className="p-6 text-slate-500">Yuklanmoqda…</div>
+  if (loading) return <div className="p-6 text-slate-500">Loading…</div>
   if (parts.length === 0) {
-    return <div className="p-6 text-slate-500">Listening testda part topilmadi.</div>
+    return <div className="p-6 text-slate-500">No parts found in the Listening test.</div>
   }
 
   const part = parts[activeIdx]
@@ -297,7 +297,7 @@ export function ListeningSection({
                   onClick={submit}
                   className="rounded-full bg-green-600 px-8 py-3 text-base font-semibold text-white hover:bg-green-700 disabled:opacity-50"
                 >
-                  {submitting ? 'Yuborilmoqda…' : 'Tugatish va yuborish'}
+                  {submitting ? 'Submitting…' : 'Finish and submit'}
                 </button>
               )}
             </div>

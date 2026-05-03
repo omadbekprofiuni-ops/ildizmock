@@ -41,7 +41,7 @@ export function SpeakingSection({
     return (
       <FullscreenGate title="Speaking">
         <div className="flex h-screen items-center justify-center text-slate-500">
-          Yuklanmoqda…
+          Loading…
         </div>
       </FullscreenGate>
     )

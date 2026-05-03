@@ -9,6 +9,7 @@ import {
   btnOutline,
   btnPrimary,
 } from '@/components/admin-shell'
+import { useConfirm } from '@/components/ConfirmDialog'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
@@ -75,17 +76,18 @@ interface SessionDetail {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  waiting: 'Kutilmoqda',
+  waiting: 'Waiting',
   listening: 'Listening',
   reading: 'Reading',
   writing: 'Writing',
-  finished: 'Tugagan',
-  cancelled: 'Bekor qilingan',
+  finished: 'Finished',
+  cancelled: 'Cancelled',
 }
 
 export default function MockControlPage() {
   const { slug, sessionId } = useParams<{ slug: string; sessionId: string }>()
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const [session, setSession] = useState<SessionDetail | null>(null)
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -113,7 +115,7 @@ export default function MockControlPage() {
   }, [])
 
   if (!session) {
-    return <div className="p-6 text-slate-500">Yuklanmoqda…</div>
+    return <div className="p-6 text-slate-500">Loading…</div>
   }
 
   const joinUrl = `${window.location.origin}/mock/join/${session.access_code}`
@@ -124,56 +126,87 @@ export default function MockControlPage() {
   }
 
   const start = async () => {
-    if (!confirm('Listening sessiyasini boshlashga ishonchingiz komilmi? Hamma talabalar avtomatik test sahifasiga o‘tadi.'))
-      return
+    // Sessiya qaysi bo'limdan boshlanishini hisoblab confirm matnida ko'rsatamiz.
+    const sectionOrder = ['listening', 'reading', 'writing'] as const
+    const firstSec = sectionOrder.find((s) => session[`${s}_test` as const])
+    const firstLabel = firstSec
+      ? firstSec.charAt(0).toUpperCase() + firstSec.slice(1)
+      : 'Sessiya'
+    const ok = await confirm({
+      title: `Start ${firstLabel} session?`,
+      description: 'All students will be automatically taken to the test page.',
+      confirmText: 'Start',
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/start/`)
-      toast.success('Sessiya boshlandi — Listening')
+      toast.success(`Session started — ${firstLabel}`)
       load()
     } catch (err) {
-      toast.error(extractErrorDetail(err, 'Sessiyani boshlab bo‘lmadi'))
+      toast.error(extractErrorDetail(err, 'Failed to start the session'))
     } finally {
       setBusy(false)
     }
   }
 
   const advance = async () => {
-    const next =
-      session.status === 'listening'
-        ? 'Reading'
-        : session.status === 'reading'
-          ? 'Writing'
-          : 'Yakunlash'
-    if (!confirm(`${next} bosqichiga o‘tishni tasdiqlaysizmi?`)) return
+    // Hozirgi bo'limdan keyingi biriktirilgan bo'limni topamiz —
+    // backend ham xuddi shu tartibda boradi.
+    const sectionOrder = ['listening', 'reading', 'writing'] as const
+    const idx = sectionOrder.indexOf(session.status as typeof sectionOrder[number])
+    const nextSec = sectionOrder
+      .slice(idx + 1)
+      .find((s) => session[`${s}_test` as const])
+    const nextLabel = nextSec
+      ? nextSec.charAt(0).toUpperCase() + nextSec.slice(1)
+      : 'Finish'
+    const ok = await confirm({
+      title: `Advance to ${nextLabel}?`,
+      description: 'Students will move to the next stage immediately.',
+      confirmText: 'Advance',
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/advance/`)
-      toast.success(`${next} bosqichiga o‘tildi`)
+      toast.success(`Advanced to ${nextLabel}`)
       load()
     } catch (err) {
-      toast.error(extractErrorDetail(err, 'Bosqichni o‘zgartirib bo‘lmadi'))
+      toast.error(extractErrorDetail(err, 'Failed to advance'))
     } finally {
       setBusy(false)
     }
   }
 
   const cancel = async () => {
-    if (!confirm("Sessiyani bekor qilasizmi? Talabalar natijalari saqlanmaydi.")) return
+    const ok = await confirm({
+      title: 'Cancel session?',
+      description: 'Student results will not be saved.',
+      confirmText: 'Cancel session',
+      cancelText: 'Keep',
+      tone: 'danger',
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/cancel/`)
-      toast.success('Sessiya bekor qilindi')
+      toast.success('Session cancelled')
       navigate(`/${slug}/admin/mock`)
     } catch (err) {
-      toast.error(extractErrorDetail(err, 'Sessiyani bekor qilib bo‘lmadi'))
+      toast.error(extractErrorDetail(err, 'Failed to cancel the session'))
     } finally {
       setBusy(false)
     }
   }
 
   const reopen = async () => {
-    if (!confirm('Sessiyani qayta ochasizmi? (24 soat ichida ruxsat etiladi)')) return
+    const ok = await confirm({
+      title: 'Reopen the session?',
+      description: 'Allowed within 24 hours of finishing.',
+      confirmText: 'Reopen',
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await api.post(`/center/${slug}/mock/${sessionId}/reopen/`)
@@ -181,7 +214,7 @@ export default function MockControlPage() {
     } catch (err) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response
         ?.data?.detail
-      alert(detail || 'Qayta ochib bo‘lmadi')
+      alert(detail || 'Failed to reopen')
     } finally {
       setBusy(false)
     }
@@ -226,7 +259,7 @@ export default function MockControlPage() {
           to={`/${slug}/admin/mock`}
           className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
         >
-          <ArrowLeft size={14} /> Sessiyalar
+          <ArrowLeft size={14} /> Sessions
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -249,7 +282,7 @@ export default function MockControlPage() {
       {/* Join link */}
       <SurfaceCard className="mb-6 border-red-100 bg-red-50/40">
         <p className="mb-2 text-sm font-semibold text-slate-700">
-          Talabalar uchun link:
+          Join link for students:
         </p>
         <div className="flex items-center gap-3">
           <input
@@ -260,7 +293,7 @@ export default function MockControlPage() {
           />
           <button type="button" onClick={copyLink} className={btnPrimary}>
             <Copy size={14} />
-            {copied ? 'Nusxalandi' : 'Nusxa olish'}
+            {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
         <p className="mt-2 text-xs text-slate-600">
@@ -273,17 +306,25 @@ export default function MockControlPage() {
 
       {/* Control */}
       <SurfaceCard className="mb-6">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">Boshqaruv</h2>
+        <h2 className="mb-4 text-base font-semibold text-slate-900">Controls</h2>
 
         {session.status === 'waiting' && (() => {
+          // Sessiyada qaysi bo'limlar biriktirilgan — start o'shaning birinchisidan boshlaydi.
+          const sectionOrder = ['listening', 'reading', 'writing'] as const
+          const firstSection = sectionOrder.find(
+            (s) => session[`${s}_test` as const],
+          )
           const noParticipants = session.participants.length === 0
-          const noListeningTest = !session.listening_test
-          const blockReason = noListeningTest
-            ? 'Listening test biriktirilmagan — sessiyani tahrirlab Listening test tanlang.'
+          const noTests = !firstSection
+          const blockReason = noTests
+            ? 'No test attached — edit the session and pick at least one test.'
             : noParticipants
-              ? 'Avval talaba qo‘shing yoki link orqali kirishlarini kuting.'
+              ? 'Add students first or wait for them to join via the link.'
               : ''
-          const disabled = busy || noParticipants || noListeningTest
+          const disabled = busy || noParticipants || noTests
+          const firstLabel = firstSection
+            ? firstSection.charAt(0).toUpperCase() + firstSection.slice(1)
+            : '—'
           return (
             <>
               <button
@@ -293,10 +334,10 @@ export default function MockControlPage() {
                 title={blockReason || undefined}
                 className={btnPrimary + ' !px-8 !py-3 text-base disabled:cursor-not-allowed disabled:opacity-50'}
               >
-                <Play size={18} /> START — Listening
+                <Play size={18} /> START — {firstLabel}
               </button>
               <p className="mt-2 text-sm text-slate-600">
-                {session.participants.length} ta talaba qo'shilgan
+                {session.participants.length} students joined
               </p>
               {blockReason && (
                 <p className="mt-1 text-sm font-medium text-amber-700">
@@ -313,7 +354,7 @@ export default function MockControlPage() {
           <div className="space-y-4">
             <div className="rounded-2xl bg-slate-50 px-6 py-5 text-center">
               <div className="text-xs uppercase tracking-widest text-slate-500">
-                {STATUS_LABEL[session.status]} taymeri
+                {STATUS_LABEL[session.status]} timer
               </div>
               <div className="font-mono text-5xl font-bold text-slate-900">
                 {m}:{s}
@@ -321,7 +362,7 @@ export default function MockControlPage() {
             </div>
 
             <div className="text-center text-sm text-slate-600">
-              Yuborgan talabalar: <strong>{submittedCount}</strong> /{' '}
+              Submitted: <strong>{submittedCount}</strong> /{' '}
               {session.participants.length}
             </div>
 
@@ -331,9 +372,20 @@ export default function MockControlPage() {
               onClick={advance}
               className={btnPrimary + ' w-full justify-center !py-3 text-base'}
             >
-              {session.status === 'listening' && 'NEXT → Reading'}
-              {session.status === 'reading' && 'NEXT → Writing'}
-              {session.status === 'writing' && '✓ FINISH'}
+              {(() => {
+                // Hozirgi bo'limdan keyingi biriktirilgan bo'limni topamiz —
+                // backend ham xuddi shu mantiq bilan ishlaydi.
+                const sectionOrder = ['listening', 'reading', 'writing'] as const
+                const idx = sectionOrder.indexOf(session.status as typeof sectionOrder[number])
+                const next = sectionOrder
+                  .slice(idx + 1)
+                  .find((s) => session[`${s}_test` as const])
+                if (next) {
+                  const label = next.charAt(0).toUpperCase() + next.slice(1)
+                  return `NEXT → ${label}`
+                }
+                return '✓ FINISH'
+              })()}
             </button>
           </div>
         )}
@@ -341,23 +393,23 @@ export default function MockControlPage() {
         {session.status === 'finished' && (
           <div className="text-center">
             <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-emerald-600">
-              <CheckCircle2 size={20} /> Sessiya tugadi
+              <CheckCircle2 size={20} /> Session finished
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Link
                 to={`/${slug}/admin/mock/${session.id}/results`}
                 className={btnPrimary}
               >
-                Natijalarni ko'rish
+                View results
               </Link>
               <button
                 type="button"
                 onClick={reopen}
                 disabled={busy}
                 className={btnOutline}
-                title="24 soat ichida qayta ochish mumkin"
+                title="Can be reopened within 24 hours"
               >
-                <RotateCcw size={14} /> Qayta ochish
+                <RotateCcw size={14} /> Reopen
               </button>
             </div>
           </div>
@@ -366,21 +418,21 @@ export default function MockControlPage() {
         {session.status === 'cancelled' && (
           <div className="text-center">
             <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-rose-600">
-              <XOctagon size={20} /> Sessiya bekor qilingan
+              <XOctagon size={20} /> Session cancelled
             </p>
             <button
               type="button"
               onClick={reopen}
               disabled={busy}
               className={btnOutline}
-              title="24 soat ichida qayta ochish mumkin"
+              title="Can be reopened within 24 hours"
             >
-              <RotateCcw size={14} /> Qayta ochish
+              <RotateCcw size={14} /> Reopen
             </button>
           </div>
         )}
 
-        {/* Bekor qilish — faqat hali tugamagan sessiyalar uchun */}
+        {/* Cancel — only for unfinished sessions */}
         {(session.status === 'waiting' ||
           session.status === 'listening' ||
           session.status === 'reading' ||
@@ -392,7 +444,7 @@ export default function MockControlPage() {
               disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
             >
-              <XOctagon size={14} /> Sessiyani bekor qilish
+              <XOctagon size={14} /> Cancel session
             </button>
           </div>
         )}
@@ -402,7 +454,7 @@ export default function MockControlPage() {
       <SurfaceCard>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900">
-            Talabalar ({session.participants.length})
+            Students ({session.participants.length})
           </h2>
           {session.status === 'waiting' && (
             <button
@@ -410,15 +462,15 @@ export default function MockControlPage() {
               onClick={() => setShowAddDialog(true)}
               className={btnPrimary}
             >
-              <UserPlus size={14} /> Talaba qo'shish
+              <UserPlus size={14} /> Add student
             </button>
           )}
         </div>
 
         {session.participants.length === 0 ? (
           <p className="text-sm text-slate-500">
-            Hali hech kim qo'shilmagan.
-            {session.status === 'waiting' && ' "Talaba qo\'shish" tugmasi orqali oldindan ro\'yxatga oling.'}
+            No one has joined yet.
+            {session.status === 'waiting' && ' Use the "Add student" button to pre-register them.'}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -445,32 +497,32 @@ export default function MockControlPage() {
                         {p.full_name}
                         {p.is_guest && (
                           <span className="ml-1.5 text-xs font-normal text-slate-500">
-                            (mehmon)
+                            (guest)
                           </span>
                         )}
                       </div>
                       <div className="mt-1 text-xs text-slate-500">
                         {pending ? (
                           <span className="font-semibold text-amber-700">
-                            ⏳ kutilmoqda
+                            ⏳ pending
                           </span>
                         ) : p.claimed_at ? (
                           <>
-                            ✓ kirdi:{' '}
-                            {new Date(p.claimed_at).toLocaleTimeString('uz-UZ', {
+                            ✓ joined:{' '}
+                            {new Date(p.claimed_at).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
                           </>
                         ) : (
-                          new Date(p.joined_at).toLocaleTimeString('uz-UZ', {
+                          new Date(p.joined_at).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })
                         )}
                         {submittedThis && (
                           <span className="ml-2 font-semibold text-emerald-700">
-                            ✓ topshirdi
+                            ✓ submitted
                           </span>
                         )}
                       </div>
@@ -479,14 +531,20 @@ export default function MockControlPage() {
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!confirm(`${p.full_name} ni ro'yxatdan olib tashlaymizmi?`)) return
+                          const ok = await confirm({
+                            title: 'Remove student?',
+                            description: `Remove ${p.full_name} from the list.`,
+                            confirmText: 'Remove',
+                            tone: 'danger',
+                          })
+                          if (!ok) return
                           await api.delete(
                             `/center/${slug}/mock/${sessionId}/participants/${p.id}/remove/`,
                           )
                           load()
                         }}
                         className="rounded p-1 text-rose-500 hover:bg-rose-100"
-                        title="Olib tashlash"
+                        title="Remove"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -550,7 +608,7 @@ function AddParticipantsDialog({
 
   const submit = async () => {
     if (selected.size === 0) {
-      setError('Hech bo\'lmaganda bitta talaba tanlang')
+      setError('Select at least one student')
       return
     }
     setBusy(true)
@@ -562,7 +620,7 @@ function AddParticipantsDialog({
       onAdded()
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail ?? 'Xatolik yuz berdi')
+      setError(err.response?.data?.detail ?? 'An error occurred')
     } finally {
       setBusy(false)
     }
@@ -585,10 +643,10 @@ function AddParticipantsDialog({
         <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              Talabalarni qo'shish
+              Add students
             </h2>
             <p className="text-xs text-slate-500">
-              Ro'yxatdan tanlang — sessiya boshlanganda ular o'z ismini bosib kirishadi.
+              Pick from the list — when the session starts they click their name to join.
             </p>
           </div>
           <button
@@ -604,21 +662,21 @@ function AddParticipantsDialog({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Ism, username yoki telefon bo'yicha qidirish…"
+            placeholder="Search by name, username or phone…"
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-red-500 focus:outline-none"
           />
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {loading ? (
-            <p className="p-4 text-center text-slate-500">Yuklanmoqda…</p>
+            <p className="p-4 text-center text-slate-500">Loading…</p>
           ) : filtered.length === 0 ? (
             <p className="p-6 text-center text-sm text-slate-500">
               {students.length === 0
-                ? 'Markazda talabalar yo\'q. Avval Talabalar sahifasidan akkaunt yarating.'
+                ? 'No students in your center yet. Create accounts on the Students page first.'
                 : students.every((s) => s.is_added)
-                  ? 'Barcha talabalar allaqachon qo\'shilgan.'
-                  : 'Qidiruvga mos talaba topilmadi.'}
+                  ? 'All students have already been added.'
+                  : 'No students match your search.'}
             </p>
           ) : (
             <ul className="space-y-1">
@@ -655,11 +713,11 @@ function AddParticipantsDialog({
 
         <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-6 py-4">
           <span className="text-xs text-slate-500">
-            {selected.size} ta tanlandi
+            {selected.size} selected
           </span>
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className={btnOutline}>
-              Bekor
+              Cancel
             </button>
             <button
               type="button"
@@ -668,7 +726,7 @@ function AddParticipantsDialog({
               className={btnPrimary + ' disabled:opacity-50'}
             >
               <Plus size={14} />
-              {busy ? 'Qo\'shilmoqda…' : `Qo'shish (${selected.size})`}
+              {busy ? 'Adding…' : `Add (${selected.size})`}
             </button>
           </div>
         </div>

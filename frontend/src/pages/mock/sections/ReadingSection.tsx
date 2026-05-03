@@ -51,15 +51,15 @@ export function ReadingSection({
     } catch (err) {
       submittedRef.current = false
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      alert(detail || 'Reading yuborishda xatolik. Internetni tekshiring va qayta urining.')
+      alert(detail || 'Error submitting Reading. Check your internet and try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div className="p-6 text-slate-500">Yuklanmoqda…</div>
+  if (loading) return <div className="p-6 text-slate-500">Loading…</div>
   if (passages.length === 0) {
-    return <div className="p-6 text-slate-500">Reading testda passage topilmadi.</div>
+    return <div className="p-6 text-slate-500">No passages found in the Reading test.</div>
   }
 
   const passage = passages[activeIdx]
@@ -136,7 +136,7 @@ export function ReadingSection({
             onClick={submit}
             className="rounded-full bg-green-600 px-8 py-2 text-base font-semibold text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {submitting ? 'Yuborilmoqda…' : 'Tugatish va yuborish'}
+            {submitting ? 'Submitting…' : 'Finish and submit'}
           </button>
         </div>
       </footer>
