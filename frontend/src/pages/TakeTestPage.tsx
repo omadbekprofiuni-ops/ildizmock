@@ -824,15 +824,27 @@ function TestGate({ attempt }: { attempt: Attempt }) {
   const isListening = attempt.test.module === 'listening'
 
   // Listening tracks (sorted, only those with audio).
+  // Two backend models exist:
+  //  - New: test.listening_parts[] with `audio_url`
+  //  - Legacy: test.passages[] with `audio_file` (older listening tests)
+  // Fall back to passages if listening_parts is empty/missing — otherwise
+  // legacy tests would skip the preload gate and lose audio entirely.
   const tracks = useMemo(() => {
     if (!isListening) return []
     const lp = attempt.test.listening_parts ?? []
-    return lp
+    if (lp.length > 0) {
+      return lp
+        .slice()
+        .sort((a, b) => a.part_number - b.part_number)
+        .filter((p) => !!p.audio_url)
+        .map((p) => ({ partNumber: p.part_number, src: p.audio_url as string }))
+    }
+    return (attempt.test.passages ?? [])
       .slice()
       .sort((a, b) => a.part_number - b.part_number)
-      .filter((p) => !!p.audio_url)
-      .map((p) => ({ partNumber: p.part_number, src: p.audio_url as string }))
-  }, [attempt.test.listening_parts, isListening])
+      .filter((p) => !!p.audio_file)
+      .map((p) => ({ partNumber: p.part_number, src: p.audio_file as string }))
+  }, [attempt.test.listening_parts, attempt.test.passages, isListening])
 
   const hasListeningAudio = isListening && tracks.length > 0
 
