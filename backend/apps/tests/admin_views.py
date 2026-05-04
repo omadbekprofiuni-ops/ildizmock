@@ -27,6 +27,7 @@ class AdminDashboardView(APIView):
 
         recent = (
             Attempt.objects.select_related('user', 'test')
+            .filter(started_at__isnull=False)
             .order_by('-started_at')[:10]
         )
         recent_attempts = [
@@ -40,7 +41,7 @@ class AdminDashboardView(APIView):
                 'band_score': str(a.band_score) if a.band_score is not None else None,
                 'raw_score': a.raw_score,
                 'total_questions': a.total_questions,
-                'started_at': a.started_at.isoformat(),
+                'started_at': a.started_at.isoformat() if a.started_at else None,
             }
             for a in recent
         ]

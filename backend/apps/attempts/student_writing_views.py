@@ -114,7 +114,7 @@ class MyDashboardView(APIView):
             }
 
         recent = list(
-            attempts.order_by('-started_at')[:5].values(
+            attempts.order_by('-created_at')[:5].values(
                 'id', 'status', 'started_at', 'submitted_at',
                 'band_score', 'raw_score', 'total_questions',
                 'test__name', 'test__module',
@@ -126,7 +126,7 @@ class MyDashboardView(APIView):
                 'test_name': a['test__name'],
                 'module': a['test__module'],
                 'status': a['status'],
-                'started_at': a['started_at'].isoformat(),
+                'started_at': a['started_at'].isoformat() if a['started_at'] else None,
                 'submitted_at': a['submitted_at'].isoformat() if a['submitted_at'] else None,
                 'band_score': str(a['band_score']) if a['band_score'] is not None else None,
                 'raw_score': a['raw_score'],

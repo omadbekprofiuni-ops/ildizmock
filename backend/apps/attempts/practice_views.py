@@ -23,7 +23,7 @@ class PracticeHistoryView(APIView):
             Attempt.objects
             .filter(user=request.user, test__is_practice_enabled=True)
             .select_related('test')
-            .order_by('-started_at')
+            .order_by('-created_at')
         )
 
         rows = []
@@ -35,7 +35,7 @@ class PracticeHistoryView(APIView):
                 'module': a.test.module,
                 'difficulty': a.test.difficulty,
                 'status': a.status,
-                'started_at': a.started_at.isoformat(),
+                'started_at': a.started_at.isoformat() if a.started_at else None,
                 'submitted_at': a.submitted_at.isoformat() if a.submitted_at else None,
                 'raw_score': a.raw_score,
                 'total_questions': a.total_questions,

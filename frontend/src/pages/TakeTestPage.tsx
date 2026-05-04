@@ -1,6 +1,13 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle2, Clock, Home, Loader2, Maximize2, Minimize2, XCircle } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import {
   Link,
   Navigate,
@@ -10,6 +17,7 @@ import {
 } from 'react-router-dom'
 
 import { ListeningAudioPlayer } from '@/components/ListeningAudioPlayer'
+import { ListeningPreloadGate } from '@/components/ListeningPreloadGate'
 import { LockedAudio } from '@/components/LockedAudio'
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
@@ -63,7 +71,8 @@ type WritingTaskFromApi = {
 type Attempt = {
   id: string
   status: 'in_progress' | 'submitted' | 'graded' | 'expired'
-  started_at: string
+  // null until the student clicks "Start" (after rules + audio preload).
+  started_at: string | null
   submitted_at: string | null
   time_spent_seconds: number
   test: {
@@ -315,7 +324,18 @@ function ReviewView({ result }: { result: Result }) {
 
 // ====== LIVE ATTEMPT ======
 
-function LiveAttemptView({ attempt }: { attempt: Attempt }) {
+interface ListeningAudioProps {
+  audioRef: RefObject<HTMLAudioElement>
+  tracks: { partNumber: number; src: string }[]
+}
+
+function LiveAttemptView({
+  attempt,
+  listeningAudio,
+}: {
+  attempt: Attempt
+  listeningAudio?: ListeningAudioProps
+}) {
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({})
   const [currentQId, setCurrentQId] = useState<number | null>(null)
@@ -428,11 +448,17 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers])
 
-  const startedAtMs = new Date(attempt.started_at).getTime()
   const totalSec = attempt.test.duration_minutes * 60
+  // started_at is set by POST /attempts/<id>/start/. If it's still null we
+  // shouldn't be in LiveAttemptView at all — TestGate gates this — but if
+  // somehow we are, treat the test as freshly started so the timer doesn't
+  // jump to 0 from a NaN computation.
+  const startedAtMs = attempt.started_at
+    ? new Date(attempt.started_at).getTime()
+    : now
   const elapsedSec = Math.floor((now - startedAtMs) / 1000)
   const remainingSec = Math.max(0, totalSec - elapsedSec)
-  const timeUp = remainingSec === 0
+  const timeUp = attempt.started_at != null && remainingSec === 0
 
   useEffect(() => {
     if (timeUp && !submitMutation.isPending) {
@@ -563,12 +589,14 @@ function LiveAttemptView({ attempt }: { attempt: Attempt }) {
             attempt.test.module === 'reading' ? 'w-3/5' : 'w-1/2'
           } overflow-y-auto border-r bg-white p-6`}
         >
-          {attempt.test.module === 'listening' && (() => {
-            const tracks = sections
-              .filter((p) => !!p.audio_file)
-              .map((p) => ({ partNumber: p.part_number, src: p.audio_file as string }))
-            return tracks.length > 0 ? <ListeningAudioPlayer tracks={tracks} /> : null
-          })()}
+          {attempt.test.module === 'listening' && listeningAudio &&
+            listeningAudio.tracks.length > 0 && (
+              <ListeningAudioPlayer
+                tracks={listeningAudio.tracks}
+                audioRef={listeningAudio.audioRef}
+                remainingPreloaded
+              />
+            )}
 
           {sections.map((p) => (
             <article key={p.id} className="mb-10">
@@ -785,14 +813,93 @@ export default function TakeTestPage() {
   return <TestGate attempt={attemptQuery.data} />
 }
 
-// ====== Pre-test rules dialog gate ======
+// ====== Pre-test rules + audio preload gate ======
+
+type GatePhase = 'rules' | 'preloading' | 'starting' | 'started'
 
 function TestGate({ attempt }: { attempt: Attempt }) {
-  const [started, setStarted] = useState(false)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
-  if (!started) {
-    return (
+  const isListening = attempt.test.module === 'listening'
+
+  // Listening tracks (sorted, only those with audio).
+  const tracks = useMemo(() => {
+    if (!isListening) return []
+    const lp = attempt.test.listening_parts ?? []
+    return lp
+      .slice()
+      .sort((a, b) => a.part_number - b.part_number)
+      .filter((p) => !!p.audio_url)
+      .map((p) => ({ partNumber: p.part_number, src: p.audio_url as string }))
+  }, [attempt.test.listening_parts, isListening])
+
+  const hasListeningAudio = isListening && tracks.length > 0
+
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [phase, setPhase] = useState<GatePhase>(
+    // Re-entry safety: if attempt already has started_at (e.g. user
+    // refreshed mid-test), skip the gate and go straight to the test.
+    attempt.started_at ? 'started' : 'rules',
+  )
+
+  const startMutation = useMutation({
+    mutationFn: async () => api.post(`/attempts/${attempt.id}/start/`),
+    onSuccess: async () => {
+      // Refetch so attempt.started_at flows in fresh.
+      await queryClient.invalidateQueries({ queryKey: ['attempt', attempt.id] })
+      setPhase('started')
+    },
+    onError: () => {
+      toast.error('Test boshlashda xatolik. Qayta urinib ko\'ring.')
+      // Bounce back so user can retry the click.
+      setPhase(hasListeningAudio ? 'preloading' : 'rules')
+    },
+  })
+
+  const onAcceptRules = async () => {
+    try { await ieltsRules.enterFullscreen() } catch { /* ignore */ }
+    if (hasListeningAudio) {
+      // Show the preload screen — the hidden <audio> below will start
+      // buffering, the user clicks "Start" once Part 1 is ready.
+      setPhase('preloading')
+    } else {
+      // Reading / writing / no-audio listening — start immediately.
+      setPhase('starting')
+      startMutation.mutate()
+    }
+  }
+
+  const onStartListening = () => {
+    // CRITICAL: this `play()` happens inside the user's click, which is
+    // what unlocks autoplay. The audio element stays mounted across the
+    // phase transition so playback continues into the test.
+    const el = audioRef.current
+    if (el) {
+      el.play().catch(() => { /* fallback handled inside player */ })
+    }
+    setPhase('starting')
+    startMutation.mutate()
+  }
+
+  // The hidden <audio> element is rendered at this fixed position in the
+  // tree for the entire TestGate lifecycle so React's reconciler treats it
+  // as the SAME DOM node across phase transitions. This is what lets the
+  // play() call from the user's "Start test" click keep playing into the
+  // test screen — unmounting/remounting would destroy the audio element.
+  const sharedAudio = hasListeningAudio ? (
+    <audio
+      ref={audioRef}
+      src={tracks[0]?.src}
+      preload="auto"
+      className="hidden"
+      controlsList="nodownload noplaybackrate"
+    />
+  ) : null
+
+  let phaseUI: ReactNode
+  if (phase === 'rules') {
+    phaseUI = (
       <>
         <div className="flex min-h-screen items-center justify-center bg-white">
           <p className="text-sm text-slate-500">Accept the rules to start…</p>
@@ -800,20 +907,42 @@ function TestGate({ attempt }: { attempt: Attempt }) {
         <TestStartDialog
           open
           module={attempt.test.module}
-          onConfirm={async () => {
-            await ieltsRules.enterFullscreen()
-            setStarted(true)
-          }}
+          onConfirm={onAcceptRules}
           onCancel={() => navigate(-1)}
         />
       </>
     )
+  } else if (phase === 'preloading' || phase === 'starting') {
+    phaseUI = hasListeningAudio ? (
+      <ListeningPreloadGate
+        tracks={tracks}
+        audioRef={audioRef}
+        isStarting={phase === 'starting'}
+        onStart={onStartListening}
+      />
+    ) : (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+      </div>
+    )
+  } else {
+    // phase === 'started'
+    phaseUI = attempt.test.module === 'writing' ? (
+      <WriteAttemptView attempt={attempt} />
+    ) : (
+      <LiveAttemptView
+        attempt={attempt}
+        listeningAudio={hasListeningAudio ? { audioRef, tracks } : undefined}
+      />
+    )
   }
 
-  if (attempt.test.module === 'writing') {
-    return <WriteAttemptView attempt={attempt} />
-  }
-  return <LiveAttemptView attempt={attempt} />
+  return (
+    <>
+      {sharedAudio}
+      {phaseUI}
+    </>
+  )
 }
 
 // ====== WRITING ATTEMPT ======
@@ -991,11 +1120,13 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [combinedEssay])
 
-  const startedAtMs = new Date(attempt.started_at).getTime()
   const totalSec = attempt.test.duration_minutes * 60
+  const startedAtMs = attempt.started_at
+    ? new Date(attempt.started_at).getTime()
+    : now
   const elapsedSec = Math.floor((now - startedAtMs) / 1000)
   const remainingSec = Math.max(0, totalSec - elapsedSec)
-  const timeUp = remainingSec === 0
+  const timeUp = attempt.started_at != null && remainingSec === 0
 
   useEffect(() => {
     if (timeUp && !submitMutation.isPending) {

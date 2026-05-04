@@ -1,5 +1,5 @@
 import { Headphones, Volume2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 interface Track {
   partNumber: number
@@ -8,63 +8,77 @@ interface Track {
 
 interface ListeningAudioPlayerProps {
   tracks: Track[]
+  /**
+   * Externally-owned audio element. Required.
+   *
+   * The element is created by `TestGate` so that:
+   *  1. Part 1 is fully buffered BEFORE the test/timer starts.
+   *  2. The very first `play()` happens inside the user's "Start test"
+   *     click handler, satisfying browser autoplay policies.
+   *
+   * This component then takes over: it switches `src` between parts and
+   * wires up event listeners. It does NOT render its own `<audio>` tag.
+   */
+  audioRef: RefObject<HTMLAudioElement>
+  /**
+   * If true, parts 2..N are NOT preloaded by this component because the
+   * gate already kicked off background fetches. Avoids double-downloading.
+   */
+  remainingPreloaded?: boolean
 }
 
 /**
  * Real IELTS Listening kabi: 4 ta part audiosi ketma-ket o'ynaydi.
- * - Mount paytida BARCHA partlar fonda preload qilinadi (browser cache'ga
- *   tushadi), shunda partlar orasida network kechikishi bo'lmaydi
- * - Birinchi part avtomatik boshlanadi
- * - Tugagach keyingi part avtomatik boshlanadi (cache'dan darhol)
+ * - Part 1 darhol o'ynaydi (TestGate'da to'liq yuklab olingan)
+ * - Part 2..4 fonda yuklanadi (TestGate boshlagan)
  * - Pause / rewind / skip yo'q
  */
-export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null)
+export function ListeningAudioPlayer({
+  tracks,
+  audioRef,
+  remainingPreloaded = false,
+}: ListeningAudioPlayerProps) {
   const lastTimeRef = useRef(0)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [status, setStatus] = useState<'loading' | 'playing' | 'between' | 'ended'>(
-    'loading',
+    'playing',
   )
   const [progress, setProgress] = useState(0)
 
   const currentTrack = tracks[currentIdx]
 
-  // Mount paytida BARCHA partlarni fonda yuklab, browser cache'iga tushiramiz.
-  // Active player'dan tashqari hidden Audio() obyektlari bilan parallel
-  // download boshlanadi.
+  // Parts 2..N preload — only if the gate didn't already do it.
   useEffect(() => {
+    if (remainingPreloaded) return
     const preloaders: HTMLAudioElement[] = []
-    const cleanup: Array<() => void> = []
-
     tracks.forEach((track, idx) => {
-      // Active track'ni alohida audioRef boshqaradi — preloader kerak emas
       if (idx === 0) return
       const a = new Audio()
       a.preload = 'auto'
       a.src = track.src
-      // Mobile Safari'ni preload qila boshlatish uchun load() chaqirish kerak
       a.load()
       preloaders.push(a)
-      cleanup.push(() => {
-        a.src = ''
-      })
     })
-
     return () => {
-      cleanup.forEach((fn) => fn())
       preloaders.forEach((a) => {
         try { a.pause() } catch { /* ignore */ }
+        a.src = ''
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [tracks, remainingPreloaded])
 
+  // Wire up the externally-owned audio element to current track + listeners.
   useEffect(() => {
     const el = audioRef.current
     if (!el || !currentTrack) return
 
     lastTimeRef.current = 0
     setProgress(0)
+
+    // Switch src only when changing parts (Part 1 already has src set by gate).
+    if (el.src !== currentTrack.src && !el.src.endsWith(currentTrack.src)) {
+      el.src = currentTrack.src
+    }
 
     const handleSeeking = () => {
       if (Math.abs(el.currentTime - lastTimeRef.current) > 0.5) {
@@ -78,11 +92,10 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
       }
     }
     const handlePlay = () => setStatus('playing')
+    const handleWaiting = () => setStatus('loading')
     const handleEnded = () => {
       if (currentIdx + 1 < tracks.length) {
         setStatus('between')
-        // Real IELTS'da partlar orasida qisqa pauza bor (taxminan 30 sekund —
-        // biz testda qisqa qildik)
         setTimeout(() => {
           setCurrentIdx((i) => i + 1)
         }, 1500)
@@ -96,21 +109,27 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
     el.addEventListener('seeking', handleSeeking)
     el.addEventListener('timeupdate', handleTimeUpdate)
     el.addEventListener('play', handlePlay)
+    el.addEventListener('waiting', handleWaiting)
     el.addEventListener('ended', handleEnded)
     el.addEventListener('contextmenu', handleContextMenu)
 
-    el.play().catch(() => {
-      // Autoplay taqiqlangan bo'lsa, status'da turamiz
-    })
+    // For Part 1 the gate already called play(); for parts 2..N we trigger it
+    // here. Browsers allow this because the page already had a user gesture.
+    if (currentIdx > 0) {
+      el.play().catch(() => { /* unlikely after Part 1 played */ })
+    } else if (el.paused) {
+      el.play().catch(() => { /* gate's play() already ran */ })
+    }
 
     return () => {
       el.removeEventListener('seeking', handleSeeking)
       el.removeEventListener('timeupdate', handleTimeUpdate)
       el.removeEventListener('play', handlePlay)
+      el.removeEventListener('waiting', handleWaiting)
       el.removeEventListener('ended', handleEnded)
       el.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [currentIdx, currentTrack, tracks.length])
+  }, [currentIdx, currentTrack, tracks.length, audioRef])
 
   if (!currentTrack) return null
 
@@ -175,14 +194,6 @@ export function ListeningAudioPlayer({ tracks }: ListeningAudioPlayerProps) {
         Real IELTS kabi: audio bir marta avtomatik o&apos;ynaydi. To&apos;xtatib,
         orqaga qaytarib bo&apos;lmaydi. Qismlar ketma-ket o&apos;ynaydi.
       </p>
-
-      <audio
-        ref={audioRef}
-        src={currentTrack.src}
-        preload="auto"
-        controlsList="nodownload noplaybackrate"
-        className="hidden"
-      />
     </div>
   )
 }

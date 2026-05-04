@@ -29,7 +29,12 @@ class Attempt(models.Model):
     # Frontend keeps it in localStorage and sends as X-Guest-Token header.
     guest_token = models.UUIDField(null=True, blank=True, default=None)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
-    started_at = models.DateTimeField(auto_now_add=True)
+    # `started_at` only fills when student actually clicks "Start" in the test
+    # gate (after rules + audio preload). The attempt row is created earlier,
+    # but the timer must not run during preload — so this stays NULL until
+    # POST /attempts/<id>/start/ is called.
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     time_spent_seconds = models.IntegerField(default=0)
     raw_score = models.IntegerField(null=True, blank=True)
@@ -49,7 +54,7 @@ class Attempt(models.Model):
     graded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-started_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         who = self.user.username if self.user_id else f'guest:{self.guest_token}'

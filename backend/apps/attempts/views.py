@@ -97,6 +97,27 @@ class AttemptViewSet(
             return AttemptListSerializer
         return AttemptDetailSerializer
 
+    @action(detail=True, methods=['post'])
+    def start(self, request, pk=None):
+        """POST /attempts/<id>/start/ — begin the timer.
+
+        Frontend calls this only after the student has accepted the rules
+        AND (for listening) the first audio part is fully buffered. The row
+        was created earlier by StartAttemptView; this just stamps
+        `started_at`. Idempotent — second call is a no-op.
+        """
+        attempt = self.get_object()
+        if not _can_access_attempt(request, attempt):
+            return Response({'detail': 'Kirish huquqi yo‘q.'},
+                            status=status.HTTP_403_FORBIDDEN)
+        if attempt.status != 'in_progress':
+            return Response({'detail': 'Urinish yopilgan.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if attempt.started_at is None:
+            attempt.started_at = timezone.now()
+            attempt.save(update_fields=['started_at'])
+        return Response(AttemptDetailSerializer(attempt).data)
+
     @action(detail=True, methods=['patch'], url_path='answers')
     def save_answers(self, request, pk=None):
         attempt = self.get_object()
