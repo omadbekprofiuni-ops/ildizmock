@@ -387,7 +387,7 @@ function LiveAttemptView({
     const removeTabHide = ieltsRules.onTabHide(() => {
       exitCount += 1
       if (exitCount === 1) {
-        toast.warning('⚠️ Don't leave the test! This is your first warning.')
+        toast.warning("⚠️ Don't leave the test! This is your first warning.")
       } else if (exitCount === 2) {
         toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
@@ -1077,7 +1077,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     const removeTabHide = ieltsRules.onTabHide(() => {
       exitCount += 1
       if (exitCount === 1) {
-        toast.warning('⚠️ Don't leave the test! This is your first warning.')
+        toast.warning("⚠️ Don't leave the test! This is your first warning.")
       } else if (exitCount === 2) {
         toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
