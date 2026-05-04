@@ -129,7 +129,7 @@ def _student_certificates_qs(user):
     qs = Certificate.objects.select_related(
         'participant', 'participant__session', 'issued_by',
     ).filter(is_revoked=False)
-    # Talaba bilan bog'liqlik: participant.user yoki ism mosi
+    # Student bilan bog'liqlik: participant.user yoki ism mosi
     from django.db.models import Q
     full_name = (
         f'{(user.first_name or "").strip()} {(user.last_name or "").strip()}'
@@ -176,7 +176,7 @@ def my_certificates(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def my_certificate_download(request, certificate_id):
-    """Sertifikat PDF yuklab olish — egasi orqali."""
+    """Certificate PDF yuklab olish — egasi orqali."""
     qs = _student_certificates_qs(request.user)
     cert = get_object_or_404(qs, pk=certificate_id)
     if not cert.pdf_file:

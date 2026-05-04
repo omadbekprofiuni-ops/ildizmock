@@ -104,7 +104,7 @@ class Command(BaseCommand):
                 enrolled_at=date.today() - timedelta(days=30),
             ))
 
-        # 6. Talabalar guruhi (ETAP 11) — IELTS 7.0
+        # 6. Students guruhi (ETAP 11) — IELTS 7.0
         StudentGroup.objects.filter(
             organization=edutech, name='IELTS 7.0',
         ).delete()

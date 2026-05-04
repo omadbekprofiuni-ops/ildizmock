@@ -66,11 +66,11 @@ export default function StudentCertificatesPage() {
 
       <main className="container space-y-6 py-10">
         {query.isLoading && (
-          <p className="text-muted-foreground">Yuklanmoqda…</p>
+          <p className="text-muted-foreground">Loading…</p>
         )}
         {query.isError && (
           <p className="text-destructive">
-            Sertifikatlarni yuklab bo'lmadi.
+            Couldn't load certificates.
           </p>
         )}
 
@@ -81,7 +81,7 @@ export default function StudentCertificatesPage() {
                 <Award size={28} />
               </div>
               <h2 className="text-lg font-semibold text-slate-900">
-                Hali sertifikat yo'q
+                No certificates yet
               </h2>
               <p className="mt-1 text-sm text-slate-500">
                 Mock test topshiring va ustozingiz baholaganidan keyin
@@ -120,7 +120,7 @@ function CertificateCard({ cert }: { cert: CertificateRow }) {
       <CardContent className="space-y-4 p-5">
         <div>
           <p className="text-xs uppercase tracking-wider text-slate-500">
-            Sertifikat raqami
+            Certificate raqami
           </p>
           <p className="font-mono text-sm font-semibold text-slate-900">
             {cert.certificate_number}
@@ -136,7 +136,7 @@ function CertificateCard({ cert }: { cert: CertificateRow }) {
 
         <div className="space-y-0.5 text-xs text-slate-600">
           <p>
-            <span className="text-slate-400">Sessiya:</span> {cert.session_name}
+            <span className="text-slate-400">Session:</span> {cert.session_name}
           </p>
           <p>
             <span className="text-slate-400">Test sanasi:</span>{' '}
@@ -148,7 +148,7 @@ function CertificateCard({ cert }: { cert: CertificateRow }) {
           </p>
           {cert.issued_by && (
             <p>
-              <span className="text-slate-400">Ustoz:</span> {cert.issued_by}
+              <span className="text-slate-400">Teacher:</span> {cert.issued_by}
             </p>
           )}
         </div>

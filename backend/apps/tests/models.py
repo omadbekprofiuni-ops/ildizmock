@@ -38,7 +38,7 @@ class Test(models.Model):
         null=True, blank=True,
         related_name='tests',
         on_delete=models.CASCADE,
-        help_text='Null = superadmin global test (hamma markazlar uchun)',
+        help_text='Null = superadmin global test (for all centers)',
     )
     is_global = models.BooleanField(default=False)
     name = models.CharField(max_length=200)
@@ -65,17 +65,17 @@ class Test(models.Model):
     cloned_from = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='clones',
-        help_text='Asl global test (agar bu klon bo‘lsa)',
+        help_text='Original global test (if this is a clone)',
     )
 
     # ETAP 6 — Practice Mode
     is_practice_enabled = models.BooleanField(
         default=False,
-        help_text='Talabalar mustaqil mashq qilish uchun bu testni ko‘rsatishimi?',
+        help_text='Should this test be visible to students for independent practice?',
     )
     practice_time_limit = models.PositiveIntegerField(
         null=True, blank=True,
-        help_text='Practice rejimi vaqt limiti (daqiqada). Bo‘sh — limit yo‘q.',
+        help_text='Practice mode time limit (minutes). Empty = no limit.',
     )
 
     # ETAP 13 — Soft delete (arxivga olish + qayta tiklash imkoniyati)
@@ -119,7 +119,7 @@ class Passage(models.Model):
     audio_duration_seconds = models.IntegerField(null=True, blank=True)
     image = models.ImageField(
         upload_to='passage_images/%Y/%m/', blank=True, null=True,
-        help_text='Passage uchun rasm/diagram (ixtiyoriy)',
+        help_text='Image/diagram for the passage (optional)',
     )
     # For writing module: minimum required word count per task
     min_words = models.IntegerField(null=True, blank=True)
@@ -159,24 +159,24 @@ class Question(models.Model):
     )
     order = models.IntegerField()
     question_number = models.PositiveSmallIntegerField(
-        default=0, help_text='Test ichidagi tartib raqam (1-40)',
+        default=0, help_text='Order number within the test (1-40)',
     )
     question_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
     text = models.TextField()
-    prompt = models.TextField(blank=True, default='', help_text='Savol matni (yangi format)')
+    prompt = models.TextField(blank=True, default='', help_text='Question text (new format)')
     options = models.JSONField(default=list, blank=True)
     correct_answer = models.JSONField()
     acceptable_answers = models.JSONField(default=list, blank=True)
     alt_answers = models.JSONField(
         default=list, blank=True,
-        help_text='Muqobil to‘g‘ri javoblar (yangi format)',
+        help_text='Alternate correct answers (new format)',
     )
     group_id = models.IntegerField(default=0)
     instruction = models.TextField(blank=True)
     points = models.IntegerField(default=1)
     image = models.ImageField(
         upload_to='question_images/%Y/%m/', blank=True, null=True,
-        help_text='Savol uchun rasm (map, diagram, chart) — ixtiyoriy',
+        help_text='Image for the question (map, diagram, chart) — optional',
     )
 
     class Meta:
@@ -192,7 +192,7 @@ class ListeningPart(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE, related_name='listening_parts',
     )
-    part_number = models.PositiveSmallIntegerField(help_text='1, 2, 3 yoki 4')
+    part_number = models.PositiveSmallIntegerField(help_text='1, 2, 3 or 4')
 
     audio_file = models.FileField(
         upload_to='listening_audio/%Y/%m/', null=True, blank=True,
@@ -204,11 +204,11 @@ class ListeningPart(models.Model):
 
     image = models.ImageField(
         upload_to='listening_images/%Y/%m/', blank=True, null=True,
-        help_text='Bo‘lim uchun rasm (ixtiyoriy)',
+        help_text='Image for the section (optional)',
     )
     transcript = models.TextField(blank=True, default='')
     instructions = models.TextField(
-        blank=True, default='', help_text='Bo‘lim ko‘rsatmasi',
+        blank=True, default='', help_text='Section instructions',
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -227,12 +227,12 @@ class WritingTask(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE, related_name='writing_tasks',
     )
-    task_number = models.PositiveSmallIntegerField(help_text='1 yoki 2')
+    task_number = models.PositiveSmallIntegerField(help_text='1 or 2')
 
-    prompt = models.TextField(help_text='Topshiriq matni')
+    prompt = models.TextField(help_text='Task text')
     chart_image = models.ImageField(
         upload_to='writing_charts/', null=True, blank=True,
-        help_text='Faqat Task 1 uchun (chart, grafik, jadval rasmi)',
+        help_text='Only for Task 1 (chart, graph, table image)',
     )
 
     min_words = models.PositiveIntegerField(default=150)
@@ -240,7 +240,7 @@ class WritingTask(models.Model):
 
     requirements = models.TextField(
         blank=True, default='',
-        help_text='Qo‘shimcha talablar (masalan: "Compare both views")',
+        help_text='Additional requirements (e.g. "Compare both views")',
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -254,7 +254,7 @@ class WritingTask(models.Model):
 
 
 class TestClone(models.Model):
-    """Markaz qaysi global testni nusxalaganini kuzatish (audit)."""
+    """Center qaysi global testni nusxalaganini kuzatish (audit)."""
 
     organization = models.ForeignKey(
         'organizations.Organization', on_delete=models.CASCADE,
@@ -263,12 +263,12 @@ class TestClone(models.Model):
     source_test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='clone_records',
-        help_text='Asl global test',
+        help_text='Original global test',
     )
     cloned_test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='+',
-        help_text='Klon test (markaz bazasidagi nusxa)',
+        help_text="Clone test (a copy in the center's database)",
     )
     cloned_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,

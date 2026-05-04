@@ -49,7 +49,7 @@ export default function AttendanceReportPage() {
     return (
       <PageShell>
         <div className="flex items-center gap-2 text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin" /> Yuklanmoqda…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       </PageShell>
     )
@@ -59,7 +59,7 @@ export default function AttendanceReportPage() {
   if (!r) {
     return (
       <PageShell>
-        <SurfaceCard>Hisobot yuklanmadi.</SurfaceCard>
+        <SurfaceCard>Couldn't load report.</SurfaceCard>
       </PageShell>
     )
   }
@@ -67,18 +67,18 @@ export default function AttendanceReportPage() {
   return (
     <PageShell>
       <PageHeader
-        title={`${r.group.name} — Davomat hisoboti`}
-        subtitle={`${r.group.student_count} talaba · ${r.sessions_count} sessiya`}
+        title={`${r.group.name} — Attendance Report`}
+        subtitle={`${r.group.student_count} students · ${r.sessions_count} sessions`}
         actions={
           <>
             <Link to={`/${slug}/admin/groups/${groupId}`} className={btnOutline}>
-              <ArrowLeft size={16} /> Guruh
+              <ArrowLeft size={16} /> Group
             </Link>
             <Link
               to={`/${slug}/admin/groups/${groupId}/schedule`}
               className={btnOutline}
             >
-              Jadval
+              Schedule
             </Link>
           </>
         }
@@ -86,25 +86,25 @@ export default function AttendanceReportPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
-          label="O'rtacha davomat"
+          label="Average attendance"
           value={`${r.avg_rate}%`}
           Icon={BarChart3}
           tone="emerald"
         />
-        <StatCard label="Talabalar" value={r.group.student_count} tone="blue" />
-        <StatCard label="Sessiyalar" value={r.sessions_count} tone="amber" />
+        <StatCard label="Students" value={r.group.student_count} tone="blue" />
+        <StatCard label="Sessions" value={r.sessions_count} tone="amber" />
       </div>
 
-      <TableCard title="Talabalar reytingi (davomat bo'yicha)">
+      <TableCard title="Student ranking (by attendance)">
         <table className={adminTable.table}>
           <thead className={adminTable.thead}>
             <tr>
               <th className={adminTable.th}>#</th>
-              <th className={adminTable.th}>Talaba</th>
-              <th className={adminTable.th}>Jami</th>
+              <th className={adminTable.th}>Student</th>
+              <th className={adminTable.th}>Total</th>
               <th className={adminTable.th}>Keldi</th>
               <th className={adminTable.th}>Kelmadi</th>
-              <th className={adminTable.th}>Davomat</th>
+              <th className={adminTable.th}>Attendance</th>
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
@@ -132,7 +132,7 @@ export default function AttendanceReportPage() {
                     <Chip tone="blue" className="ml-2">A</Chip>
                   )}
                   {s.rate < 60 && s.total > 0 && (
-                    <Chip tone="rose" className="ml-2">Past</Chip>
+                    <Chip tone="rose" className="ml-2">Low</Chip>
                   )}
                 </td>
               </tr>
@@ -140,7 +140,7 @@ export default function AttendanceReportPage() {
             {r.students.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-slate-500">
-                  Bu guruhda talaba yo'q yoki hali sessiya yaratilmagan.
+                  There are no students in this group or sessions haven't been created yet.
                 </td>
               </tr>
             )}

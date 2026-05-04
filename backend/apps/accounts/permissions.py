@@ -16,7 +16,7 @@ class IsAdmin(permissions.BasePermission):
 class IsTeacher(permissions.BasePermission):
     """Access for role=teacher (org admins / superadmin allowed too)."""
 
-    message = 'O‘qituvchi huquqi talab qilinadi.'
+    message = 'Teacher huquqi talab qilinadi.'
 
     def has_permission(self, request, view):
         user = request.user

@@ -1,4 +1,4 @@
-"""Talaba uchun ochiq mock endpointlar — autentifikatsiyasiz."""
+"""Student uchun ochiq mock endpointlar — autentifikatsiyasiz."""
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -41,7 +41,7 @@ def join_view(request, access_code):
     # POST — qo'shilish
     if not session.is_join_allowed():
         if session.status in ('finished', 'cancelled'):
-            msg = 'Sessiya tugagan, qo‘shilib bo‘lmaydi.'
+            msg = 'Session tugagan, qo‘shilib bo‘lmaydi.'
         elif session.link_expires_at and timezone.now() > session.link_expires_at:
             msg = 'This link has expired.'
         else:
@@ -313,7 +313,7 @@ class _SpeakingUploadThrottle(ScopedRateThrottle):
 @permission_classes([permissions.AllowAny])
 @throttle_classes([_SpeakingUploadThrottle])
 def submit_speaking(request, browser_session_id):
-    """ETAP 14 BUG #11 — Talaba speaking audio yuklashi."""
+    """ETAP 14 BUG #11 — Student speaking audio yuklashi."""
     participant = get_object_or_404(
         MockParticipant, browser_session_id=browser_session_id,
     )
@@ -367,7 +367,7 @@ def submit_speaking(request, browser_session_id):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def my_result(request, browser_session_id):
-    """Sessiya yakunlanganidan keyin talaba o'z natijasini ko'radi."""
+    """Session yakunlanganidan keyin talaba o'z natijasini ko'radi."""
     participant = get_object_or_404(
         MockParticipant, browser_session_id=browser_session_id,
     )

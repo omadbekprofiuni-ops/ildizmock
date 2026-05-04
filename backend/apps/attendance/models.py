@@ -1,6 +1,6 @@
-"""ETAP 15 — Davomat tizimi.
+"""ETAP 15 — Attendance tizimi.
 
-Markaz o'qituvchilari guruh talabalarining davomatini ish kunlari bo'yicha
+Center o'qituvchilari guruh talabalarining davomatini ish kunlari bo'yicha
 qayd qiladi. Schedule asosida sessiyalar avtomatik yaratiladi (cron yoki
 manual command), o'qituvchi har sessiyada talabalar holatini belgilaydi.
 
@@ -39,7 +39,7 @@ class ClassSchedule(models.Model):
     end_time = models.TimeField(help_text='Format: 16:00')
     room = models.CharField(
         max_length=50, blank=True, default='',
-        help_text='Misol: Room 301, Online',
+        help_text='e.g. Room 301, Online',
     )
     is_active = models.BooleanField(default=True)
 
@@ -56,8 +56,8 @@ class ClassSchedule(models.Model):
         db_table = 'class_schedules'
         ordering = ['day_of_week', 'start_time']
         unique_together = [('group', 'day_of_week', 'start_time')]
-        verbose_name = 'Dars jadvali'
-        verbose_name_plural = 'Dars jadvallari'
+        verbose_name = 'Class schedule'
+        verbose_name_plural = 'Class schedules'
 
     def __str__(self):
         day_name = dict(self.DAYS_OF_WEEK).get(self.day_of_week, '?')
@@ -86,7 +86,7 @@ class AttendanceSession(models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='sessions',
-        help_text='Qaysi jadvaldan yaratilgan (auto-generation paytida)',
+        help_text='Which schedule it was generated from (during auto-generation)',
     )
 
     date = models.DateField(db_index=True)
@@ -95,7 +95,7 @@ class AttendanceSession(models.Model):
 
     is_finalized = models.BooleanField(
         default=False,
-        help_text='Yakunlangandan keyin yozuvlarni o\'zgartirib bo\'lmaydi',
+        help_text='Records cannot be modified after the session ends',
     )
     notes = models.TextField(blank=True, default='')
 
@@ -112,8 +112,8 @@ class AttendanceSession(models.Model):
         db_table = 'attendance_sessions'
         ordering = ['-date', '-start_time']
         unique_together = [('group', 'date')]
-        verbose_name = 'Davomat sessiyasi'
-        verbose_name_plural = 'Davomat sessiyalari'
+        verbose_name = 'Attendance session'
+        verbose_name_plural = 'Attendance sessions'
 
     def __str__(self):
         return f'{self.group.name} — {self.date:%d.%m.%Y}'
@@ -159,7 +159,7 @@ class AttendanceRecord(models.Model):
     )
     notes = models.TextField(
         blank=True, default='',
-        help_text='Kechikish/kasal sababi va boshqalar',
+        help_text='Reason for tardiness/absence, etc.',
     )
 
     marked_at = models.DateTimeField(auto_now=True)
@@ -174,8 +174,8 @@ class AttendanceRecord(models.Model):
         db_table = 'attendance_records'
         ordering = ['student__first_name', 'student__last_name']
         unique_together = [('session', 'student')]
-        verbose_name = 'Davomat yozuvi'
-        verbose_name_plural = 'Davomat yozuvlari'
+        verbose_name = 'Attendance yozuvi'
+        verbose_name_plural = 'Attendance yozuvlari'
 
     def __str__(self):
         name = (

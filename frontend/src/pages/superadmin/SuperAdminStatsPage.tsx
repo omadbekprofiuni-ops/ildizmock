@@ -76,27 +76,27 @@ export default function SuperAdminStatsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Statistics</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Platforma bo‘yicha umumiy ko‘rsatkichlar.
+            Platform-wide overview metrics.
           </p>
         </div>
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Statistika yuklab bo‘lmadi.</p>
+          <p className="text-rose-600">Couldn't load statistics.</p>
         )}
 
         {data && (
           <>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <Stat
-                label="Markazlar"
+                label="Centers"
                 value={data.orgs_total}
                 hint={`${data.orgs_by_status.active} faol · ${data.orgs_by_status.trial} trial`}
               />
               <Stat
-                label="Talabalar"
+                label="Students"
                 value={data.students_total}
-                hint={`${data.teachers_total} ustoz`}
+                hint={`${data.teachers_total} teachers`}
               />
               <Stat
                 label="Testlar"
@@ -104,21 +104,21 @@ export default function SuperAdminStatsPage() {
                 hint={`${data.tests_global} global`}
               />
               <Stat
-                label="Mock sessiyalar"
+                label="Mock sessions"
                 value={data.mock_sessions_total}
-                hint={`${data.mock_sessions_finished} tugatilgan`}
+                hint={`${data.mock_sessions_finished} completed`}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <Stat
-                label="Bu oy attempts"
+                label="This month's attempts"
                 value={data.attempts_this_month}
-                hint={`Jami: ${data.attempts_total}`}
+                hint={`Total: ${data.attempts_total}`}
                 accent="text-blue-600"
               />
               <Stat
-                label="Mock natijalar"
+                label="Mock results"
                 value={data.mock_completed_count}
                 hint={
                   data.mock_avg_overall !== null
@@ -134,7 +134,7 @@ export default function SuperAdminStatsPage() {
                 accent="text-amber-600"
               />
               <Stat
-                label="Daromad ($)"
+                label="Revenue ($)"
                 value={`$${data.revenue_total_usd.toFixed(0)}`}
                 accent="text-violet-600"
               />
@@ -183,7 +183,7 @@ export default function SuperAdminStatsPage() {
               <Card>
                 <CardContent className="p-0">
                   <div className="border-b p-4">
-                    <h2 className="text-base font-semibold">Yangi talabalar</h2>
+                    <h2 className="text-base font-semibold">New studentlar</h2>
                   </div>
                   {data.recent_students.length === 0 ? (
                     <p className="p-6 text-sm text-slate-500">Hozircha yo‘q.</p>
@@ -213,7 +213,7 @@ export default function SuperAdminStatsPage() {
                   </div>
                   {data.soon_expiring.length === 0 ? (
                     <p className="p-6 text-sm text-slate-500">
-                      Yaqin orada tarif tugaydigan markaz yo‘q.
+                      No centers with plans expiring soon.
                     </p>
                   ) : (
                     <ul className="divide-y">
@@ -230,7 +230,7 @@ export default function SuperAdminStatsPage() {
                                 : 'bg-amber-100 text-amber-800'
                             }`}
                           >
-                            {o.days_remaining} kun
+                            {o.days_remaining} days
                           </span>
                         </li>
                       ))}

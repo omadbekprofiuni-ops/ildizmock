@@ -100,7 +100,7 @@ export default function TestsPage() {
     setBusy(id)
     try {
       await api.post(`/center/${slug}/tests/${id}/restore/`)
-      setMessage('Test arxivdan qaytarildi.')
+      setMessage('Test restored from archive.')
       loadArchived()
     } finally {
       setBusy(null)
@@ -115,15 +115,15 @@ export default function TestsPage() {
     const data = err.response?.data
     if (typeof data === 'string') return data.slice(0, 200)
     if (data?.detail) return data.detail
-    if (err.response?.status === 404) return "Test topilmadi (404)."
+    if (err.response?.status === 404) return "Test not found (404)."
     if (err.response?.status === 403) return "Sizda bu amalga ruxsat yo'q."
-    if (err.response?.status === 500) return 'Server xatoligi (500). Adminga xabar bering.'
+    if (err.response?.status === 500) return 'Server error (500). Please contact the admin.'
     return err.message ?? 'Xatolik yuz berdi.'
   }
 
   const publishTest = async (id: string, name: string) => {
     if (!slug) return
-    if (!window.confirm(`"${name}" testini nashr qilasizmi? Talabalar uchun ko'rinadigan bo'ladi.`)) return
+    if (!window.confirm(`Publish "${name}"? Students will be able to see it.`)) return
     setBusy(id)
     try {
       await api.post(`/center/${slug}/tests/${id}/publish/`)
@@ -138,11 +138,11 @@ export default function TestsPage() {
 
   const unpublishTest = async (id: string, name: string) => {
     if (!slug) return
-    if (!window.confirm(`"${name}" testini draft holatiga qaytarasizmi? Talabalar uchun ko'rinmaydi.`)) return
+    if (!window.confirm(`Move "${name}" back to draft? It will be hidden from students.`)) return
     setBusy(id)
     try {
       await api.post(`/center/${slug}/tests/${id}/unpublish/`)
-      setMessage('Test draft holatiga qaytarildi.')
+      setMessage('Test moved back to draft.')
       loadMine()
     } catch (e: unknown) {
       setMessage(extractError(e))
@@ -153,8 +153,8 @@ export default function TestsPage() {
 
   const hardDeleteTest = async (id: string, name: string) => {
     if (!slug) return
-    if (!window.confirm(`"${name}" doimiy o'chiriladi! Bu amalni qaytarib bo'lmaydi. Davom etamizmi?`)) return
-    if (!window.confirm("Yana bir bor: barcha savollar va urinishlar ham o'chiriladi. Tasdiqlaysizmi?")) return
+    if (!window.confirm(`"${name}" will be permanently deleted! This cannot be undone. Continue?`)) return
+    if (!window.confirm("Once more: all questions and attempts will also be deleted. Are you sure?")) return
     setBusy(id)
     try {
       await api.delete(`/center/${slug}/tests/${id}/hard-delete/`)
@@ -205,12 +205,12 @@ export default function TestsPage() {
 
   const cloneOwnTest = async (testId: string) => {
     if (!slug) return
-    if (!confirm('Bu testdan nusxa yaratamizmi?')) return
+    if (!confirm('Clone this test?')) return
     setBusy(testId)
     setMessage('')
     try {
       await api.post(`/center/${slug}/tests/${testId}/clone/`)
-      setMessage('✅ Nusxa yaratildi')
+      setMessage('✅ Clone created')
       loadMine()
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
@@ -228,10 +228,10 @@ export default function TestsPage() {
     <PageShell>
       <PageHeader
         title="Testlar"
-        subtitle="Markaz bazasidagi testlar va SuperAdmin tayyorlagan global katalog"
+        subtitle="Tests in the center's database and the global catalog prepared by SuperAdmin"
         actions={
           <Link to={`/${slug}/admin/tests/new`} className={btnPrimary}>
-            <Plus size={16} /> Yangi test
+            <Plus size={16} /> New test
           </Link>
         }
       />
@@ -255,7 +255,7 @@ export default function TestsPage() {
             value={filter.module}
             onChange={(v) => setFilter({ ...filter, module: v })}
             options={[
-              { value: '', label: 'Barcha modullar' },
+              { value: '', label: 'All modules' },
               { value: 'listening', label: 'Listening' },
               { value: 'reading', label: 'Reading' },
               { value: 'writing', label: 'Writing' },
@@ -266,7 +266,7 @@ export default function TestsPage() {
             value={filter.difficulty}
             onChange={(v) => setFilter({ ...filter, difficulty: v })}
             options={[
-              { value: '', label: 'Barcha qiyinliklar' },
+              { value: '', label: 'All difficulties' },
               { value: 'easy', label: 'Easy' },
               { value: 'medium', label: 'Medium' },
               { value: 'hard', label: 'Hard' },
@@ -294,9 +294,9 @@ export default function TestsPage() {
             <tr>
               <th className={adminTable.th}>Test</th>
               <th className={adminTable.th}>Modul</th>
-              <th className={adminTable.th}>Qiyinlik</th>
+              <th className={adminTable.th}>Difficulty</th>
               <th className={adminTable.th}>Savollar</th>
-              <th className={adminTable.th}>Holat</th>
+              <th className={adminTable.th}>Status</th>
               <th className={adminTable.th + ' text-right'}>Amal</th>
             </tr>
           </thead>
@@ -304,15 +304,15 @@ export default function TestsPage() {
             {loading ? (
               <tr>
                 <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                  Yuklanmoqda…
+                  Loading…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                   {tab === 'mine'
-                    ? "Hali testingiz yo'q. Global katalogdan klon qiling."
-                    : "Katalogda hali test yo'q."}
+                    ? "You don't have any tests yet. Clone one from the global catalog."
+                    : "No tests in the catalog yet."}
                 </td>
               </tr>
             ) : (
@@ -347,7 +347,7 @@ export default function TestsPage() {
                     {tab === 'catalog' ? (
                       t.already_cloned ? (
                         <span className="text-xs text-slate-400">
-                          Allaqachon nusxalangan
+                          Already cloned
                         </span>
                       ) : (
                         <button
@@ -357,7 +357,7 @@ export default function TestsPage() {
                           className={btnPrimary + ' !py-1.5 !px-3 text-xs'}
                         >
                           <Copy size={14} />
-                          {busy === t.id ? 'Klonlash…' : 'Klon qilish'}
+                          {busy === t.id ? 'Cloning…' : 'Clone'}
                         </button>
                       )
                     ) : tab === 'archived' ? (
@@ -375,9 +375,9 @@ export default function TestsPage() {
                           disabled={busy === t.id}
                           onClick={() => hardDeleteTest(t.id, t.name)}
                           className="inline-flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                          title="Doimiy o'chirish"
+                          title="Permanently delete"
                         >
-                          <Trash2 size={14} /> O'chirish
+                          <Trash2 size={14} /> Delete
                         </button>
                       </div>
                     ) : (
@@ -392,7 +392,7 @@ export default function TestsPage() {
                         <Link
                           to={`/${slug}/admin/tests/${t.id}/edit`}
                           className="inline-flex items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-2 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                          title="Tahrirlash"
+                          title="Edit"
                         >
                           <Edit2 size={14} />
                         </Link>
@@ -402,7 +402,7 @@ export default function TestsPage() {
                             disabled={busy === t.id}
                             onClick={() => publishTest(t.id, t.name)}
                             className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                            title="Nashr qilish"
+                            title="Publish"
                           >
                             <CheckCircle size={14} /> Nashr
                           </button>
@@ -422,7 +422,7 @@ export default function TestsPage() {
                           disabled={busy === t.id}
                           onClick={() => cloneOwnTest(t.id)}
                           className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-2 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-                          title="Klon qilish"
+                          title="Clone"
                         >
                           <Copy size={14} />
                         </button>

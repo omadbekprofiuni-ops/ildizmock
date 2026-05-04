@@ -25,7 +25,7 @@ interface Props {
  *    Part 1 is fully buffered.
  *  - Kicks off background `new Audio()` preloaders for Parts 2..N so they
  *    finish during the test.
- *  - Shows a progress UI; only enables the "Test boshlash" button once
+ *  - Shows a progress UI; only enables the "Start test" button once
  *    Part 1 is ready.
  */
 export function ListeningPreloadGate({
@@ -67,7 +67,7 @@ export function ListeningPreloadGate({
     }
     const handleError = () => {
       setError(
-        'Audio yuklab bo‘lmadi — internetingizni tekshirib qayta urinib ko‘ring.',
+        'Couldn't load audio — please check your internet and try again.',
       )
     }
 
@@ -111,7 +111,7 @@ export function ListeningPreloadGate({
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <p className="text-sm text-destructive">
-          Listening test'da audio fayl topilmadi.
+          No audio file found in the Listening test.
         </p>
       </div>
     )
@@ -129,8 +129,8 @@ export function ListeningPreloadGate({
           </h1>
           <p className="text-sm text-slate-600">
             {ready
-              ? 'Part 1 to‘liq yuklandi. Test boshlanganda timer ham ishga tushadi.'
-              : 'Birinchi qism to‘liq yuklab olinadi, keyin test boshlanadi. '
+              ? 'Part 1 fully loaded. The timer starts when the test begins.'
+              : 'The first part is fully downloaded, then the test starts. '
                 + 'Qolgan qismlar test davomida fonda yuklanadi.'}
           </p>
         </div>
@@ -178,12 +178,12 @@ export function ListeningPreloadGate({
           ) : ready ? (
             <>
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              Test boshlash →
+              Start test →
             </>
           ) : (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Yuklanmoqda…
+              Loading…
             </>
           )}
         </Button>

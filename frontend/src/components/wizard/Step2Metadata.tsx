@@ -15,7 +15,7 @@ export function Step2Metadata({
       <h2 className="mb-6 text-2xl text-slate-900">Test ma'lumotlari</h2>
 
       <div className="space-y-4">
-        <Field label="Test nomi *">
+        <Field label="Test name *">
           <input
             value={data.name}
             onChange={(e) => setData({ ...data, name: e.target.value })}
@@ -25,7 +25,7 @@ export function Step2Metadata({
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Qiyinlik">
+          <Field label="Difficulty">
             <select
               value={data.difficulty}
               onChange={(e) =>
@@ -52,7 +52,7 @@ export function Step2Metadata({
             </select>
           </Field>
 
-          <Field label="Davomiyligi (min)">
+          <Field label="Duration (min)">
             <input
               type="number"
               min={5}

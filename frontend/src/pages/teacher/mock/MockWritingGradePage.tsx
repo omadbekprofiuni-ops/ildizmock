@@ -66,7 +66,7 @@ export default function MockWritingGradePage() {
         setScores(init)
         setFeedback(r.data.writing_feedback ?? '')
       })
-      .catch(() => setError('Talaba topilmadi yoki ruxsat yo‘q.'))
+      .catch(() => setError('Student not found or access denied.'))
   }, [id])
 
   const submit = async (e: React.FormEvent) => {
@@ -85,7 +85,7 @@ export default function MockWritingGradePage() {
       }
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail ?? 'Saqlashda xatolik')
+      setError(err.response?.data?.detail ?? 'Save failed')
     } finally {
       setBusy(false)
     }
@@ -100,7 +100,7 @@ export default function MockWritingGradePage() {
   if (!detail)
     return (
       <TeacherLayout>
-        <div className="p-8 text-slate-500">Yuklanmoqda…</div>
+        <div className="p-8 text-slate-500">Loading…</div>
       </TeacherLayout>
     )
 
@@ -134,7 +134,7 @@ export default function MockWritingGradePage() {
           <Stat label="Reading" value={detail.reading_score} />
           <Stat label="Speaking" value={detail.speaking_score} />
           <Stat
-            label="Hisoblangan Writing band"
+            label="Calculated Writing band"
             value={writingBand}
             highlight
           />
@@ -164,7 +164,7 @@ export default function MockWritingGradePage() {
           )}
           <div className="mb-4 rounded-lg border bg-blue-50 p-4">
             <p className="mb-2 text-xs font-semibold uppercase text-blue-900">
-              Talaba javobi ({wordCount(detail.writing_task1_text)} so'z):
+              Student response ({wordCount(detail.writing_task1_text)} words):
             </p>
             <div className="whitespace-pre-wrap rounded bg-white p-3 text-sm">
               {detail.writing_task1_text || (
@@ -209,7 +209,7 @@ export default function MockWritingGradePage() {
           )}
           <div className="mb-4 rounded-lg border bg-blue-50 p-4">
             <p className="mb-2 text-xs font-semibold uppercase text-blue-900">
-              Talaba javobi ({wordCount(detail.writing_task2_text)} so'z):
+              Student response ({wordCount(detail.writing_task2_text)} words):
             </p>
             <div className="whitespace-pre-wrap rounded bg-white p-3 text-sm">
               {detail.writing_task2_text || (
@@ -242,13 +242,13 @@ export default function MockWritingGradePage() {
         {/* Feedback */}
         <section className="rounded-2xl border bg-white p-6">
           <label className="mb-2 block text-sm font-medium">
-            Talaba uchun izoh (ixtiyoriy)
+            Note for student (optional)
           </label>
           <textarea
             rows={4}
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Tavsiyalar, e'tibor berilishi kerak bo'lgan jihatlar…"
+            placeholder="Recommendations, points that need attention…"
             className="w-full rounded-lg border border-slate-300 px-4 py-2"
           />
         </section>
@@ -272,7 +272,7 @@ export default function MockWritingGradePage() {
             disabled={busy}
             className="rounded-full bg-emerald-600 px-8 py-3 text-base font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           >
-            {busy ? 'Saqlanyapti…' : 'Baholashni saqlash'}
+            {busy ? 'Saving…' : 'Save grading'}
           </button>
         </div>
       </form>

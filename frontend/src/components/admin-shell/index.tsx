@@ -117,7 +117,7 @@ export function SurfaceCard({
  * Data-table card — ichida jadval bo'lgan card. Header ixtiyoriy.
  *
  * Foydalanish:
- *   <TableCard title="O'quvchilar" toolbar={<input ... />}>
+ *   <TableCard title="Students" toolbar={<input ... />}>
  *     <table>...</table>
  *   </TableCard>
  */

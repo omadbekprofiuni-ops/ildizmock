@@ -14,7 +14,7 @@ export function Step5Review({ testId }: { testId: string }) {
   if (!test)
     return (
       <div className="rounded-2xl border bg-white p-8 text-sm text-slate-500">
-        Yuklanmoqda…
+        Loading…
       </div>
     )
 
@@ -29,25 +29,25 @@ export function Step5Review({ testId }: { testId: string }) {
       </div>
       <h2 className="mb-2 text-2xl text-slate-900">Yakuniy ko'rib chiqish</h2>
       <p className="mb-6 text-sm text-slate-500">
-        Pastdagi tugmani bossangiz, test markazlar uchun katalogga chiqadi.
+        Pressing the button below publishes the test to the centers' catalog.
       </p>
 
       <div className="space-y-3 rounded-xl border bg-slate-50 p-4 text-sm">
-        <Row label="Nomi">{test.name}</Row>
+        <Row label="Name">{test.name}</Row>
         <Row label="Modul">{test.module}</Row>
-        <Row label="Qiyinlik">{test.difficulty}</Row>
+        <Row label="Difficulty">{test.difficulty}</Row>
         <Row label="Davomiyligi">{test.duration_minutes} min</Row>
         <Row label="Tur">{test.test_type}</Row>
-        <Row label="Holat">{test.status}</Row>
+        <Row label="Status">{test.status}</Row>
         <Row label="Listening parts">{test.listening_parts.length}</Row>
         <Row label="Reading sections">{test.passages.length}</Row>
         <Row label="Writing tasks">{test.writing_tasks.length}</Row>
-        <Row label="Jami savollar">{totalQuestions}</Row>
+        <Row label="Total questions">{totalQuestions}</Row>
       </div>
 
       <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
         ⚠️ E'lon qilingach, test global katalogga qo'shiladi va markazlar uni
-        nusxalay olishadi. Tahrirlash istasangiz Draft holatiga qaytaring.
+        nusxalay olishadi. Edit istasangiz Draft holatiga qaytaring.
       </div>
     </div>
   )

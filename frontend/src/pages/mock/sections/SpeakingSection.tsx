@@ -69,7 +69,7 @@ export function SpeakingSection({
               </h2>
               <p className="mt-2 text-sm text-rose-800">
                 Quyidagi savollar/topshiriqlarni o'qing va o'z javobingizni
-                mikrofonga aytib bering. Tugatgach <strong>Yuborish</strong>
+                speak into the microphone. When done, press <strong>Submit</strong>
                 tugmasini bosing — ustozingiz baholashni kutmoqdasiz.
               </p>
             </div>

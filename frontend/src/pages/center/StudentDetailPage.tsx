@@ -79,14 +79,14 @@ export default function StudentDetailPage() {
   if (loading) {
     return (
       <PageShell>
-        <StateCard Icon={UserIcon} title="Yuklanmoqda…" />
+        <StateCard Icon={UserIcon} title="Loading…" />
       </PageShell>
     )
   }
   if (!data) {
     return (
       <PageShell>
-        <StateCard Icon={UserIcon} title="Talaba topilmadi" />
+        <StateCard Icon={UserIcon} title="Student not found" />
       </PageShell>
     )
   }
@@ -101,7 +101,7 @@ export default function StudentDetailPage() {
         to={`/${slug}/admin/students`}
         className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
       >
-        <ArrowLeft size={14} /> O'quvchilar
+        <ArrowLeft size={14} /> Students
       </Link>
 
       <PageHeader
@@ -131,7 +131,7 @@ export default function StudentDetailPage() {
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-center">
                 <div className="rounded-lg bg-slate-50 px-2 py-2">
-                  <div className="text-xs text-slate-500">Eng yaxshi</div>
+                  <div className="text-xs text-slate-500">Best</div>
                   <div className="text-lg font-semibold text-slate-900">
                     {s.best != null ? s.best.toFixed(1) : '—'}
                   </div>
@@ -162,7 +162,7 @@ export default function StudentDetailPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">Sana</th>
+                  <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Test</th>
                   <th className="px-3 py-2">Modul</th>
                   <th className="px-3 py-2 text-center">Band</th>
@@ -219,7 +219,7 @@ export default function StudentDetailPage() {
       {/* Mocks */}
       <SurfaceCard>
         <h3 className="mb-3 text-sm font-semibold text-slate-800">
-          Mock sessiyalar ({data.mocks.length})
+          Mock sessions ({data.mocks.length})
         </h3>
         {data.mocks.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
@@ -230,8 +230,8 @@ export default function StudentDetailPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">Sana</th>
-                  <th className="px-3 py-2">Sessiya</th>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Session</th>
                   <th className="px-3 py-2 text-center">Listening</th>
                   <th className="px-3 py-2 text-center">Reading</th>
                   <th className="px-3 py-2 text-center">Writing</th>

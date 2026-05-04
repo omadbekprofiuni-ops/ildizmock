@@ -167,7 +167,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
           </div>
           {inOrgContext && (
             <div className="text-xs text-slate-500">
-              Markaz: <span className="font-medium text-slate-900">{orgName}</span>
+              Center: <span className="font-medium text-slate-900">{orgName}</span>
             </div>
           )}
         </header>

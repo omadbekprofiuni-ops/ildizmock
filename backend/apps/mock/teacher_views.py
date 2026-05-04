@@ -167,7 +167,7 @@ class TeacherMockViewSet(viewsets.ViewSet):
             try:
                 num = Decimal(str(v))
             except (InvalidOperation, TypeError):
-                return Response({'detail': f'{f} raqam bo‘lishi kerak.'},
+                return Response({'detail': f'{f} must be a number.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if num < 0 or num > 9:
                 return Response({'detail': f'{f} 0–9 oralig‘ida.'},
@@ -234,7 +234,7 @@ class TeacherMockViewSet(viewsets.ViewSet):
             try:
                 num = Decimal(str(v))
             except (InvalidOperation, TypeError):
-                return Response({'detail': f'{f} raqam bo‘lishi kerak.'},
+                return Response({'detail': f'{f} must be a number.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if num < 0 or num > 9:
                 return Response({'detail': f'{f} 0–9 oralig‘ida bo‘lsin.'},
@@ -249,15 +249,15 @@ class TeacherMockViewSet(viewsets.ViewSet):
         else:
             v = request.data.get('score')
             if v is None or v == '':
-                return Response({'detail': 'Kriteriyalar yoki score majburiy.'},
+                return Response({'detail': 'Either criteria or score is required.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             try:
                 num = Decimal(str(v))
             except (InvalidOperation, TypeError):
-                return Response({'detail': 'Score raqam bo‘lishi kerak.'},
+                return Response({'detail': 'Score must be a number.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if num < 0 or num > 9:
-                return Response({'detail': 'Score 0–9 oralig‘ida bo‘lishi kerak.'},
+                return Response({'detail': 'Score must be between 0 and 9.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             p.speaking_score = num
 

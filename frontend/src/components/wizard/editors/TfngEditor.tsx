@@ -13,7 +13,7 @@ export function TfngEditor({
   return (
     <div>
       <div className="mb-2 text-xs uppercase tracking-widest text-slate-500">
-        To'g'ri javob
+        Correct answer
       </div>
       <div className="flex flex-wrap gap-2">
         {VALUES.map((v) => (
@@ -44,7 +44,7 @@ export function YnngEditor(props: {
   return (
     <div>
       <div className="mb-2 text-xs uppercase tracking-widest text-slate-500">
-        To'g'ri javob
+        Correct answer
       </div>
       <div className="flex flex-wrap gap-2">
         {VALS.map((v) => (

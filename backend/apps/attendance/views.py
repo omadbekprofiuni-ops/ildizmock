@@ -1,6 +1,6 @@
 """ETAP 15 — Attendance API.
 
-Markaz admin va o'qituvchi guruh davomatini boshqarishi uchun endpoints.
+Center admin va o'qituvchi guruh davomatini boshqarishi uchun endpoints.
 URL pattern: /api/v1/center/<slug>/attendance/...
 """
 
@@ -41,7 +41,7 @@ User = get_user_model()
 def _get_org_or_403(user, slug: str) -> Organization:
     org = get_object_or_404(Organization, slug=slug)
     if org.status != 'active':
-        raise PermissionDenied('Markaz faol holatda emas.')
+        raise PermissionDenied('Center is not active.')
     if user.role == 'superadmin':
         return org
     is_admin = OrganizationMembership.objects.filter(
@@ -88,7 +88,7 @@ class CenterScheduleViewSet(viewsets.ModelViewSet):
             StudentGroup, pk=self.kwargs['group_pk'], organization=org,
         )
         if not _is_admin(self.request.user, org) and group.teacher_id != self.request.user.id:
-            raise PermissionDenied('Faqat guruh o\'qituvchisi yoki admin.')
+            raise PermissionDenied('Only the group teacher or admin.')
         return group
 
     def get_queryset(self):
@@ -97,17 +97,17 @@ class CenterScheduleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         group = self.get_group()
         if not _is_admin(self.request.user, self.get_organization()):
-            raise PermissionDenied('Faqat admin jadval yarata oladi.')
+            raise PermissionDenied('Only an admin can create a schedule.')
         serializer.save(group=group, created_by=self.request.user)
 
     def perform_update(self, serializer):
         if not _is_admin(self.request.user, self.get_organization()):
-            raise PermissionDenied('Faqat admin tahrirlay oladi.')
+            raise PermissionDenied('Only an admin can edit.')
         serializer.save()
 
     def perform_destroy(self, instance):
         if not _is_admin(self.request.user, self.get_organization()):
-            raise PermissionDenied('Faqat admin o\'chira oladi.')
+            raise PermissionDenied('Only an admin can delete.')
         instance.delete()
 
 
@@ -154,11 +154,11 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
 
         # Permission: faqat admin yoki guruh o'qituvchisi
         if not (_is_admin(request.user, org) or group.teacher_id == request.user.id):
-            raise PermissionDenied('Faqat admin yoki guruh o\'qituvchisi.')
+            raise PermissionDenied('Only the admin or group teacher.')
         if group.organization_id != org.id:
-            raise ValidationError('Guruh boshqa markazdan.')
+            raise ValidationError('Group boshqa markazdan.')
 
-        # Sessiya ham talaba yozuvlari ham bir tranzaksiyada
+        # Session ham talaba yozuvlari ham bir tranzaksiyada
         from django.db import transaction
         with transaction.atomic():
             session = ser.save(created_by=request.user)
@@ -178,9 +178,9 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         org = self.get_organization()
         if not _is_admin(request.user, org):
-            raise PermissionDenied('Faqat admin o\'chira oladi.')
+            raise PermissionDenied('Only an admin can delete.')
         if session.is_finalized:
-            raise ValidationError('Yakunlangan sessiyani o\'chirib bo\'lmaydi.')
+            raise ValidationError('Cannot delete a finished session.')
         return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'], url_path='bulk-mark')
@@ -189,7 +189,7 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         if session.is_finalized:
             return Response(
-                {'detail': 'Sessiya yakunlangan.'},
+                {'detail': 'Session has ended.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -220,10 +220,10 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
         """Sessiyani yopish — keyin o'zgartirib bo'lmaydi."""
         session = self.get_object()
         if session.is_finalized:
-            return Response({'detail': 'Allaqachon yakunlangan.'})
+            return Response({'detail': 'Already ended.'})
         session.is_finalized = True
         session.save(update_fields=['is_finalized', 'updated_at'])
-        return Response({'detail': 'Sessiya yakunlandi.', 'is_finalized': True})
+        return Response({'detail': 'Session ended.', 'is_finalized': True})
 
     @action(detail=True, methods=['post'])
     def reopen(self, request, pk=None, org_slug=None):
@@ -234,7 +234,7 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         session.is_finalized = False
         session.save(update_fields=['is_finalized', 'updated_at'])
-        return Response({'detail': 'Sessiya qayta ochildi.', 'is_finalized': False})
+        return Response({'detail': 'Session reopened.', 'is_finalized': False})
 
 
 # ===== Reports =====
@@ -250,13 +250,13 @@ class StudentAttendanceReportView(APIView):
         student = get_object_or_404(
             User, pk=student_id, organization=org, role='student',
         )
-        # O'qituvchi faqat o'z guruhi talabasini ko'radi
+        # Teacher faqat o'z guruhi talabasini ko'radi
         if not _is_admin(request.user, org):
             if request.user.role != 'teacher' or (
                 student.group is None
                 or student.group.teacher_id != request.user.id
             ):
-                raise PermissionDenied('Faqat o\'z guruh talabangiz.')
+                raise PermissionDenied('Only students in your own group.')
 
         records = AttendanceRecord.objects.filter(
             student=student, session__group__organization=org,
@@ -324,7 +324,7 @@ class StudentAttendanceReportView(APIView):
 
 
 class GroupAttendanceReportView(APIView):
-    """Guruh davomati statistikasi (har talaba uchun rate)."""
+    """Group davomati statistikasi (har talaba uchun rate)."""
 
     permission_classes = [permissions.IsAuthenticated]
 
@@ -334,7 +334,7 @@ class GroupAttendanceReportView(APIView):
             StudentGroup, pk=group_id, organization=org,
         )
         if not _is_admin(request.user, org) and group.teacher_id != request.user.id:
-            raise PermissionDenied('Faqat admin yoki guruh o\'qituvchisi.')
+            raise PermissionDenied('Only the admin or group teacher.')
 
         sessions = list(
             group.attendance_sessions.order_by('-date')[:30]
@@ -387,7 +387,7 @@ class GroupAttendanceReportView(APIView):
 
 
 class AttendanceTodayView(APIView):
-    """Bugungi sessiyalar (dashboard kartochkasi uchun)."""
+    """Today's sessiyalar (dashboard kartochkasi uchun)."""
 
     permission_classes = [permissions.IsAuthenticated]
 

@@ -62,7 +62,7 @@ export default function OrgTeachersPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">O'qituvchilar</h1>
             <p className="text-sm text-muted-foreground">
-              {orgName ? `${orgName} markazi o'qituvchilari` : 'Markaz tanlanmagan'}
+              {orgName ? `${orgName} center teachers` : 'No center selected'}
             </p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function OrgTeachersPage() {
         {!orgId ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-500">
-              Avval markazni tanlang.
+              First select a center.
             </CardContent>
           </Card>
         ) : (
@@ -88,7 +88,7 @@ export default function OrgTeachersPage() {
                 />
               </div>
               <span className="text-sm text-slate-500">
-                Jami: <strong>{filtered.length}</strong> / {teachers.length}
+                Total: <strong>{filtered.length}</strong> / {teachers.length}
               </span>
             </div>
 
@@ -100,7 +100,7 @@ export default function OrgTeachersPage() {
                       <th className="px-4 py-3 text-left">Ism</th>
                       <th className="px-4 py-3 text-left">Login</th>
                       <th className="px-4 py-3 text-left">Telefon</th>
-                      <th className="px-4 py-3 text-center">Holat</th>
+                      <th className="px-4 py-3 text-center">Status</th>
                       <th className="px-4 py-3 text-left">Oxirgi kirish</th>
                       <th className="px-4 py-3 text-left">Qo'shilgan</th>
                     </tr>
@@ -116,7 +116,7 @@ export default function OrgTeachersPage() {
                     {!query.isLoading && filtered.length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
-                          O'qituvchi topilmadi.
+                          Teacher not found.
                         </td>
                       </tr>
                     )}
@@ -137,7 +137,7 @@ export default function OrgTeachersPage() {
                                 : 'bg-rose-100 text-rose-700'
                             }`}
                           >
-                            {t.is_active ? 'faol' : 'o\'chirilgan'}
+                            {t.is_active ? 'faol' : 'deleted'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-slate-600">

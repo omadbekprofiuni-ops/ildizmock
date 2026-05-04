@@ -126,12 +126,12 @@ export default function MockControlPage() {
   }
 
   const start = async () => {
-    // Sessiya qaysi bo'limdan boshlanishini hisoblab confirm matnida ko'rsatamiz.
+    // Session qaysi bo'limdan boshlanishini hisoblab confirm matnida ko'rsatamiz.
     const sectionOrder = ['listening', 'reading', 'writing'] as const
     const firstSec = sectionOrder.find((s) => session[`${s}_test` as const])
     const firstLabel = firstSec
       ? firstSec.charAt(0).toUpperCase() + firstSec.slice(1)
-      : 'Sessiya'
+      : 'Session'
     const ok = await confirm({
       title: `Start ${firstLabel} session?`,
       description: 'All students will be automatically taken to the test page.',

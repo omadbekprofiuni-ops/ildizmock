@@ -79,7 +79,7 @@ export default function CenterAnalyticsPage() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     },
-    onError: () => toast.error('Excel yuklab bo‘lmadi'),
+    onError: () => toast.error('Couldn't download Excel'),
   })
 
   const data = query.data
@@ -90,7 +90,7 @@ export default function CenterAnalyticsPage() {
         <div>
           <h1 className="text-3xl font-light text-slate-900">Analytics</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Markaz natijalari, trend va eng yaxshi talabalar.
+            Center results, trends, and top students.
           </p>
         </div>
         <Button
@@ -99,7 +99,7 @@ export default function CenterAnalyticsPage() {
         >
           {exportMutation.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Yuklanmoqda…
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
             </>
           ) : (
             <>
@@ -111,16 +111,16 @@ export default function CenterAnalyticsPage() {
 
       {query.isLoading && <p className="text-slate-500">Loading…</p>}
       {query.isError && (
-        <p className="text-rose-600">Ma'lumotlarni yuklab bo‘lmadi.</p>
+        <p className="text-rose-600">Couldn't load data.</p>
       )}
 
       {data && (
         <>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Stat label="Talabalar" value={data.totals.students} />
-            <Stat label="Sessiyalar" value={data.totals.sessions} />
+            <Stat label="Students" value={data.totals.students} />
+            <Stat label="Sessions" value={data.totals.sessions} />
             <Stat
-              label="Tugatilgan testlar"
+              label="Completed tests"
               value={data.totals.completed}
               hint={`${data.totals.participants} ishtirokchi`}
             />
@@ -161,7 +161,7 @@ export default function CenterAnalyticsPage() {
 
           <Card>
             <CardContent className="p-6">
-              <h2 className="mb-4 text-base font-semibold">6 oylik trend</h2>
+              <h2 className="mb-4 text-base font-semibold">6-month trend</h2>
               <TrendChart data={data.monthly_trend} />
             </CardContent>
           </Card>
@@ -169,15 +169,15 @@ export default function CenterAnalyticsPage() {
           <Card>
             <CardContent className="p-0">
               <div className="border-b p-4">
-                <h2 className="text-base font-semibold">Top 10 talabalar</h2>
+                <h2 className="text-base font-semibold">Top 10 students</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="px-4 py-3">#</th>
-                      <th className="px-4 py-3">Talaba</th>
-                      <th className="px-4 py-3">Sessiya</th>
+                      <th className="px-4 py-3">Student</th>
+                      <th className="px-4 py-3">Session</th>
                       <th className="px-4 py-3 text-center">L</th>
                       <th className="px-4 py-3 text-center">R</th>
                       <th className="px-4 py-3 text-center">W</th>
@@ -223,7 +223,7 @@ export default function CenterAnalyticsPage() {
           {data.recent_sessions.length > 0 && (
             <Card>
               <CardContent className="p-6">
-                <h2 className="mb-4 text-base font-semibold">Oxirgi sessiyalar</h2>
+                <h2 className="mb-4 text-base font-semibold">Recent sessions</h2>
                 <ul className="divide-y">
                   {data.recent_sessions.map((s) => (
                     <li key={s.id} className="flex items-center justify-between py-2 text-sm">
@@ -319,7 +319,7 @@ function TrendChart({
 }: {
   data: { month: string; count: number; avg_score: number | null }[]
 }) {
-  if (data.length === 0) return <p className="text-sm text-slate-500">Ma'lumot yo‘q</p>
+  if (data.length === 0) return <p className="text-sm text-slate-500">Information yo‘q</p>
 
   const W = 800
   const H = 220

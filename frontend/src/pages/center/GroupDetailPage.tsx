@@ -83,7 +83,7 @@ function TrendBadge({ trend }: { trend: GroupDetail['trend'] }) {
     )
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-500">
-      Ma'lumot yetarli emas
+      Not enough data
     </span>
   )
 }
@@ -92,7 +92,7 @@ function ProgressChart({ data }: { data: ChartPoint[] }) {
   if (data.length === 0)
     return (
       <div className="flex h-40 items-center justify-center text-sm text-slate-400">
-        Hozircha sessiya yo‘q
+        No sessions yet
       </div>
     )
   const W = 600
@@ -185,7 +185,7 @@ export default function GroupDetailPage() {
 
   const removeStudent = async (id: number) => {
     if (!slug || !groupId) return
-    if (!window.confirm('Talabani guruhdan chiqarmoqchimisiz?')) return
+    if (!window.confirm('Remove this student from the group?')) return
     await api.post(`/center/${slug}/groups/${groupId}/remove-student/${id}/`)
     toast.success('Guruhdan chiqarildi')
     load()
@@ -193,23 +193,23 @@ export default function GroupDetailPage() {
 
   const removeGroup = async () => {
     if (!slug || !groupId) return
-    if (!window.confirm("Guruhni o'chirmoqchimisiz? Talabalar guruhsiz qoladi.")) return
+    if (!window.confirm("Delete this group? Students will be left without a group.")) return
     await api.delete(`/center/${slug}/groups/${groupId}/`)
-    toast.success("Guruh o'chirildi")
+    toast.success("Group deleted")
     navigate(`/${slug}/admin/groups`)
   }
 
   if (loading) {
     return (
       <PageShell>
-        <StateCard Icon={Loader2} title="Yuklanmoqda…" />
+        <StateCard Icon={Loader2} title="Loading…" />
       </PageShell>
     )
   }
   if (!group) {
     return (
       <PageShell>
-        <StateCard Icon={X} title="Guruh topilmadi" />
+        <StateCard Icon={X} title="Group not found" />
       </PageShell>
     )
   }
@@ -220,15 +220,15 @@ export default function GroupDetailPage() {
         to={`/${slug}/admin/groups`}
         className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
       >
-        <ArrowLeft size={14} /> Guruhlar
+        <ArrowLeft size={14} /> Groups
       </Link>
 
       <PageHeader
         title={group.name}
         subtitle={
           group.teacher
-            ? `O‘qituvchi: ${group.teacher.full_name}`
-            : 'O‘qituvchi tayinlanmagan'
+            ? `Teacher: ${group.teacher.full_name}`
+            : 'Teacher tayinlanmagan'
         }
         actions={
           <>
@@ -237,14 +237,14 @@ export default function GroupDetailPage() {
               onClick={removeGroup}
               className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
             >
-              <Trash2 size={14} /> O‘chirish
+              <Trash2 size={14} /> Delete
             </button>
             <button
               type="button"
               onClick={() => setShowAdd(true)}
               className={btnPrimary}
             >
-              <UserPlus size={16} /> Talaba qo‘shish
+              <UserPlus size={16} /> Add student
             </button>
           </>
         }
@@ -252,7 +252,7 @@ export default function GroupDetailPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="Talabalar" value={String(group.student_count)} />
+        <StatTile label="Students" value={String(group.student_count)} />
         <StatTile
           label="O‘rtacha"
           value={group.avg_score != null ? group.avg_score.toFixed(1) : '—'}
@@ -284,14 +284,14 @@ export default function GroupDetailPage() {
         </SurfaceCard>
 
         <SurfaceCard>
-          <h3 className="mb-3 text-sm font-semibold text-slate-800">Ma‘lumot</h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-800">Information</h3>
           <dl className="space-y-2 text-sm">
-            <Row label="Dars jadvali" value={group.class_schedule || '—'} />
+            <Row label="Class schedule" value={group.class_schedule || '—'} />
             <Row label="Boshlanish" value={group.start_date || '—'} />
             <Row label="Tugash" value={group.end_date || '—'} />
             <Row
-              label="Holat"
-              value={group.is_active ? 'Faol' : 'Faol emas'}
+              label="Status"
+              value={group.is_active ? 'Active' : 'Active emas'}
             />
           </dl>
           {group.description && (
@@ -306,19 +306,19 @@ export default function GroupDetailPage() {
       <SurfaceCard>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-800">
-            Talabalar ({group.members.length})
+            Students ({group.members.length})
           </h3>
         </div>
         {group.members.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
-            Guruhda talaba yo‘q
+            No students in the group
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">Talaba</th>
+                  <th className="px-3 py-2">Student</th>
                   <th className="px-3 py-2 text-center">Testlar</th>
                   <th className="px-3 py-2 text-center">O‘rtacha</th>
                   <th className="px-3 py-2 text-center">So‘nggi</th>
@@ -464,7 +464,7 @@ function AddStudentsDialog({
 
   const onSave = async () => {
     if (selected.size === 0) {
-      toast.error('Hech narsa tanlanmadi')
+      toast.error('Nothing selected')
       return
     }
     setSaving(true)
@@ -473,7 +473,7 @@ function AddStudentsDialog({
         `/center/${slug}/groups/${groupId}/add-students/`,
         { student_ids: Array.from(selected) },
       )
-      toast.success(`${selected.size} ta talaba qo‘shildi`)
+      toast.success(`${selected.size} students added`)
       onAdded()
     } catch {
       toast.error('Xatolik')
@@ -505,7 +505,7 @@ function AddStudentsDialog({
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
           />
           <p className="mt-1 text-xs text-slate-500">
-            Faqat hech qaysi guruhga biriktirilmagan talabalar ko‘rinadi.
+            Only students not assigned to any group are shown.
           </p>
         </div>
         <div className="min-h-[200px] flex-1 overflow-y-auto px-5 py-2">
@@ -515,7 +515,7 @@ function AddStudentsDialog({
             </p>
           ) : filtered.length === 0 ? (
             <p className="py-10 text-center text-sm text-slate-500">
-              Mos talaba topilmadi
+              No matching students
             </p>
           ) : (
             filtered.map((s) => (
@@ -545,7 +545,7 @@ function AddStudentsDialog({
           </span>
           <div className="flex gap-2">
             <button onClick={onClose} className={btnOutline}>
-              Bekor
+              Cancel
             </button>
             <button
               onClick={onSave}
@@ -554,7 +554,7 @@ function AddStudentsDialog({
             >
               {saving ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Saqlanmoqda…
+                  <Loader2 size={14} className="animate-spin" /> Saving…
                 </>
               ) : (
                 <>

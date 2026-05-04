@@ -74,15 +74,15 @@ export default function SuperAdminAudioPage() {
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Audio fayllar yuklab bo‘lmadi.</p>
+          <p className="text-rose-600">Couldn't load audio files.</p>
         )}
 
         {query.data && (
           <>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              <Stat label="Jami fayllar" value={query.data.totals.count} />
-              <Stat label="Umumiy davomiylik" value={fmtDuration(totalDuration)} />
-              <Stat label="Umumiy hajm" value={fmtSize(totalSize)} />
+              <Stat label="Total files" value={query.data.totals.count} />
+              <Stat label="Total duration" value={fmtDuration(totalDuration)} />
+              <Stat label="Total size" value={fmtSize(totalSize)} />
             </div>
 
             <Card>
@@ -90,7 +90,7 @@ export default function SuperAdminAudioPage() {
                 <div className="flex items-center justify-between border-b p-4">
                   <h2 className="text-base font-semibold">Fayllar</h2>
                   <input
-                    placeholder="Test/markaz nomi bo‘yicha qidirish…"
+                    placeholder="Search by test or center name…"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     className="w-72 rounded-md border px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
@@ -102,7 +102,7 @@ export default function SuperAdminAudioPage() {
                     <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                       <tr>
                         <th className="px-4 py-3">Test</th>
-                        <th className="px-4 py-3">Markaz</th>
+                        <th className="px-4 py-3">Center</th>
                         <th className="px-4 py-3 text-center">Part</th>
                         <th className="px-4 py-3 text-center">Davomiylik</th>
                         <th className="px-4 py-3 text-center">Hajm</th>
@@ -154,7 +154,7 @@ export default function SuperAdminAudioPage() {
                       {filtered.length === 0 && !query.isLoading && (
                         <tr>
                           <td colSpan={7} className="p-8 text-center text-slate-500">
-                            Audio fayllar topilmadi.
+                            No audio files found.
                           </td>
                         </tr>
                       )}

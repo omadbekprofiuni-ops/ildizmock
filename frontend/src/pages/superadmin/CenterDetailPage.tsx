@@ -405,10 +405,10 @@ function LogoDropzone({
       await api.post(`/super/organizations/${orgId}/logo/`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      toast.success('Logo yuklandi')
+      toast.success('Logo uploaded')
       onUpdated()
     } catch {
-      toast.error('Yuklashda xatolik')
+      toast.error('Upload failed')
     } finally {
       setBusy(false)
     }
@@ -422,7 +422,7 @@ function LogoDropzone({
       toast.success('Logo o‘chirildi')
       onUpdated()
     } catch {
-      toast.error('O‘chirishda xatolik')
+      toast.error('Delete failed')
     } finally {
       setBusy(false)
     }
@@ -445,7 +445,7 @@ function LogoDropzone({
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
         <ImagePlus size={18} className="text-red-600" />
-        <h2 className="text-base font-semibold text-slate-900">Markaz logosi</h2>
+        <h2 className="text-base font-semibold text-slate-900">Center logo</h2>
       </div>
 
       <input
@@ -466,7 +466,7 @@ function LogoDropzone({
           <div className="flex-1 text-sm">
             <p className="font-medium text-slate-900">Joriy logo</p>
             <p className="text-xs text-slate-500">
-              Yangisini yuklash uchun pastga drag qiling yoki “Almashtirish”ni bosing.
+              Drag a new one below or click “Replace”.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -476,7 +476,7 @@ function LogoDropzone({
               disabled={busy}
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-              <UploadCloud size={14} className="mr-1 inline" /> Almashtirish
+              <UploadCloud size={14} className="mr-1 inline" /> Replace
             </button>
             <button
               type="button"
@@ -484,7 +484,7 @@ function LogoDropzone({
               disabled={busy}
               className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
             >
-              <Trash2 size={14} className="mr-1 inline" /> O‘chirish
+              <Trash2 size={14} className="mr-1 inline" /> Delete
             </button>
           </div>
         </div>
@@ -512,9 +512,9 @@ function LogoDropzone({
           {busy ? <Loader2 size={26} className="animate-spin" /> : <UploadCloud size={26} />}
         </div>
         <p className="mt-3 text-sm font-medium text-slate-700">
-          Faylni bu yerga tashlang yoki <span className="text-red-600 underline">tanlang</span>
+          Drop the file here or <span className="text-red-600 underline">choose</span>
         </p>
-        <p className="mt-1 text-xs text-slate-500">PNG, JPG, SVG (transparent background tavsiya etiladi)</p>
+        <p className="mt-1 text-xs text-slate-500">PNG, JPG, SVG (transparent background recommended)</p>
       </div>
     </div>
   )

@@ -17,8 +17,8 @@ class Plan(models.Model):
 
     code = models.CharField(max_length=20, unique=True, choices=PLAN_CHOICES)
     name = models.CharField(max_length=100)
-    max_students = models.IntegerField(default=5, help_text='-1 = cheksiz')
-    max_teachers = models.IntegerField(default=1, help_text='-1 = cheksiz')
+    max_students = models.IntegerField(default=5, help_text='-1 = unlimited')
+    max_teachers = models.IntegerField(default=1, help_text='-1 = unlimited')
     duration_days = models.IntegerField(default=14)
     price_usd = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     features = models.JSONField(default=list, blank=True)
@@ -35,7 +35,7 @@ class Organization(models.Model):
 
     STATUS_CHOICES = [
         ('trial', 'Trial'),
-        ('active', 'Faol'),
+        ('active', 'Active'),
         ('expired', 'Tarif tugagan'),
         ('blocked', 'Bloklangan'),
     ]
@@ -126,7 +126,7 @@ class OrganizationMembership(models.Model):
 
 
 class StudentGroup(models.Model):
-    """Talabalar guruhi (markaz ichida).
+    """Students guruhi (markaz ichida).
 
     O'qituvchilar guruhdagi talabalarni kuzatadi, admin esa
     guruhlar o'rtasida taqqoslaydi.
@@ -138,7 +138,7 @@ class StudentGroup(models.Model):
     )
     name = models.CharField(
         max_length=100,
-        help_text='Misol: IELTS 7.0, Group A, Beginner 1',
+        help_text='e.g. IELTS 7.0, Group A, Beginner 1',
     )
     description = models.TextField(blank=True, default='')
 
@@ -151,7 +151,7 @@ class StudentGroup(models.Model):
 
     target_band_score = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True,
-        help_text='Maqsad band score (6.5, 7.0, 7.5...)',
+        help_text='Target band score (6.5, 7.0, 7.5...)',
     )
     class_schedule = models.CharField(max_length=200, blank=True, default='')
 

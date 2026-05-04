@@ -149,7 +149,7 @@ export function QuestionRenderer({
           onChange={(e) => onChange(e.target.value)}
           className="ml-8 rounded border border-slate-300 px-3 py-1.5"
         >
-          <option value="">— Tanlang —</option>
+          <option value="">— Select —</option>
           {(question.options || []).map((opt) => (
             <option key={opt} value={opt}>
               {opt}
@@ -173,7 +173,7 @@ export function QuestionRenderer({
         type="text"
         value={typeof value === 'string' ? value : ''}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Javobni kiriting"
+        placeholder="Enter your answer"
         className="ml-8 w-full max-w-md rounded border border-slate-300 px-3 py-1.5"
       />
     </div>

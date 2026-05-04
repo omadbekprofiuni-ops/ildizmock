@@ -1,4 +1,4 @@
-"""ETAP 7 — Markaz admini uchun analytics + Excel export.
+"""ETAP 7 — Center admini uchun analytics + Excel export.
 
 Mock test natijalariga asoslangan statistika, oylik trend va eng yaxshi
 talabalar ro'yxati. Export endpointi openpyxl orqali .xlsx fayl yaratadi.
@@ -161,7 +161,7 @@ class CenterAnalyticsExcelView(_CenterAdminBaseView):
         ws.title = 'Mock Results'
 
         headers = [
-            '#', 'Talaba', 'Sessiya', 'Sana',
+            '#', 'Student', 'Session', 'Date',
             'Listening', 'Reading', 'Writing', 'Speaking', 'Overall',
             'Writing status', 'Speaking status',
         ]
@@ -211,7 +211,7 @@ class CenterAnalyticsExcelView(_CenterAdminBaseView):
             best=Max('overall_band_score'),
         )
         ws.cell(row=last_row, column=1, value='XULOSA').font = Font(bold=True, size=12)
-        ws.cell(row=last_row + 1, column=1, value='Tugatilgan testlar:')
+        ws.cell(row=last_row + 1, column=1, value='Completed tests:')
         ws.cell(row=last_row + 1, column=2, value=summary['total'] or 0)
         ws.cell(row=last_row + 2, column=1, value='O‘rtacha Overall:')
         ws.cell(

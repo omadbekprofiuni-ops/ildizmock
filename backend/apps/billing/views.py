@@ -178,7 +178,7 @@ class BillingOrganizationDetailView(APIView):
 
 
 class CenterSubscriptionView(APIView):
-    """ETAP 17 — Markaz adminining hozirgi obuna + joriy oydagi quota usage.
+    """ETAP 17 — Center adminining hozirgi obuna + joriy oydagi quota usage.
 
     GET /api/v1/billing/subscription/?org=<slug>
     """

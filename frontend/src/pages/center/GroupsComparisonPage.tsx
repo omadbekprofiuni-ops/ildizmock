@@ -57,21 +57,21 @@ export default function GroupsComparisonPage() {
         to={`/${slug}/admin/groups`}
         className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
       >
-        <ArrowLeft size={14} /> Guruhlar
+        <ArrowLeft size={14} /> Groups
       </Link>
 
       <PageHeader
-        title="Guruhlar taqqoslash"
-        subtitle="Faol guruhlarning o‘rtacha balli bo‘yicha reytingi"
+        title="Compare groups"
+        subtitle="Ranking of active groups by average score"
       />
 
       {loading ? (
-        <StateCard Icon={Trophy} title="Yuklanmoqda…" />
+        <StateCard Icon={Trophy} title="Loading…" />
       ) : rows.length === 0 ? (
         <StateCard
           Icon={Trophy}
-          title="Hozircha guruh yo‘q"
-          description="Avval bir nechta guruh yarating va talabalarni biriktiring."
+          title="No groups yet"
+          description="First create a few groups and assign students."
         />
       ) : (
         <SurfaceCard>
@@ -80,9 +80,9 @@ export default function GroupsComparisonPage() {
               <thead className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="px-3 py-2">#</th>
-                  <th className="px-3 py-2">Guruh</th>
-                  <th className="px-3 py-2">O‘qituvchi</th>
-                  <th className="px-3 py-2 text-center">Talabalar</th>
+                  <th className="px-3 py-2">Group</th>
+                  <th className="px-3 py-2">Teacher</th>
+                  <th className="px-3 py-2 text-center">Students</th>
                   <th className="px-3 py-2 text-center">O‘rtacha</th>
                   <th className="px-3 py-2 text-center">So‘nggi</th>
                   <th className="px-3 py-2 text-center">Maqsad</th>

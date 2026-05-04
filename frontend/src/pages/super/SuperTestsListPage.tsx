@@ -65,10 +65,10 @@ export default function SuperTestsListPage() {
       <PageShell>
         <PageHeader
           title="Global testlar"
-          subtitle="SuperAdmin tayyorlagan, hamma markazlar nusxalashi mumkin bo'lgan testlar"
+          subtitle="Tests prepared by SuperAdmin that any center can clone"
           actions={
             <Link to="/super/tests/wizard" className={btnPrimary}>
-              <Plus size={16} /> Yangi test (Wizard)
+              <Plus size={16} /> New test (Wizard)
             </Link>
           }
         />
@@ -77,11 +77,11 @@ export default function SuperTestsListPage() {
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr>
-                <th className={adminTable.th}>Nomi</th>
+                <th className={adminTable.th}>Name</th>
                 <th className={adminTable.th}>Modul</th>
-                <th className={adminTable.th}>Qiyinlik</th>
+                <th className={adminTable.th}>Difficulty</th>
                 <th className={adminTable.th}>Savollar</th>
-                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th}>Status</th>
                 <th className={adminTable.th}>Practice</th>
                 <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
@@ -90,13 +90,13 @@ export default function SuperTestsListPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Yuklanmoqda…
+                    Loading…
                   </td>
                 </tr>
               ) : tests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Hali test yo'q. "+ Yangi test" tugmasi bilan boshlang.
+                    No tests yet. "+ New test" tugmasi bilan boshlang.
                   </td>
                 </tr>
               ) : (
@@ -142,7 +142,7 @@ export default function SuperTestsListPage() {
                           to={`/super/tests/wizard/${t.id}`}
                           className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
-                          Tahrirlash
+                          Edit
                         </Link>
                         <button
                           type="button"
@@ -153,7 +153,7 @@ export default function SuperTestsListPage() {
                               : 'inline-flex items-center gap-1 rounded-xl bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100'
                           }
                         >
-                          {t.status === 'published' ? 'Draft' : "E'lon qilish"}
+                          {t.status === 'published' ? 'Draft' : "Publish"}
                         </button>
                       </div>
                     </td>

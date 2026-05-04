@@ -27,7 +27,7 @@ export function LockedAudio({ src, onEnded }: LockedAudioProps) {
     if (!el) return
 
     const handleSeeking = () => {
-      // Talaba timeline'ni surish urinishi — qayta tiklaymiz
+      // Student timeline'ni surish urinishi — qayta tiklaymiz
       if (Math.abs(el.currentTime - lastTimeRef.current) > 0.5) {
         el.currentTime = lastTimeRef.current
       }
@@ -93,9 +93,9 @@ export function LockedAudio({ src, onEnded }: LockedAudioProps) {
       </p>
 
       {/*
-        controls va controlsList olib tashlandi.
-        muted=false default, lekin browser autoplay policy uchun
-        component mount paytida user already test'ga "Start" bosgan bo'ladi.
+        controls and controlsList intentionally removed.
+        muted=false by default; browser autoplay policy is fine because
+        by the time this mounts the user has already pressed "Start".
       */}
       <audio
         ref={ref}

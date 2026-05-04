@@ -62,7 +62,7 @@ export default function ResultPage() {
       return res.data.id
     },
     onSuccess: (newId) => navigate(`/take/${newId}`),
-    onError: () => toast.error('Qayta urinishni boshlab bo‘lmadi'),
+    onError: () => toast.error('Couldn't start a retry'),
   })
 
   if (!attemptId) return <Navigate to="/" replace />
@@ -202,7 +202,7 @@ export default function ResultPage() {
           <div className="rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-4 text-sm text-emerald-900">
             <p className="font-semibold">Practice mode</p>
             <p className="mt-0.5">
-              Quyida har savol uchun darhol javoblar ko‘rsatildi. Cheklov
+              Answers for each question are shown below. Limit
               yo‘q — istagancha qayta urinib ko‘rishingiz mumkin.
             </p>
           </div>
@@ -230,7 +230,7 @@ export default function ResultPage() {
         {sortedAnswers.length > 0 && (
           <Card>
             <CardContent className="space-y-3 p-6">
-              <CardTitle className="mb-1 text-base">Savollar bo‘yicha tahlil</CardTitle>
+              <CardTitle className="mb-1 text-base">Question analysis</CardTitle>
               <ol className="space-y-3">
                 {sortedAnswers.map((a) => (
                   <li
@@ -269,7 +269,7 @@ export default function ResultPage() {
                         </p>
                         {!a.is_correct && (
                           <p>
-                            <span className="text-slate-500">To‘g‘ri javob: </span>
+                            <span className="text-slate-500">Correct answer: </span>
                             <span className="font-semibold text-emerald-700">
                               {formatAnswer(a.correct_answer)}
                             </span>
@@ -292,7 +292,7 @@ export default function ResultPage() {
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              {retry.isPending ? 'Yaratilmoqda…' : 'Qayta urinish'}
+              {retry.isPending ? 'Creating…' : 'Qayta urinish'}
             </Button>
           )}
           <Link to={`/take/${r.id}?review=1`}>
@@ -313,8 +313,8 @@ export default function ResultPage() {
 }
 
 function formatAnswer(value: unknown): string {
-  if (value === null || value === undefined) return '(javob berilmagan)'
-  if (typeof value === 'string') return value || '(javob berilmagan)'
+  if (value === null || value === undefined) return '(no answer)'
+  if (typeof value === 'string') return value || '(no answer)'
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   if (Array.isArray(value)) return value.map(formatAnswer).join(', ')
   if (typeof value === 'object') {

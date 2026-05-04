@@ -58,7 +58,7 @@ export default function OrgStatisticsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Statistika</h1>
             <p className="text-sm text-muted-foreground">
-              {orgName ? `${orgName} markazi statistikasi` : 'Markaz tanlanmagan'}
+              {orgName ? `${orgName} center statistics` : 'No center selected'}
             </p>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function OrgStatisticsPage() {
         {!orgId ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-500">
-              Avval markazni tanlang.
+              First select a center.
             </CardContent>
           </Card>
         ) : query.isLoading ? (
@@ -80,7 +80,7 @@ export default function OrgStatisticsPage() {
         ) : !stats ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-400">
-              Ma'lumot olib bo'lmadi.
+              Couldn't fetch data.
             </CardContent>
           </Card>
         ) : (
@@ -89,7 +89,7 @@ export default function OrgStatisticsPage() {
               <StatCard
                 Icon={Users}
                 tone="blue"
-                label="Talabalar"
+                label="Students"
                 value={stats.students_count}
               />
               <StatCard
@@ -121,7 +121,7 @@ export default function OrgStatisticsPage() {
                   </h3>
                   <Row
                     Icon={CheckCircle2}
-                    label="Jami urinishlar"
+                    label="Total attempts"
                     value={stats.attempts_total}
                   />
                   <Row
@@ -135,11 +135,11 @@ export default function OrgStatisticsPage() {
               <Card>
                 <CardContent className="p-5">
                   <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
-                    Mock sessiyalar
+                    Mock sessions
                   </h3>
                   <Row
                     Icon={Clock}
-                    label="Jami sessiyalar"
+                    label="Total sessions"
                     value={stats.mock_sessions_total}
                   />
                   <Row
@@ -162,7 +162,7 @@ export default function OrgStatisticsPage() {
                   </h3>
                   <Row
                     Icon={CreditCard}
-                    label="Jami tushum"
+                    label="Total revenue"
                     value={fmtMoney(stats.total_revenue_uzs)}
                   />
                   <Row

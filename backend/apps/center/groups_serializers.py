@@ -1,4 +1,4 @@
-"""ETAP 11 — Talabalar guruhi serializerlari."""
+"""ETAP 11 — Students guruhi serializerlari."""
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -40,7 +40,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
 
 class StudentGroupListSerializer(serializers.ModelSerializer):
-    """Guruh ro'yxati uchun (kartalarda ko'rinadigan)."""
+    """Group ro'yxati uchun (kartalarda ko'rinadigan)."""
 
     teacher = GroupTeacherMiniSerializer(read_only=True)
     student_count = serializers.IntegerField(read_only=True, default=0)
@@ -102,11 +102,11 @@ class StudentGroupWriteSerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(id=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError("O'qituvchi topilmadi.")
+            raise serializers.ValidationError("Teacher not found.")
         if user.role != 'teacher':
             raise serializers.ValidationError("Tanlangan foydalanuvchi o'qituvchi emas.")
         if org and user.organization_id != org.id:
-            raise serializers.ValidationError("O'qituvchi bu markazga tegishli emas.")
+            raise serializers.ValidationError("Teacher bu markazga tegishli emas.")
         return value
 
     def create(self, validated_data):

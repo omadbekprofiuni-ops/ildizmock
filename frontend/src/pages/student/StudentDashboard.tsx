@@ -86,7 +86,7 @@ export default function StudentDashboard() {
           <Stat
             label="Targetgacha"
             value={targetGap !== null ? `+${targetGap.toFixed(1)}` : '—'}
-            hint={target ? `${target} → hozir ${avg?.toFixed(1) ?? '—'}` : 'Target belgilanmagan'}
+            hint={target ? `${target} → now ${avg?.toFixed(1) ?? '—'}` : 'Target belgilanmagan'}
             Icon={Target}
           />
         </div>
@@ -149,7 +149,7 @@ export default function StudentDashboard() {
               to="/student/mock"
               label="Mock results"
               Icon={GraduationCap}
-              hint="Mock natijalar"
+              hint="Mock results"
             />
             <ActionCard
               to="/student/certificates"

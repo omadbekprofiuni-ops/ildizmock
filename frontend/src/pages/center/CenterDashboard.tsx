@@ -76,36 +76,36 @@ export default function CenterDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-light text-slate-900">Bosh sahifa</h1>
+        <h1 className="text-3xl font-light text-slate-900">Home</h1>
         {data && (
           <p className="mt-1 text-sm text-slate-500">{data.organization.name}</p>
         )}
       </div>
 
-      {query.isLoading && <p className="text-slate-500">Yuklanmoqda…</p>}
+      {query.isLoading && <p className="text-slate-500">Loading…</p>}
       {query.isError && (
-        <p className="text-rose-600">Ma‘lumotlar yuklanmadi.</p>
+        <p className="text-rose-600">Informationlar yuklanmadi.</p>
       )}
 
       {data && (
         <>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <StatCard
-              label="Talabalar"
+              label="Students"
               value={data.totals.students}
-              hint={`${data.totals.teachers} ustoz`}
+              hint={`${data.totals.teachers} teachers`}
               tone="blue"
               Icon={Users}
             />
             <StatCard
-              label="Mock sessiyalar"
+              label="Mock sessions"
               value={data.totals.sessions}
-              hint={`${data.totals.completed_sessions} tugatilgan`}
+              hint={`${data.totals.completed_sessions} completed`}
               tone="emerald"
               Icon={CalendarDays}
             />
             <StatCard
-              label="Tugatilgan testlar"
+              label="Completed tests"
               value={data.totals.completed_tests}
               hint={`${data.totals.participants} ishtirokchi`}
               tone="amber"
@@ -118,7 +118,7 @@ export default function CenterDashboard() {
                   ? data.totals.avg_overall.toFixed(1)
                   : '—'
               }
-              hint={`Oxirgi 7 kun: ${data.totals.recent_sessions_7d} sessiya`}
+              hint={`Last 7 days: ${data.totals.recent_sessions_7d} sessions`}
               tone="violet"
               Icon={ClipboardList}
             />
@@ -128,7 +128,7 @@ export default function CenterDashboard() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="mb-4 text-base font-semibold">
-                  Haftalik aktivlik
+                  Weekly activity
                 </h2>
                 <WeeklyChart data={data.weekly_activity} />
               </CardContent>
@@ -163,20 +163,20 @@ export default function CenterDashboard() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
             <Card>
               <CardContent className="flex h-full flex-col p-6">
-                <h2 className="mb-2 text-base font-semibold">Tezkor amallar</h2>
+                <h2 className="mb-2 text-base font-semibold">Quick actions</h2>
                 <div className="space-y-2 text-sm">
                   <Link
                     to={`/${slug}/admin/mock`}
                     className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-slate-50"
                   >
-                    <span>Yangi mock sessiya</span>
+                    <span>New mock session</span>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
                   </Link>
                   <Link
                     to={`/${slug}/admin/students`}
                     className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-slate-50"
                   >
-                    <span>Talaba qo‘shish</span>
+                    <span>Add student</span>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
                   </Link>
                   <Link
@@ -190,7 +190,7 @@ export default function CenterDashboard() {
                     to={`/${slug}/admin/settings`}
                     className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-slate-50"
                   >
-                    <span>Markaz sozlamalari</span>
+                    <span>Center settings</span>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
                   </Link>
                 </div>
@@ -201,11 +201,11 @@ export default function CenterDashboard() {
           <Card>
             <CardContent className="p-0">
               <div className="border-b p-4">
-                <h2 className="text-base font-semibold">Oxirgi sessiyalar</h2>
+                <h2 className="text-base font-semibold">Recent sessions</h2>
               </div>
               {data.recent_sessions.length === 0 ? (
                 <p className="p-6 text-sm text-slate-500">
-                  Hozircha mock sessiyalar yo‘q.
+                  No mock sessions yet.
                 </p>
               ) : (
                 <ul className="divide-y">
@@ -224,7 +224,7 @@ export default function CenterDashboard() {
                           to={`/${slug}/admin/mock/${s.id}/results`}
                           className="ml-3 text-sm text-slate-700 hover:underline"
                         >
-                          Natijalar →
+                          Results →
                         </Link>
                       </div>
                     </li>
@@ -289,7 +289,7 @@ function WeeklyChart({
       <div className="flex flex-wrap gap-3 text-xs text-slate-600">
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded-sm bg-blue-600" />
-          Sessiyalar
+          Sessions
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" />
@@ -306,7 +306,7 @@ function WeeklyChart({
                   height: `${(d.sessions / max) * 100}%`,
                   minHeight: d.sessions ? 4 : 0,
                 }}
-                title={`${d.sessions} sessiya`}
+                title={`${d.sessions} sessions`}
               />
               <div
                 className="w-3 rounded-t bg-emerald-500"

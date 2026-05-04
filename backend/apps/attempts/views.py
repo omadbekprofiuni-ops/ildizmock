@@ -50,7 +50,7 @@ class StartAttemptView(APIView):
         test = get_object_or_404(Test, pk=test_id, is_published=True)
         if test.module in ('writing', 'speaking') and not request.user.is_authenticated:
             return Response(
-                {'detail': 'Bu test uchun ro‘yxatdan o‘tish kerak.'},
+                {'detail': 'Registration is required for this test.'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         import uuid as _uuid
@@ -192,6 +192,6 @@ class AttemptViewSet(
             return Response({'detail': 'Kirish huquqi yo‘q.'},
                             status=status.HTTP_403_FORBIDDEN)
         if attempt.status not in ('graded', 'submitted'):
-            return Response({'detail': 'Natija hali hisoblanmagan'},
+            return Response({'detail': 'Result not yet calculated'},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response(AttemptResultSerializer(attempt).data)

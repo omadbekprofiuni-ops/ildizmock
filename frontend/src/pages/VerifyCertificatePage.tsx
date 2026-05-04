@@ -58,7 +58,7 @@ export default function VerifyCertificatePage() {
           to="/"
           className="mb-4 inline-block text-sm text-slate-500 hover:text-red-600"
         >
-          ← Bosh sahifa
+          ← Home
         </Link>
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-xl">
@@ -73,10 +73,10 @@ export default function VerifyCertificatePage() {
                 <BadgeX size={36} />
               </div>
               <h1 className="text-2xl font-bold text-slate-900">
-                Sertifikat topilmadi
+                Certificate not found
               </h1>
               <p className="mt-2 text-slate-600">
-                Verifikatsiya kodi noto‘g‘ri yoki sertifikat mavjud emas.
+                Verification code is invalid or the certificate doesn't exist.
               </p>
               <p className="mt-4 font-mono text-xs text-slate-400">{code}</p>
             </div>
@@ -105,7 +105,7 @@ function ValidCertificate({ data }: { data: VerifyResponse }) {
         <div className="flex items-center gap-3">
           <BadgeCheck size={32} />
           <div>
-            <h1 className="text-xl font-bold">Sertifikat haqiqiy</h1>
+            <h1 className="text-xl font-bold">Certificate haqiqiy</h1>
             <p className="text-sm text-emerald-50">
               ILDIZmock Test sertifikati tasdiqlandi
             </p>
@@ -125,9 +125,9 @@ function ValidCertificate({ data }: { data: VerifyResponse }) {
         </div>
 
         <div className="rounded-xl border border-slate-200 p-5">
-          <Row label="Sertifikat raqami" value={data.certificate_number ?? ''} mono />
-          <Row label="Talaba" value={data.full_name ?? ''} bold />
-          <Row label="Markaz" value={data.organization_name ?? ''} />
+          <Row label="Certificate raqami" value={data.certificate_number ?? ''} mono />
+          <Row label="Student" value={data.full_name ?? ''} bold />
+          <Row label="Center" value={data.organization_name ?? ''} />
           <Row label="Test sanasi" value={formatDate(data.test_date)} />
           <Row label="Berilgan sanasi" value={formatDate(data.issue_date)} last />
         </div>
@@ -149,9 +149,9 @@ function RevokedCertificate({ data }: { data: VerifyResponse | null }) {
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 text-rose-600">
         <BadgeX size={36} />
       </div>
-      <h1 className="text-2xl font-bold text-slate-900">Bekor qilingan</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Revoked</h1>
       <p className="mt-2 text-slate-600">
-        Bu sertifikat bekor qilingan — hozirda haqiqiy hisoblanmaydi.
+        This certificate has been revoked — it is no longer valid.
       </p>
       {data?.certificate_number && (
         <p className="mt-4 font-mono text-xs text-slate-400">
@@ -160,7 +160,7 @@ function RevokedCertificate({ data }: { data: VerifyResponse | null }) {
       )}
       {data?.revoked_at && (
         <p className="mt-1 text-xs text-slate-400">
-          Bekor qilingan: {formatDate(data.revoked_at)}
+          Revoked: {formatDate(data.revoked_at)}
         </p>
       )}
     </div>

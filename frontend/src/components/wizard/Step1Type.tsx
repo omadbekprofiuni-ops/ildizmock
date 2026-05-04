@@ -19,7 +19,7 @@ export function Step1Type({
       <div className="mb-1 text-xs uppercase tracking-widest text-orange-600">
         Qadam 1
       </div>
-      <h2 className="mb-6 text-2xl text-slate-900">Test turini tanlang</h2>
+      <h2 className="mb-6 text-2xl text-slate-900">Choose test type</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {TYPES.map((t) => {

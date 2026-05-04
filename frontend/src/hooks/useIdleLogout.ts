@@ -6,7 +6,7 @@ import { useAuth } from '@/stores/auth'
 const IDLE_LIMIT_MS = 10 * 60 * 1000 // 10 daqiqa
 
 // Test paytida foydalanuvchi sukutda passage o'qiyotgan bo'lishi mumkin —
-// bu sahifalarda idle-logout o'chirilgan.
+// bu sahifalarda idle-logout deleted.
 const SKIP_PATH_PREFIXES = ['/take/', '/mock/']
 
 export function useIdleLogout() {

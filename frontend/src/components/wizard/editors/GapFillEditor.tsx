@@ -12,7 +12,7 @@ export function GapFillEditor({
     <div className="space-y-3">
       <div>
         <div className="mb-1 text-xs uppercase tracking-widest text-slate-500">
-          To'g'ri javob
+          Correct answer
         </div>
         <input
           value={value}

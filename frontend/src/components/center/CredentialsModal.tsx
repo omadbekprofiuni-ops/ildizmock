@@ -64,7 +64,7 @@ export function CredentialsModal({ credentials, onClose }: Props) {
 
         <div className="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900">
           ⚠️ <strong>Diqqat:</strong> Parol bu yerda faqat bir marta
-          ko'rsatiladi. Eslab qolish yoki nusxa olish uchun yuqoridagi tugmalardan
+          shown. Use the buttons above to remember or copy
           foydalaning.
         </div>
 

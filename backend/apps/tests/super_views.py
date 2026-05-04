@@ -1,6 +1,6 @@
 """SuperAdmin / Wizard ViewSets (ETAP 2).
 
-Yangi `/api/v1/super/...` endpointlari — global test yaratish, audio yuklash,
+New `/api/v1/super/...` endpointlari — global test yaratish, audio yuklash,
 savol qo'shish.
 """
 
@@ -83,7 +83,7 @@ class SuperTestViewSet(viewsets.ModelViewSet):
     def add_listening_part(self, request, pk=None):
         test = self.get_object()
         if test.module not in ('listening', 'full_mock'):
-            raise ValidationError('Faqat Listening testlarga part qo‘shish mumkin')
+            raise ValidationError('Parts can only be added to Listening tests')
 
         part_number = request.data.get('part_number')
         if not part_number:
@@ -104,7 +104,7 @@ class SuperTestViewSet(viewsets.ModelViewSet):
     def add_passage(self, request, pk=None):
         test = self.get_object()
         if test.module not in ('reading', 'full_mock'):
-            raise ValidationError('Faqat Reading testlarga passage qo‘shish mumkin')
+            raise ValidationError('Passages can only be added to Reading tests')
 
         section_number = request.data.get('section_number')
         if not section_number:
@@ -128,7 +128,7 @@ class SuperTestViewSet(viewsets.ModelViewSet):
     def add_writing_task(self, request, pk=None):
         test = self.get_object()
         if test.module not in ('writing', 'full_mock'):
-            raise ValidationError('Faqat Writing testlarga task qo‘shish mumkin')
+            raise ValidationError('Tasks can only be added to Writing tests')
 
         task_number = request.data.get('task_number')
         if not task_number:
@@ -169,7 +169,7 @@ class SuperListeningPartViewSet(viewsets.ModelViewSet):
         part = self.get_object()
         audio = request.FILES.get('audio')
         if not audio:
-            raise ValidationError({'audio': 'Audio fayl yuklang'})
+            raise ValidationError({'audio': 'Upload an audio file'})
 
         part.audio_file = audio
         part.audio_size_bytes = audio.size
@@ -229,11 +229,11 @@ class SuperWritingTaskViewSet(viewsets.ModelViewSet):
     def upload_chart(self, request, pk=None):
         task = self.get_object()
         if task.task_number != 1:
-            raise ValidationError('Chart rasm faqat Task 1 uchun')
+            raise ValidationError('Chart image is for Task 1 only')
 
         image = request.FILES.get('image')
         if not image:
-            raise ValidationError({'image': 'Rasm yuklang'})
+            raise ValidationError({'image': 'Upload an image'})
 
         task.chart_image = image
         task.save(update_fields=['chart_image'])

@@ -1,4 +1,4 @@
-"""ETAP 9 — Markaz admini uchun zamonaviy dashboard + sozlamalar.
+"""ETAP 9 — Center admini uchun zamonaviy dashboard + sozlamalar.
 
 `/dashboard/` markaz uchun statistik kartalar, haftalik mock aktivlik
 chart va pending tasklar (writing/speaking baholash) ma'lumotlarini

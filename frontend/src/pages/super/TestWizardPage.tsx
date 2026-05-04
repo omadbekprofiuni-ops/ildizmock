@@ -64,7 +64,7 @@ export default function TestWizardPage() {
       const detail =
         (err.response?.data?.name as string[] | undefined)?.[0] ??
         (err.response?.data?.detail as string | undefined) ??
-        'Saqlashda xatolik'
+        'Save failed'
       setError(detail)
     } finally {
       setSaving(false)
@@ -90,10 +90,10 @@ export default function TestWizardPage() {
             <Link to="/super/tests" className="hover:text-orange-600">
               Testlar
             </Link>{' '}
-            / {testId ? 'Tahrirlash' : 'Yangi'}
+            / {testId ? 'Edit' : 'New'}
           </div>
           <h1 className="text-3xl font-light text-slate-900 sm:text-4xl">
-            {testId ? 'Testni tahrirlash' : 'Yangi test '}
+            {testId ? 'Edit test' : 'New test '}
             {!testId && <em className="italic text-orange-600">yaratish.</em>}
           </h1>
         </header>
@@ -135,7 +135,7 @@ export default function TestWizardPage() {
                   disabled={saving || !data.name}
                   className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
                 >
-                  {saving ? 'Saqlanmoqda…' : 'Saqlash va davom →'}
+                  {saving ? 'Saving…' : 'Save and continue →'}
                 </button>
               ) : step === 5 ? (
                 <button
@@ -144,7 +144,7 @@ export default function TestWizardPage() {
                   disabled={saving}
                   className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  {saving ? 'Yuborilmoqda…' : "E'lon qilish ✓"}
+                  {saving ? 'Submitting…' : "Publish ✓"}
                 </button>
               ) : (
                 <button
@@ -168,7 +168,7 @@ export default function TestWizardPage() {
                 Test turi
               </ChecklistItem>
               <ChecklistItem done={step > 2} active={step === 2}>
-                Ma'lumotlar
+                Informationlar
               </ChecklistItem>
               <ChecklistItem done={step > 3} active={step === 3}>
                 Kontent
@@ -177,7 +177,7 @@ export default function TestWizardPage() {
                 Savollar
               </ChecklistItem>
               <ChecklistItem done={false} active={step === 5}>
-                E'lon qilish
+                Publish
               </ChecklistItem>
             </div>
           </aside>

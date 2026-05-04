@@ -67,7 +67,7 @@ const MODULE_OPTIONS: {
   icon: LucideIcon
   hint: string
 }[] = [
-  { value: 'listening', label: 'Listening', icon: Headphones, hint: 'Audio yuklang, savollar yarating' },
+  { value: 'listening', label: 'Listening', icon: Headphones, hint: 'Upload audio, create questions' },
   { value: 'reading', label: 'Reading', icon: BookOpen, hint: 'Passage matni va savollar' },
   { value: 'writing', label: 'Writing', icon: PenLine, hint: 'Task 1 + Task 2 sharti' },
 ]
@@ -260,10 +260,10 @@ export default function EasyTestCreatePage() {
 
   useEffect(() => {
     if (isEdit) {
-      document.title = 'ILDIZmock — Test tahrirlash'
+      document.title = 'ILDIZmock — Edit test'
     } else {
       const mod = moduleParam ? `(${moduleParam})` : ''
-      document.title = `ILDIZmock — Yangi test ${mod}`.trim()
+      document.title = `ILDIZmock — New test ${mod}`.trim()
     }
   }, [moduleParam, isEdit])
 
@@ -325,7 +325,7 @@ export default function EasyTestCreatePage() {
       })
       .catch(() => {
         if (cancelled) return
-        toast.error("Testni yuklashda xato — orqaga qayting")
+        toast.error("Failed to load the test — please go back")
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -412,21 +412,21 @@ export default function EasyTestCreatePage() {
 
   const onSave = async () => {
     if (!name.trim()) {
-      toast.error('Test nomini kiriting')
+      toast.error('Enter the test name')
       return
     }
     // ETAP 18 — published test struktura validatsiyasi
     if (isPublished && !structureValid) {
       if (module === 'reading') {
         toast.error(
-          `Reading test 3 passage va aynan 40 savoldan iborat bo'lishi kerak. ` +
-          `Hozir: ${sections.length} passage, ${totalQuestions} savol. ` +
+          `A Reading test must contain 3 passages and exactly 40 questions. ` +
+          `Currently: ${sections.length} passages, ${totalQuestions} questions. ` +
           `Draft sifatida saqlash mumkin.`,
         )
       } else if (module === 'listening') {
         toast.error(
-          `Listening test 4 part va aynan 40 savoldan iborat bo'lishi kerak. ` +
-          `Hozir: ${sections.length} part, ${totalQuestions} savol. ` +
+          `A Listening test must contain 4 parts and exactly 40 questions. ` +
+          `Currently: ${sections.length} parts, ${totalQuestions} questions. ` +
           `Draft sifatida saqlash mumkin.`,
         )
       } else if (module === 'writing') {
@@ -436,13 +436,13 @@ export default function EasyTestCreatePage() {
     }
     if (module === 'writing') {
       if (!writingTasks[0].prompt.trim() || !writingTasks[1].prompt.trim()) {
-        toast.error("Task 1 va Task 2 sharti kiritilishi kerak")
+        toast.error("Task 1 and Task 2 prompts must be entered")
         return
       }
     } else {
       for (const sec of sections) {
         if (!sec.title.trim()) {
-          toast.error("Har section'ga sarlavha bering")
+          toast.error("Give each section a title")
           return
         }
         for (const q of sec.questions) {
@@ -451,7 +451,7 @@ export default function EasyTestCreatePage() {
             return
           }
           if (!q.correct_answer.trim()) {
-            toast.error('Har savolga to‘g‘ri javob ko‘rsating')
+            toast.error('Provide the correct answer for every question')
             return
           }
         }
@@ -502,7 +502,7 @@ export default function EasyTestCreatePage() {
         toast.success("Test yangilandi")
       } else {
         await api.post(`/center/${slug}/tests/easy-create/`, payload)
-        toast.success('Test yaratildi')
+        toast.success('Test created')
       }
       navigate(`/${slug}/admin/tests`)
     } catch (err) {
@@ -525,7 +525,7 @@ export default function EasyTestCreatePage() {
     return (
       <PageShell maxWidth="max-w-5xl">
         <div className="flex items-center justify-center py-20 text-slate-500">
-          <Loader2 size={20} className="mr-2 animate-spin" /> Yuklanmoqda…
+          <Loader2 size={20} className="mr-2 animate-spin" /> Loading…
         </div>
       </PageShell>
     )
@@ -541,11 +541,11 @@ export default function EasyTestCreatePage() {
       </Link>
 
       <PageHeader
-        title={isEdit ? 'Testni tahrirlash' : 'Yangi test yaratish'}
+        title={isEdit ? 'Edit test' : 'Create new test'}
         subtitle={
           isEdit
-            ? "Section/passage va savollarni o'zgartiring — saqlash bosilganda atomar yangilanadi"
-            : "Bir sahifada section/passage va savollarni qo‘shing — oxirida bir martalik saqlanadi"
+            ? "Edit sections/passages and questions — applied atomically when you press Save"
+            : "Add sections/passages and questions on one page — saved atomically at the end"
         }
         actions={
           <>
@@ -554,7 +554,7 @@ export default function EasyTestCreatePage() {
               onClick={() => navigate(`/${slug}/admin/tests`)}
               className={btnOutline}
             >
-              Bekor
+              Cancel
             </button>
             <button
               type="button"
@@ -564,10 +564,10 @@ export default function EasyTestCreatePage() {
             >
               {saving ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" /> Saqlanmoqda…
+                  <Loader2 size={16} className="animate-spin" /> Saving…
                 </>
               ) : (
-                <>Saqlash</>
+                <>Save</>
               )}
             </button>
           </>
@@ -623,7 +623,7 @@ export default function EasyTestCreatePage() {
                       module === 'reading' ? 'Passage' : 'Part'
                     } sonini ${requiredSections} qilib qo'ying`
                   : totalQuestions < requiredQuestions
-                    ? `Yana ${requiredQuestions - totalQuestions} ta savol qo'shing`
+                    ? `Add ${requiredQuestions - totalQuestions} more question(s)`
                     : `${totalQuestions - requiredQuestions} ta savolni olib tashlang`}
                 <br />
                 <span className="text-xs text-slate-500">
@@ -660,7 +660,7 @@ export default function EasyTestCreatePage() {
       )}
 
       <div className="space-y-6">
-        {/* Module selector — faqat URL'dan modul aniq emas bo'lsa ko'rinadi */}
+        {/* Module selector — only shown when the module isn't already determined by the URL */}
         {!moduleLocked && (
         <SurfaceCard>
           <p className="mb-3 text-sm font-medium text-slate-700">Test turi</p>
@@ -701,7 +701,7 @@ export default function EasyTestCreatePage() {
         {/* Basic info */}
         <SurfaceCard>
           <div className="space-y-4">
-            <Field label="Test nomi">
+            <Field label="Test name">
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -720,7 +720,7 @@ export default function EasyTestCreatePage() {
             </Field>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <Field label="Qiyinlik">
+              <Field label="Difficulty">
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}
@@ -732,7 +732,7 @@ export default function EasyTestCreatePage() {
                   <option value="expert">Expert</option>
                 </select>
               </Field>
-              <Field label="Davomiyligi (daqiqa)">
+              <Field label="Duration (minutes)">
                 <input
                   type="number"
                   min={5}
@@ -742,7 +742,7 @@ export default function EasyTestCreatePage() {
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </Field>
-              <Field label="Holat">
+              <Field label="Status">
                 <label className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm">
                   <input
                     type="checkbox"
@@ -751,9 +751,9 @@ export default function EasyTestCreatePage() {
                     className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
                   />
                   <span className="text-slate-700">
-                    Darhol e‘lon qilish{' '}
+                    Publish immediately{' '}
                     <span className="text-xs text-slate-500">
-                      (Mock sessiyada faqat <b>published</b> testlar ko‘rinadi)
+                      (Only <b>published</b> tests appear in mock sessions)
                     </span>
                   </span>
                 </label>
@@ -773,7 +773,7 @@ export default function EasyTestCreatePage() {
                     Kamida {t.min_words} so‘z · taklif: {t.suggested_minutes} daqiqa
                   </span>
                 </div>
-                <Field label="Topshiriq sharti">
+                <Field label="Task prompt">
                   <textarea
                     value={t.prompt}
                     onChange={(e) =>
@@ -864,7 +864,7 @@ export default function EasyTestCreatePage() {
               className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-5 font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
             >
               <Plus size={18} />
-              {module === 'listening' ? "Yangi Part qo'shish" : "Yangi Passage qo'shish"}
+              {module === 'listening' ? "Add new part" : "Add new passage"}
             </button>
           </div>
         )}
@@ -920,7 +920,7 @@ function SectionEditor({
             type="button"
             onClick={onRemove}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-            title="O‘chirish"
+            title="Delete"
           >
             <Trash2 size={14} />
           </button>
@@ -928,7 +928,7 @@ function SectionEditor({
       </div>
 
       <div className="space-y-4">
-        <Field label={module === 'listening' ? 'Part sarlavhasi' : 'Passage sarlavhasi'}>
+        <Field label={module === 'listening' ? 'Part title' : 'Passage title'}>
           <input
             value={section.title}
             onChange={(e) => onChange({ title: e.target.value })}
@@ -1099,7 +1099,7 @@ function QuestionEditor({
         <input
           value={question.correct_answer}
           onChange={(e) => onChange({ correct_answer: e.target.value })}
-          placeholder="To'g'ri javob (kichik harflarda yozing)"
+          placeholder="Correct answer (in lowercase)"
           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
         />
       )}
@@ -1107,7 +1107,7 @@ function QuestionEditor({
       {question.question_type === 'matching_headings' && (
         <div className="space-y-2">
           <p className="text-xs text-slate-500">
-            Sarlavhalar ro'yxati (List of Headings) — to'g'ri sarlavhani tanlang:
+            List of headings — pick the correct heading:
           </p>
           {question.options.map((opt, oi) => (
             <div key={oi} className="flex items-center gap-2">
@@ -1159,7 +1159,7 @@ function QuestionEditor({
       {question.question_type === 'matching' && (
         <div className="space-y-2">
           <p className="text-xs text-slate-500">
-            Variantlar (har qatorda bittadan), to'g'ri javobni tanlang:
+            Options (one per line), select the correct answer:
           </p>
           {question.options.map((opt, oi) => (
             <div key={oi} className="flex items-center gap-2">
@@ -1232,9 +1232,9 @@ function AudioField({
         audio_file_path: res.data.path,
         audio_url: res.data.url,
       })
-      toast.success('Audio yuklandi')
+      toast.success('Audio uploaded')
     } catch {
-      toast.error('Audio yuklashda xatolik')
+      toast.error('Failed to upload audio')
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -1243,7 +1243,7 @@ function AudioField({
 
   return (
     <div>
-      <div className="mb-1 text-sm font-medium text-slate-700">Audio fayl</div>
+      <div className="mb-1 text-sm font-medium text-slate-700">Audio file</div>
       <div className="flex flex-wrap items-center gap-2">
         <input
           ref={inputRef}
@@ -1260,11 +1260,11 @@ function AudioField({
         >
           {uploading ? (
             <>
-              <Loader2 size={14} className="animate-spin" /> Yuklanmoqda…
+              <Loader2 size={14} className="animate-spin" /> Loading…
             </>
           ) : (
             <>
-              <Upload size={14} /> {section.audio_file_path ? 'Almashtirish' : 'Audio yuklash'}
+              <Upload size={14} /> {section.audio_file_path ? 'Replace' : 'Upload audio'}
             </>
           )}
         </button>
@@ -1305,9 +1305,9 @@ function SectionImageField({
         { headers: { 'Content-Type': 'multipart/form-data' } },
       )
       onChange({ image_path: res.data.path, image_url: res.data.url })
-      toast.success('Rasm yuklandi')
+      toast.success('Image uploaded')
     } catch {
-      toast.error('Rasm yuklashda xatolik')
+      toast.error('Failed to upload image')
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -1336,11 +1336,11 @@ function SectionImageField({
         >
           {uploading ? (
             <>
-              <Loader2 size={14} className="animate-spin" /> Yuklanmoqda…
+              <Loader2 size={14} className="animate-spin" /> Loading…
             </>
           ) : (
             <>
-              <Upload size={14} /> {section.image_path ? 'Almashtirish' : 'Rasm yuklash'}
+              <Upload size={14} /> {section.image_path ? 'Replace' : 'Upload image'}
             </>
           )}
         </button>
@@ -1350,7 +1350,7 @@ function SectionImageField({
             onClick={() => onChange({ image_path: null, image_url: null })}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
           >
-            <X size={12} /> O‘chirish
+            <X size={12} /> Delete
           </button>
         )}
       </div>
@@ -1392,9 +1392,9 @@ function ChartImageField({
         chart_image_path: res.data.path,
         chart_image_url: res.data.url,
       })
-      toast.success('Rasm yuklandi')
+      toast.success('Image uploaded')
     } catch {
-      toast.error('Rasm yuklashda xatolik')
+      toast.error('Failed to upload image')
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -1405,7 +1405,7 @@ function ChartImageField({
     <div>
       <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
         <ImageIcon size={14} className="text-slate-500" />
-        Chart / rasm (Task 1 uchun)
+        Chart / image (for Task 1)
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <input
@@ -1423,11 +1423,11 @@ function ChartImageField({
         >
           {uploading ? (
             <>
-              <Loader2 size={14} className="animate-spin" /> Yuklanmoqda…
+              <Loader2 size={14} className="animate-spin" /> Loading…
             </>
           ) : (
             <>
-              <Upload size={14} /> {task.chart_image_path ? 'Almashtirish' : 'Rasm yuklash'}
+              <Upload size={14} /> {task.chart_image_path ? 'Replace' : 'Upload image'}
             </>
           )}
         </button>
@@ -1437,7 +1437,7 @@ function ChartImageField({
             onClick={() => onChange({ chart_image_path: null, chart_image_url: null })}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
           >
-            <X size={12} /> O‘chirish
+            <X size={12} /> Delete
           </button>
         )}
       </div>
@@ -1449,7 +1449,7 @@ function ChartImageField({
         />
       )}
       <p className="mt-1 text-xs text-slate-500">
-        IELTS Task 1 uchun chart, grafik yoki jadval (PNG/JPG/WEBP).
+        Chart, graph, or table for IELTS Task 1 (PNG/JPG/WEBP).
       </p>
     </div>
   )

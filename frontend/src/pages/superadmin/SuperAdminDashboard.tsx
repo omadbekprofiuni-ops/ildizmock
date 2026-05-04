@@ -130,7 +130,7 @@ export default function SuperAdminDashboard() {
                           <span className="font-medium text-slate-900">{o.name}</span>{' '}
                           <span className="text-slate-500">· {o.plan_name}</span>
                         </span>
-                        <Chip tone="rose">{o.days_remaining} kun</Chip>
+                        <Chip tone="rose">{o.days_remaining} days</Chip>
                       </li>
                     ))}
                   </ul>

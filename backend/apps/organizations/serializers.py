@@ -103,7 +103,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class PublicOrgSerializer(serializers.ModelSerializer):
-    """Talaba markaz sahifasiga kirsa — brand info."""
+    """Student markaz sahifasiga kirsa — brand info."""
 
     class Meta:
         model = Organization

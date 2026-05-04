@@ -20,7 +20,7 @@ User = get_user_model()
 class IsTeacherOfStudent(permissions.BasePermission):
     """Object-level — submission's student must have request.user as their teacher."""
 
-    message = 'Bu talaba sizning shogirdingiz emas.'
+    message = 'This student is not your apprentice.'
 
     def has_object_permission(self, request, view, obj):
         student = obj.attempt.user
@@ -146,7 +146,7 @@ class TeacherStudentStatsView(APIView):
             if not student:
                 raise User.DoesNotExist
         except User.DoesNotExist:
-            return Response({'detail': 'Talaba topilmadi.'}, status=404)
+            return Response({'detail': 'Student not found.'}, status=404)
 
         attempts = (
             Attempt.objects

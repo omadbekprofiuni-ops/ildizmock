@@ -47,7 +47,7 @@ export function AudioUploadCard({
     setProgress(0)
 
     if (file.size > 50 * 1024 * 1024) {
-      setError('Fayl 50 MB dan kichik bo\'lsin')
+      setError('File must be smaller than 50 MB')
       setUploading(false)
       return
     }
@@ -74,7 +74,7 @@ export function AudioUploadCard({
       })
     } catch (e: unknown) {
       const err = e as { response?: { data?: { audio?: string[] } } }
-      setError(err.response?.data?.audio?.[0] ?? 'Yuklashda xatolik')
+      setError(err.response?.data?.audio?.[0] ?? 'Upload failed')
     } finally {
       setUploading(false)
     }
@@ -93,7 +93,7 @@ export function AudioUploadCard({
         </div>
       ) : (
         <div className="text-center text-sm text-slate-500">
-          🎵 Audio fayl yuklang (MP3, M4A — 50 MB gacha)
+          🎵 Upload an audio file (MP3, M4A — up to 50 MB)
         </div>
       )}
 
@@ -109,7 +109,7 @@ export function AudioUploadCard({
           }}
         />
         <span className="block w-full rounded-full bg-slate-900 py-2.5 text-center text-sm font-semibold text-white hover:bg-slate-800">
-          {uploading ? `Yuklanmoqda… ${progress}%` : audioUrl ? 'Boshqa fayl yuklash' : 'Fayl tanlash'}
+          {uploading ? `Loading… ${progress}%` : audioUrl ? 'Upload another file' : 'Choose file'}
         </span>
       </label>
 

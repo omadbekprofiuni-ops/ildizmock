@@ -75,7 +75,7 @@ export default function MockResultDetailPage() {
       URL.revokeObjectURL(url)
     },
     onError: () => {
-      toast.error('Sertifikat yuklanmadi', {
+      toast.error('Certificate failed to load', {
         description: 'Iltimos, biroz keyin urinib ko‘ring.',
       })
     },
@@ -128,8 +128,8 @@ export default function MockResultDetailPage() {
                     </div>
                   ) : (
                     <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                      Baholash jarayonida — barcha sectionlar yakunlanishi
-                      bilan natija ko‘rinadi.
+                      Grading in progress — all sections must be completed
+                      to see the result.
                     </div>
                   )}
                 </div>
@@ -210,12 +210,12 @@ export default function MockResultDetailPage() {
                     {downloadMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Yuklanmoqda…
+                        Loading…
                       </>
                     ) : (
                       <>
                         <Download className="mr-2 h-4 w-4" />
-                        Sertifikatni yuklab olish
+                        Download certificate
                       </>
                     )}
                   </Button>

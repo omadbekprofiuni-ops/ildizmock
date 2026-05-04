@@ -145,7 +145,7 @@ function AppRoutes() {
           {/* TROUBLESHOOTING — /super/org/:id/stats alias */}
           <Route path="/super/org/:id/stats" element={<SuperAdminRoute><CenterDetailPage /></SuperAdminRoute>} />
 
-          {/* SuperAdmin org context links (sidebar nav) — context'dan id orqali */}
+          {/* SuperAdmin org context links (sidebar nav) — id resolved from context */}
           <Route
             path="/super/org/dashboard"
             element={
@@ -297,8 +297,8 @@ function AppRoutes() {
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
-          {/* Center layout (slug-based) — Permission'lar backend tomonda
-              IsCenterAdmin / IsCenterMember orqali tekshiriladi. */}
+          {/* Center layout (slug-based) — permissions are checked on the
+              backend via IsCenterAdmin / IsCenterMember. */}
           <Route path="/:slug/admin" element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
             <Route element={<CenterAdminLayout />}>
               <Route index element={<CenterDashboard />} />

@@ -69,11 +69,11 @@ export default function CenterSettingsPage() {
       return res.data
     },
     onSuccess: () => {
-      toast.success('Sozlamalar saqlandi')
+      toast.success('Settings saved')
       qc.invalidateQueries({ queryKey: ['center-settings', slug] })
       qc.invalidateQueries({ queryKey: ['center-dashboard', slug] })
     },
-    onError: () => toast.error('Saqlashda xatolik'),
+    onError: () => toast.error('Save failed'),
   })
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,22 +91,22 @@ export default function CenterSettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-light text-slate-900">Markaz sozlamalari</h1>
+        <h1 className="text-3xl font-light text-slate-900">Center settings</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Markaz brendi (logo, rang) va aloqa ma'lumotlari.
+          Center branding (logo, color) and contact information.
         </p>
       </div>
 
-      {settings.isLoading && <p className="text-slate-500">Yuklanmoqda…</p>}
+      {settings.isLoading && <p className="text-slate-500">Loading…</p>}
       {settings.isError && (
-        <p className="text-rose-600">Sozlamalarni yuklab bo‘lmadi.</p>
+        <p className="text-rose-600">Couldn't load settings.</p>
       )}
 
       {settings.data && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardContent className="space-y-5 p-6">
-              <Field label="Markaz nomi">
+              <Field label="Center name">
                 <input
                   className="w-full rounded-md border px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
                   value={name}
@@ -114,7 +114,7 @@ export default function CenterSettingsPage() {
                 />
               </Field>
 
-              <Field label="Asosiy rang">
+              <Field label="Primary color">
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -128,7 +128,7 @@ export default function CenterSettingsPage() {
                     onChange={(e) => setPrimaryColor(e.target.value)}
                   />
                   <span className="text-xs text-slate-500">
-                    Tugmalar va talaba sahifasidagi accent rangi
+                    Accent color for buttons and the student page
                   </span>
                 </div>
               </Field>
@@ -171,10 +171,10 @@ export default function CenterSettingsPage() {
                   {save.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saqlanmoqda…
+                      Saving…
                     </>
                   ) : (
-                    'Saqlash'
+                    'Save'
                   )}
                 </Button>
                 <span className="text-xs text-slate-500">
@@ -221,7 +221,7 @@ export default function CenterSettingsPage() {
                   onClick={() => fileRef.current?.click()}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {logoFile ? 'Boshqa fayl' : 'Fayl tanlash'}
+                  {logoFile ? 'Boshqa fayl' : 'Choose file'}
                 </Button>
                 {(settings.data.logo || logoFile) && !removeLogo && (
                   <Button
@@ -234,13 +234,13 @@ export default function CenterSettingsPage() {
                     }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    O‘chirish
+                    Delete
                   </Button>
                 )}
               </div>
               {logoFile && (
                 <p className="text-xs text-slate-500">
-                  Yangi: {logoFile.name}
+                  New: {logoFile.name}
                 </p>
               )}
               {removeLogo && (

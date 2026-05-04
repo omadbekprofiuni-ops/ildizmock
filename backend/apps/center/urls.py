@@ -36,6 +36,6 @@ urlpatterns = router.urls + [
     # Excel import — bulk-create a Reading test from an .xlsx file
     path('tests/excel-template/', excel_template, name='center-tests-excel-template'),
     path('tests/excel-import/', excel_import, name='center-tests-excel-import'),
-    # ETAP 15 — Davomat tizimi
+    # ETAP 15 — Attendance tizimi
     path('', include('apps.attendance.urls')),
 ]

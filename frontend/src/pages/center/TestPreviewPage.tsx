@@ -79,18 +79,18 @@ export default function TestPreviewPage() {
     api
       .get<TestDetail>(`/center/${slug}/tests/${testId}/preview/`)
       .then((r) => setTest(r.data))
-      .catch(() => setError('Test topilmadi yoki sizga ruxsat yo‘q.'))
+      .catch(() => setError('Test not found or access denied.'))
   }, [slug, testId])
 
   if (error)
     return <div className="p-8 text-red-600">{error}</div>
   if (!test)
-    return <div className="p-8 text-slate-500">Yuklanmoqda…</div>
+    return <div className="p-8 text-slate-500">Loading…</div>
 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b bg-amber-100 px-4 py-3 text-center text-sm text-amber-900">
-        📋 PREVIEW MODE — bu admin uchun ko'rinish, javoblar yashil rangda ko'rinadi
+        📋 PREVIEW MODE — admin view, correct answers shown in green
       </div>
 
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
@@ -219,7 +219,7 @@ export default function TestPreviewPage() {
 function QuestionList({ questions }: { questions: Question[] }) {
   if (!questions.length) {
     return (
-      <p className="italic text-slate-400">Hali savol qo'shilmagan</p>
+      <p className="italic text-slate-400">No questions added yet</p>
     )
   }
   return (
@@ -253,7 +253,7 @@ function QuestionList({ questions }: { questions: Question[] }) {
           )}
 
           <p className="mt-3 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
-            ✓ To'g'ri javob: <strong>{formatAnswer(q.correct_answer)}</strong>
+            ✓ Correct answer: <strong>{formatAnswer(q.correct_answer)}</strong>
             {q.alt_answers && q.alt_answers.length > 0 && (
               <span className="ml-2 text-xs text-green-600">
                 (muqobil: {q.alt_answers.join(', ')})

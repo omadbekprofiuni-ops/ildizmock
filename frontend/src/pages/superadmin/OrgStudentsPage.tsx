@@ -63,9 +63,9 @@ export default function OrgStudentsPage() {
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-slate-700" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Talabalar</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Students</h1>
             <p className="text-sm text-muted-foreground">
-              {orgName ? `${orgName} markazi talabalari` : 'Markaz tanlanmagan'}
+              {orgName ? `${orgName} center students` : 'No center selected'}
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function OrgStudentsPage() {
         {!orgId ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-500">
-              Avval markazni tanlang (Centers ro'yxatidan).
+              First select a center (from the Centers list).
             </CardContent>
           </Card>
         ) : (
@@ -101,7 +101,7 @@ export default function OrgStudentsPage() {
                 Faqat faollar
               </label>
               <span className="text-sm text-slate-500">
-                Jami: <strong>{filtered.length}</strong> / {students.length}
+                Total: <strong>{filtered.length}</strong> / {students.length}
               </span>
             </div>
 
@@ -113,7 +113,7 @@ export default function OrgStudentsPage() {
                       <th className="px-4 py-3 text-left">Ism</th>
                       <th className="px-4 py-3 text-left">Login</th>
                       <th className="px-4 py-3 text-left">Telefon</th>
-                      <th className="px-4 py-3 text-center">Holat</th>
+                      <th className="px-4 py-3 text-center">Status</th>
                       <th className="px-4 py-3 text-left">Oxirgi kirish</th>
                       <th className="px-4 py-3 text-left">Yaratilgan</th>
                     </tr>
@@ -129,7 +129,7 @@ export default function OrgStudentsPage() {
                     {!query.isLoading && filtered.length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
-                          Talabalar topilmadi.
+                          No students found.
                         </td>
                       </tr>
                     )}
@@ -150,7 +150,7 @@ export default function OrgStudentsPage() {
                                 : 'bg-rose-100 text-rose-700'
                             }`}
                           >
-                            {s.is_active ? 'faol' : 'o\'chirilgan'}
+                            {s.is_active ? 'faol' : 'deleted'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-slate-600">

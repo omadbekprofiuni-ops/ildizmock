@@ -100,23 +100,23 @@ export default function ListeningPdfImportPage() {
 
       <PageHeader
         title="Listening test — PDF import"
-        subtitle="Cambridge IELTS yoki o'xshash PDF dan savollarni avtomatik chiqaring"
+        subtitle="Automatically extract questions from Cambridge IELTS or similar PDFs"
       />
 
       {/* Stepper */}
       <div className="mb-6 flex items-center gap-2 text-xs">
-        <Step n={1} label="PDF yuklash" active={step >= 1} done={step > 1} />
+        <Step n={1} label="Upload PDF" active={step >= 1} done={step > 1} />
         <Divider />
-        <Step n={2} label="Tahrirlash" active={step >= 2} done={step > 2} />
+        <Step n={2} label="Edit" active={step >= 2} done={step > 2} />
         <Divider />
-        <Step n={3} label="Audio + saqlash" active={step >= 3} done={false} />
+        <Step n={3} label="Audio + save" active={step >= 3} done={false} />
       </div>
 
       {/* STEP 1: Upload */}
       {step === 1 && (
         <SurfaceCard>
           <h3 className="mb-3 text-base font-semibold text-slate-900">
-            1. PDF faylni yuklang
+            1. Upload the PDF file
           </h3>
 
           <div
@@ -138,7 +138,7 @@ export default function ListeningPdfImportPage() {
             ) : (
               <>
                 <div className="font-medium text-slate-700">
-                  PDF faylni tanlang yoki bu yerga sudrab tashlang
+                  Choose a PDF file or drag it here
                 </div>
                 <div className="text-xs text-slate-500">
                   Cambridge IELTS, DiyorBek IELTS yoki shunga o'xshash format · Maks. 20 MB
@@ -173,7 +173,7 @@ export default function ListeningPdfImportPage() {
                 </>
               ) : (
                 <>
-                  <Upload size={14} /> Parse qilish
+                  <Upload size={14} /> Parse
                 </>
               )}
             </button>
@@ -217,7 +217,7 @@ export default function ListeningPdfImportPage() {
                 </h3>
 
                 {part.questions.length === 0 ? (
-                  <p className="text-sm text-slate-500">Bu qismda savol topilmadi.</p>
+                  <p className="text-sm text-slate-500">No questions found in this part.</p>
                 ) : (
                   <div className="space-y-3">
                     {part.questions.map((q, qi) => (
@@ -269,7 +269,7 @@ export default function ListeningPdfImportPage() {
                           </div>
                         )}
                         <div className="mt-2 flex items-center gap-2 text-xs">
-                          <span className="text-slate-500">To'g'ri javob:</span>
+                          <span className="text-slate-500">Correct answer:</span>
                           <input
                             value={
                               Array.isArray(q.answer) ? q.answer.join(', ') : q.answer
@@ -277,7 +277,7 @@ export default function ListeningPdfImportPage() {
                             onChange={(e) =>
                               updateQuestion(pi, qi, 'answer', e.target.value)
                             }
-                            placeholder="javob..."
+                            placeholder="answer..."
                             className="flex-1 rounded border border-slate-300 px-2 py-1 font-mono"
                           />
                         </div>
@@ -303,7 +303,7 @@ export default function ListeningPdfImportPage() {
               disabled={parsed.parts.length === 0}
               className={btnPrimary + ' disabled:opacity-50'}
             >
-              Audio yuklashga →
+              Upload audioga →
             </button>
           </div>
         </div>
@@ -313,10 +313,10 @@ export default function ListeningPdfImportPage() {
       {step === 3 && (
         <SurfaceCard>
           <h3 className="mb-2 text-base font-semibold text-slate-900">
-            3. Audio fayl va saqlash
+            3. Audio file va saqlash
           </h3>
           <p className="mb-4 text-sm text-slate-600">
-            Audio yuklash va testni saqlash bosqichi keyingi etap'da to'liq
+            Audio upload and test save will be completed in the next stage
             ishga tushiriladi. Hozircha parse qilingan ma'lumotlarni JSON
             sifatida ko'rishingiz mumkin.
           </p>
@@ -336,15 +336,15 @@ export default function ListeningPdfImportPage() {
               onClick={() => setStep(2)}
               className={btnOutline}
             >
-              ← Tahrirlash
+              ← Edit
             </button>
             <button
               type="button"
               disabled
               className={btnPrimary + ' opacity-50 cursor-not-allowed'}
-              title="Bu funksiya keyingi etap'da yakunlanadi"
+              title="This feature will be finalized in the next stage"
             >
-              Saqlash (tez orada)
+              Save (coming soon)
             </button>
           </div>
         </SurfaceCard>

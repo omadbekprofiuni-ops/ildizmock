@@ -37,7 +37,7 @@ export default function MockSpeakingQueuePage() {
 
       <div className="p-8">
         {loading ? (
-          <p className="text-slate-500">Yuklanmoqda…</p>
+          <p className="text-slate-500">Loading…</p>
         ) : rows.length === 0 ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-12 text-center">
             <div className="mb-2 text-3xl">✓</div>
@@ -50,9 +50,9 @@ export default function MockSpeakingQueuePage() {
             <table className="w-full">
               <thead className="border-b bg-slate-50">
                 <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-                  <th className="p-4">Talaba</th>
-                  <th className="p-4">Sessiya</th>
-                  <th className="p-4 text-center">Sana</th>
+                  <th className="p-4">Student</th>
+                  <th className="p-4">Session</th>
+                  <th className="p-4 text-center">Date</th>
                   <th className="p-4 text-center">L</th>
                   <th className="p-4 text-center">R</th>
                   <th className="p-4 text-center">W</th>

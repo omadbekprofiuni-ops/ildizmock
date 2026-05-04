@@ -79,7 +79,7 @@ export default function OrgTestResultsPage() {
           <BarChart3 className="h-6 w-6 text-slate-700" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {data?.name ?? 'Test natijalari'}
+              {data?.name ?? 'Test results'}
             </h1>
             <p className="text-sm text-muted-foreground">
               {orgName ? `${orgName} — ${data?.module ?? ''}` : data?.module ?? ''}
@@ -99,7 +99,7 @@ export default function OrgTestResultsPage() {
         {query.isError && (
           <Card>
             <CardContent className="p-10 text-center text-rose-600">
-              Ma'lumot olib bo'lmadi.
+              Couldn't fetch data.
             </CardContent>
           </Card>
         )}
@@ -109,10 +109,10 @@ export default function OrgTestResultsPage() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 text-left">Talaba</th>
-                    <th className="px-4 py-3 text-center">To'g'ri/Jami</th>
+                    <th className="px-4 py-3 text-left">Student</th>
+                    <th className="px-4 py-3 text-center">Correct/Total</th>
                     <th className="px-4 py-3 text-center">Band</th>
-                    <th className="px-4 py-3 text-center">Holat</th>
+                    <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3 text-left">Boshlangan</th>
                     <th className="px-4 py-3 text-left">Topshirgan</th>
                   </tr>

@@ -49,7 +49,7 @@ export function AttendanceWidget({ slug }: AttendanceWidgetProps) {
         <div className="flex items-center justify-between border-b p-4">
           <div className="flex items-center gap-2">
             <CalendarCheck className="h-5 w-5 text-brand-500" />
-            <h2 className="text-base font-semibold">Bugungi davomat</h2>
+            <h2 className="text-base font-semibold">Today's attendance</h2>
           </div>
           <Link
             to={`/${slug}/admin/attendance`}
@@ -61,9 +61,9 @@ export function AttendanceWidget({ slug }: AttendanceWidgetProps) {
         </div>
 
         {query.isLoading ? (
-          <div className="p-6 text-sm text-slate-500">Yuklanmoqda…</div>
+          <div className="p-6 text-sm text-slate-500">Loading…</div>
         ) : query.isError ? (
-          <div className="p-6 text-sm text-rose-600">Davomat yuklanmadi.</div>
+          <div className="p-6 text-sm text-rose-600">Attendance failed to load.</div>
         ) : sessions.length === 0 ? (
           <div className="p-6 text-sm text-slate-500">
             Bugun rejalashtirilgan dars yo&apos;q.
@@ -81,8 +81,8 @@ export function AttendanceWidget({ slug }: AttendanceWidgetProps) {
                       {s.start_time ?? '—'}
                       {s.end_time ? ` – ${s.end_time}` : ''} ·{' '}
                       {s.total > 0
-                        ? `${s.total} talaba`
-                        : 'Davomat hali olinmagan'}
+                        ? `${s.total} students`
+                        : 'Attendance not taken yet'}
                     </div>
                   </div>
                   <div className="text-right">
@@ -109,7 +109,7 @@ export function AttendanceWidget({ slug }: AttendanceWidgetProps) {
                     to={`/${slug}/admin/attendance/${s.id}`}
                     className="text-xs font-medium text-brand-600 hover:text-brand-700"
                   >
-                    {s.is_finalized ? 'Ko‘rish →' : 'Davomatni belgilash →'}
+                    {s.is_finalized ? 'View →' : 'Mark attendance →'}
                   </Link>
                 </div>
               </li>

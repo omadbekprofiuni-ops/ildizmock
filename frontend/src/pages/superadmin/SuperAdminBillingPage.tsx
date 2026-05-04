@@ -132,11 +132,11 @@ export default function SuperAdminBillingPage() {
     mutationFn: async (orgId: number) =>
       (await api.post('/super/billing/cycles/generate/', { organization_id: orgId })).data,
     onSuccess: () => {
-      toast.success('Hisob-kitob davri yaratildi')
+      toast.success('Billing cycle created')
       qc.invalidateQueries({ queryKey: ['super-billing-org', selectedOrgId] })
       qc.invalidateQueries({ queryKey: ['super-billing-overview'] })
     },
-    onError: () => toast.error('Cycle yaratishda xatolik'),
+    onError: () => toast.error('Failed to create cycle'),
   })
 
   const markPaid = useMutation({
@@ -184,11 +184,11 @@ export default function SuperAdminBillingPage() {
         price_per_session_tier_3: tier_3,
       })).data,
     onSuccess: () => {
-      toast.success('Narxlar saqlandi')
+      toast.success('Prices saved')
       qc.invalidateQueries({ queryKey: ['super-billing-org', selectedOrgId] })
       qc.invalidateQueries({ queryKey: ['super-billing-overview'] })
     },
-    onError: () => toast.error('Narxlarni saqlashda xatolik'),
+    onError: () => toast.error('Failed to save prices'),
   })
 
   const totals = overview.data?.totals
@@ -200,25 +200,25 @@ export default function SuperAdminBillingPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Billing</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Markazlar bo‘yicha sessiya-asosli hisob-kitob va to‘lovlar.
+            Per-center session-based billing and payments.
           </p>
         </div>
 
         {overview.isLoading && <p className="text-slate-500">Loading…</p>}
         {overview.isError && (
-          <p className="text-rose-600">Ma‘lumotlarni yuklab bo‘lmadi.</p>
+          <p className="text-rose-600">Couldn't load data.</p>
         )}
 
         {totals && (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Stat label="Markazlar" value={totals.organizations} />
+            <Stat label="Centers" value={totals.organizations} />
             <Stat
-              label="Tugatilgan sessiyalar"
+              label="Completed sessions"
               value={totals.sessions_finished}
-              hint={`${totals.unbilled_sessions} ta hali billing'sa kiritilmagan`}
+              hint={`${totals.unbilled_sessions} not yet included in billing`}
             />
             <Stat
-              label="Bu oydagi daromad"
+              label="This month's revenue"
               value={fmtMoney(totals.monthly_revenue)}
               accent="text-emerald-600"
             />
@@ -226,7 +226,7 @@ export default function SuperAdminBillingPage() {
               label="Kutilayotgan to‘lov"
               value={fmtMoney(totals.pending_amount)}
               accent="text-amber-600"
-              hint={`Jami daromad: ${fmtMoney(totals.total_revenue)}`}
+              hint={`Total revenue: ${fmtMoney(totals.total_revenue)}`}
             />
           </div>
         )}
@@ -234,15 +234,15 @@ export default function SuperAdminBillingPage() {
         <Card>
           <CardContent className="p-0">
             <div className="border-b p-4">
-              <h2 className="text-base font-semibold">Markazlar</h2>
+              <h2 className="text-base font-semibold">Centers</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th className="px-4 py-3">Markaz</th>
-                    <th className="px-4 py-3 text-center">Sessiyalar</th>
-                    <th className="px-4 py-3 text-center">Hozirgi narx</th>
+                    <th className="px-4 py-3">Center</th>
+                    <th className="px-4 py-3 text-center">Sessions</th>
+                    <th className="px-4 py-3 text-center">Current price</th>
                     <th className="px-4 py-3 text-center">Qarzdorlik</th>
                     <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3"></th>
@@ -275,7 +275,7 @@ export default function SuperAdminBillingPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="font-semibold">{o.sessions_finished}</div>
-                        <div className="text-xs text-slate-500">jami {o.sessions_total}</div>
+                        <div className="text-xs text-slate-500">total {o.sessions_total}</div>
                       </td>
                       <td className="px-4 py-3 text-center font-mono text-emerald-700">
                         {fmtMoney(o.current_price_per_session)}
@@ -312,7 +312,7 @@ export default function SuperAdminBillingPage() {
                   {orgs.length === 0 && !overview.isLoading && (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-slate-500">
-                        Markazlar yo‘q.
+                        Centers yo‘q.
                       </td>
                     </tr>
                   )}
@@ -338,10 +338,10 @@ export default function SuperAdminBillingPage() {
                     {generateCycle.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Yaratilmoqda…
+                        Creating…
                       </>
                     ) : (
-                      'O‘tgan oyga cycle yaratish'
+                      'Create cycle for last month'
                     )}
                   </Button>
                   <Button
@@ -368,7 +368,7 @@ export default function SuperAdminBillingPage() {
                   />
 
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold">Hisob-kitob davrlari</h3>
+                    <h3 className="mb-2 text-sm font-semibold">Billing cycles</h3>
                     {orgDetail.data.cycles.length === 0 ? (
                       <p className="text-sm text-slate-500">
                         Hozircha cycle yo‘q. Yuqoridagi tugma yordamida yarating.
@@ -379,7 +379,7 @@ export default function SuperAdminBillingPage() {
                           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                             <tr>
                               <th className="px-3 py-2">Davr</th>
-                              <th className="px-3 py-2 text-center">Sessiyalar</th>
+                              <th className="px-3 py-2 text-center">Sessions</th>
                               <th className="px-3 py-2 text-right">Summa</th>
                               <th className="px-3 py-2 text-right">To‘langan</th>
                               <th className="px-3 py-2">Status</th>
@@ -394,7 +394,7 @@ export default function SuperAdminBillingPage() {
                                   <div className="font-medium">{c.period_label}</div>
                                   {c.total_students > 0 && (
                                     <div className="text-xs text-slate-500">
-                                      {c.total_students} talaba
+                                      {c.total_students} students
                                     </div>
                                   )}
                                 </td>
@@ -440,7 +440,7 @@ export default function SuperAdminBillingPage() {
                   {orgDetail.data.unbilled_sessions.length > 0 && (
                     <div>
                       <h3 className="mb-2 text-sm font-semibold">
-                        Hisob-kitob davriga kirmagan sessiyalar
+                        Sessions not yet included in a billing cycle
                       </h3>
                       <ul className="divide-y rounded-md border text-sm">
                         {orgDetail.data.unbilled_sessions.map((s) => (
@@ -474,7 +474,7 @@ export default function SuperAdminBillingPage() {
                         <table className="w-full text-sm">
                           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                             <tr>
-                              <th className="px-3 py-2">Sana</th>
+                              <th className="px-3 py-2">Date</th>
                               <th className="px-3 py-2">Davr</th>
                               <th className="px-3 py-2">Usul</th>
                               <th className="px-3 py-2 text-right">Summa</th>
@@ -631,7 +631,7 @@ function MarkPaidModal({
 
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel} disabled={saving}>
-            Bekor
+            Cancel
           </Button>
           <Button
             onClick={() =>
@@ -645,7 +645,7 @@ function MarkPaidModal({
             disabled={saving || !amount}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            {saving ? 'Saqlanmoqda…' : 'Tasdiqlash'}
+            {saving ? 'Saving…' : 'Confirm'}
           </Button>
         </div>
       </div>
@@ -704,13 +704,13 @@ function PricingEditor({
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Pricing tiers</h3>
         <p className="text-xs text-slate-500">
-          Bitta sessiya narxi (so‘mda). Avtomatik tier session soniga qarab tanlanadi.
+          Price per session (in UZS). Tier is selected automatically based on session count.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <PricingInput label="0–100 sessiya" value={tier1} onChange={setTier1} valid={t1 !== null} />
-        <PricingInput label="101–500 sessiya" value={tier2} onChange={setTier2} valid={t2 !== null} />
-        <PricingInput label="501+ sessiya" value={tier3} onChange={setTier3} valid={t3 !== null} />
+        <PricingInput label="0–100 sessions" value={tier1} onChange={setTier1} valid={t1 !== null} />
+        <PricingInput label="101–500 sessions" value={tier2} onChange={setTier2} valid={t2 !== null} />
+        <PricingInput label="501+ sessions" value={tier3} onChange={setTier3} valid={t3 !== null} />
       </div>
       <div className="mt-3 flex items-center justify-end gap-2">
         {dirty && (
@@ -723,7 +723,7 @@ function PricingEditor({
               setTier3(String(initial.tier_3))
             }}
           >
-            Bekor qilish
+            Cancel
           </button>
         )}
         <Button
@@ -737,10 +737,10 @@ function PricingEditor({
           {saving ? (
             <>
               <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-              Saqlanmoqda…
+              Saving…
             </>
           ) : (
-            'Narxlarni saqlash'
+            'Save prices'
           )}
         </Button>
       </div>

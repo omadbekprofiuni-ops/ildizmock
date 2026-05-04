@@ -55,7 +55,7 @@ export default function MockResultsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, sessionId])
 
-  if (!session) return <div className="p-6 text-slate-500">Yuklanmoqda…</div>
+  if (!session) return <div className="p-6 text-slate-500">Loading…</div>
 
   const updateScore = async (
     participantId: number,
@@ -65,7 +65,7 @@ export default function MockResultsPage() {
     if (score === '') return
     const num = Number(score)
     if (isNaN(num) || num < 0 || num > 9) {
-      alert('0–9 oralig‘ida son kiriting')
+      alert('Enter a number between 0 and 9')
       return
     }
     await api.post(
@@ -77,10 +77,10 @@ export default function MockResultsPage() {
 
   const issueCert = async (p: Participant) => {
     if (!p.overall_band_score) {
-      alert('Avval barcha 4 modulni baholang.')
+      alert('First grade all 4 modules.')
       return
     }
-    if (!confirm(`${p.full_name} uchun rasmiy sertifikat berasizmi?`)) return
+    if (!confirm(`Issue an official certificate for ${p.full_name}?`)) return
     setBusyId(p.id)
     try {
       const r = await api.post<{ pdf_url: string; certificate_number: string }>(
@@ -98,9 +98,9 @@ export default function MockResultsPage() {
   }
 
   const revokeCert = async (p: Participant) => {
-    const reason = prompt('Bekor qilish sababi (ixtiyoriy):') ?? ''
+    const reason = prompt('Cancellation reason (optional):') ?? ''
     if (reason === null) return
-    if (!confirm(`${p.full_name} sertifikatini bekor qilasizmi?`)) return
+    if (!confirm(`Revoke ${p.full_name}'s certificate?`)) return
     setBusyId(p.id)
     try {
       await api.post(
@@ -123,10 +123,10 @@ export default function MockResultsPage() {
           to={`/${slug}/admin/mock/${sessionId}`}
           className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
         >
-          <ArrowLeft size={14} /> Boshqaruv
+          <ArrowLeft size={14} /> Control
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          {session.name} — Natijalar
+          {session.name} — Results
         </h1>
       </div>
 
@@ -134,20 +134,20 @@ export default function MockResultsPage() {
         <table className={adminTable.table}>
           <thead className={adminTable.thead}>
             <tr>
-              <th className={adminTable.th}>Talaba</th>
+              <th className={adminTable.th}>Student</th>
               <th className={adminTable.th + ' text-center'}>L</th>
               <th className={adminTable.th + ' text-center'}>R</th>
               <th className={adminTable.th + ' text-center'}>W</th>
               <th className={adminTable.th + ' text-center'}>S</th>
               <th className={adminTable.th + ' text-center'}>Overall</th>
-              <th className={adminTable.th + ' text-center'}>Sertifikat</th>
+              <th className={adminTable.th + ' text-center'}>Certificate</th>
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
             {session.participants.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                  Bu sessiyada talaba bo'lmagan.
+                  No students in this session.
                 </td>
               </tr>
             ) : (
@@ -178,10 +178,10 @@ export default function MockResultsPage() {
                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                               : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
                           }`}
-                          title="To'liq baholash (kriteriyalar + feedback)"
+                          title="Full grading (criteria + feedback)"
                         >
                           <PenLine size={11} />
-                          {p.writing_status === 'graded' ? 'Tahrirlash' : 'Baholash'}
+                          {p.writing_status === 'graded' ? 'Edit' : 'Baholash'}
                         </Link>
                       </div>
                     </td>
@@ -198,10 +198,10 @@ export default function MockResultsPage() {
                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                               : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
                           }`}
-                          title="To'liq baholash (kriteriyalar + audio)"
+                          title="Full grading (criteria + audio)"
                         >
                           <Mic size={11} />
-                          {p.speaking_status === 'graded' ? 'Tahrirlash' : 'Baholash'}
+                          {p.speaking_status === 'graded' ? 'Edit' : 'Baholash'}
                         </Link>
                       </div>
                     </td>
@@ -225,7 +225,7 @@ export default function MockResultsPage() {
                       ) : cert && cert.is_revoked ? (
                         <div className="space-y-1">
                           <div className="text-xs text-rose-600">
-                            ⊘ bekor qilingan
+                            ⊘ revoked
                           </div>
                           <button
                             type="button"
@@ -244,8 +244,8 @@ export default function MockResultsPage() {
                           className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                           title={
                             p.overall_band_score
-                              ? 'Sertifikat berish'
-                              : 'Avval barcha modullarni baholang'
+                              ? 'Certificate berish'
+                              : 'First grade all modules'
                           }
                         >
                           <Award size={12} /> Berish
@@ -295,7 +295,7 @@ function CertActions({
           onClick={onRevoke}
           disabled={disabled}
           className="inline-flex items-center gap-1 rounded border border-rose-200 px-2 py-0.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-          title="Sertifikatni bekor qilish"
+          title="Revoke certificate"
         >
           <Trash2 size={11} />
         </button>

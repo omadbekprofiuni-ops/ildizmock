@@ -98,14 +98,14 @@ export function Step4Questions({
   if (!test)
     return (
       <div className="rounded-2xl border bg-white p-8 text-sm text-slate-500">
-        Yuklanmoqda…
+        Loading…
       </div>
     )
 
   if (module === 'writing') {
     return (
       <div className="rounded-2xl border bg-white p-8 text-sm text-slate-600">
-        Writing testlar uchun savollar yo'q. Talaba essay yozadi va qo'lda
+        No questions for Writing tests. The student writes an essay and is graded manually
         baholanadi (ETAP 5 da). Keyingi qadamga o'ting.
       </div>
     )
@@ -127,7 +127,7 @@ export function Step4Questions({
       </div>
       <h2 className="mb-1 text-2xl text-slate-900">Savollar va javob kaliti</h2>
       <p className="mb-6 text-sm text-slate-500">
-        Jami: {questions.length} savol qo'shildi
+        Total: {questions.length} savol qo'shildi
       </p>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -155,7 +155,7 @@ export function Step4Questions({
 
       <div className="mb-6">
         <div className="mb-2 text-xs uppercase tracking-widest text-slate-500">
-          Yangi savol turi
+          New question type
         </div>
         <div className="flex flex-wrap gap-2">
           {QUESTION_TYPES.map((t) => (
@@ -222,7 +222,7 @@ export function Step4Questions({
               'summary_completion',
             ].includes(editing.question_type) && (
               <div className="rounded-lg border-2 border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                Bu turdagi savol uchun maxsus editor keyingi etapda qo'shiladi.
+                A dedicated editor for this question type will be added in the next stage.
                 Hozircha JSON sifatida `correct_answer` qo'lda kiriting.
                 <textarea
                   placeholder='{"pairs": {"a": "1"}}'
@@ -249,7 +249,7 @@ export function Step4Questions({
                 onClick={() => setEditing(null)}
                 className="flex-1 rounded-full border border-slate-300 py-2 text-sm hover:bg-slate-50"
               >
-                Bekor qilish
+                Cancel
               </button>
               <button
                 type="button"
@@ -257,7 +257,7 @@ export function Step4Questions({
                 disabled={saving || !editing.prompt}
                 className="flex-1 rounded-full bg-slate-900 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
               >
-                {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

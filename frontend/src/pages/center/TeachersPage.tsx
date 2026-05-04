@@ -69,7 +69,7 @@ export default function TeachersPage() {
   }
 
   const deactivate = async (id: number) => {
-    if (!slug || !window.confirm("Ustozni o'chirmoqchimisiz?")) return
+    if (!slug || !window.confirm("Delete this teacher?")) return
     await api.post(`/center/${slug}/teachers/${id}/deactivate/`)
     load()
   }
@@ -77,11 +77,11 @@ export default function TeachersPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Ustozlar"
-        subtitle="Markazda ishlaydigan ustozlar va ularning faolligi"
+        title="Teachers"
+        subtitle="Teachers working at the center and their activity"
         actions={
           <button type="button" onClick={() => setShowAdd(true)} className={btnPrimary}>
-            <Plus size={16} /> Yangi ustoz
+            <Plus size={16} /> New teacher
           </button>
         }
       />
@@ -90,8 +90,8 @@ export default function TeachersPage() {
         <StateCard
           Icon={GraduationCap}
           tone="emerald"
-          title="Hali ustoz qo'shilmagan"
-          description="Markaz uchun birinchi ustozni qo'shing — talabalar tayinlash mumkin bo'ladi."
+          title="No teachers added yet"
+          description="Add the first teacher for the center — you'll then be able to assign students."
         />
       ) : (
         <TableCard
@@ -102,7 +102,7 @@ export default function TeachersPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
-                placeholder="Ism yoki login bo'yicha qidirish..."
+                placeholder="Search by name or login..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -113,10 +113,10 @@ export default function TeachersPage() {
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr>
-                <th className={adminTable.th}>Ustoz</th>
+                <th className={adminTable.th}>Teacher</th>
                 <th className={adminTable.th}>Login</th>
                 <th className={adminTable.th}>Talabalari</th>
-                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th}>Status</th>
                 <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
             </thead>
@@ -124,13 +124,13 @@ export default function TeachersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Yuklanmoqda…
+                    Loading…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Qidiruv bo'yicha hech narsa topilmadi.
+                    Nothing matched the search.
                   </td>
                 </tr>
               ) : (
@@ -154,7 +154,7 @@ export default function TeachersPage() {
                       </td>
                       <td className={adminTable.td}>{t.students_count} ta</td>
                       <td className={adminTable.td}>
-                        {t.is_active ? <Chip tone="emerald">Faol</Chip> : <Chip>O'chirilgan</Chip>}
+                        {t.is_active ? <Chip tone="emerald">Active</Chip> : <Chip>Deleted</Chip>}
                       </td>
                       <td className={adminTable.td + ' text-right'}>
                         <div className="inline-flex items-center gap-1">
@@ -163,7 +163,7 @@ export default function TeachersPage() {
                             onClick={() => setEditing(t)}
                             className={btnGhost}
                           >
-                            Tahrirlash
+                            Edit
                           </button>
                           <button
                             type="button"
@@ -178,7 +178,7 @@ export default function TeachersPage() {
                               onClick={() => deactivate(t.id)}
                               className="rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
                             >
-                              O'chirish
+                              Delete
                             </button>
                           )}
                         </div>
@@ -291,7 +291,7 @@ function EditTeacherModal({
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
-            Bekor
+            Cancel
           </button>
           <button
             type="button"
@@ -299,7 +299,7 @@ function EditTeacherModal({
             disabled={saving}
             className={btnPrimary + ' flex-1 justify-center'}
           >
-            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
       </div>
@@ -350,7 +350,7 @@ function AddTeacherModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Yangi ustoz</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">New teacher</h2>
         <div className="space-y-3">
           <FormInput
             label="Ism"
@@ -371,11 +371,11 @@ function AddTeacherModal({
         </div>
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
         <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-700">
-          💡 Parol avtomatik yaratiladi va keyingi ekranda ko'rsatiladi.
+          💡 Parol avtomatik yaratiladi va keyingi ekranda shown.
         </div>
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
-            Bekor qilish
+            Cancel
           </button>
           <button
             type="button"
@@ -383,7 +383,7 @@ function AddTeacherModal({
             disabled={submitting}
             className={btnPrimary + ' flex-1 justify-center'}
           >
-            {submitting ? 'Saqlanmoqda…' : 'Saqlash va parol olish'}
+            {submitting ? 'Saving…' : 'Save and get password'}
           </button>
         </div>
       </div>

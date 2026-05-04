@@ -36,7 +36,7 @@ export function Step3Content({ testId, module, onUpdate }: Props) {
   if (!test)
     return (
       <div className="rounded-2xl border bg-white p-8 text-sm text-slate-500">
-        Yuklanmoqda…
+        Loading…
       </div>
     )
 
@@ -150,7 +150,7 @@ function ListeningContent({
       </div>
 
       <div className="space-y-4">
-        <Field label="Bo'lim ko'rsatmasi (instructions)">
+        <Field label="Section instructions">
           <textarea
             value={draft.instructions ?? ''}
             onChange={(e) => setDraft({ ...draft, instructions: e.target.value })}
@@ -173,13 +173,13 @@ function ListeningContent({
           disabled={saving}
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
-          {saving ? 'Saqlanmoqda…' : current ? 'Yangilash' : 'Part yaratish'}
+          {saving ? 'Saving…' : current ? 'Yangilash' : 'Create part'}
         </button>
 
         {current && (
           <div className="pt-4">
             <div className="mb-2 text-xs uppercase tracking-widest text-slate-500">
-              Audio fayl
+              Audio file
             </div>
             <AudioUploadCard
               partId={current.id}
@@ -268,7 +268,7 @@ function ReadingContent({
       </div>
 
       <div className="space-y-4">
-        <Field label="Sarlavha *">
+        <Field label="Title *">
           <input
             value={draft.title ?? ''}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -282,7 +282,7 @@ function ReadingContent({
             className="w-full rounded-lg border border-slate-300 px-4 py-2 outline-none focus:border-slate-900"
           />
         </Field>
-        <Field label="Bo'lim ko'rsatmasi">
+        <Field label="Section instructions">
           <textarea
             value={draft.instructions ?? ''}
             onChange={(e) => setDraft({ ...draft, instructions: e.target.value })}
@@ -305,7 +305,7 @@ function ReadingContent({
           disabled={saving}
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
-          {saving ? 'Saqlanmoqda…' : current ? 'Yangilash' : 'Section yaratish'}
+          {saving ? 'Saving…' : current ? 'Yangilash' : 'Create section'}
         </button>
       </div>
     </div>
@@ -384,7 +384,7 @@ function WritingContent({
       </div>
 
       <div className="space-y-4">
-        <Field label="Topshiriq matni *">
+        <Field label="Task text *">
           <textarea
             value={draft.prompt ?? ''}
             onChange={(e) => setDraft({ ...draft, prompt: e.target.value })}
@@ -417,7 +417,7 @@ function WritingContent({
             />
           </Field>
         </div>
-        <Field label="Qo'shimcha talablar (ixtiyoriy)">
+        <Field label="Additional requirements (optional)">
           <textarea
             value={draft.requirements ?? ''}
             onChange={(e) => setDraft({ ...draft, requirements: e.target.value })}
@@ -432,12 +432,12 @@ function WritingContent({
           disabled={saving}
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
-          {saving ? 'Saqlanmoqda…' : current ? 'Yangilash' : 'Task yaratish'}
+          {saving ? 'Saving…' : current ? 'Yangilash' : 'Create task'}
         </button>
 
         {taskNum === 1 && current && (
           <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-500">
-            Chart rasm yuklash UI keyingi etapda — hozir API tayyor:
+            Chart image upload UI is in the next stage — API is ready:
             <br />
             <code className="text-slate-700">
               POST /super/writing-tasks/{current.id}/upload-chart/

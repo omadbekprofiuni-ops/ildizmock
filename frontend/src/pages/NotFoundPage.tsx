@@ -10,7 +10,7 @@ function pickHome(
   // 1) Slug-li markaz panelidan kelgan bo'lsa — markaz dashboardiga
   const slugMatch = pathname.match(/^\/([^/]+)\/admin(\/|$)/)
   if (slugMatch && user) {
-    return { to: `/${slugMatch[1]}/admin`, label: 'Markaz paneliga qaytish' }
+    return { to: `/${slugMatch[1]}/admin`, label: 'Back to center panel' }
   }
 
   // 2) /super/* dan — superadmin dashboardiga
@@ -25,7 +25,7 @@ function pickHome(
 
   // 4) /teacher/* dan — teacher paneliga
   if (pathname.startsWith('/teacher') && user) {
-    return { to: '/teacher', label: 'Ustoz paneliga qaytish' }
+    return { to: '/teacher', label: 'Back to teacher panel' }
   }
 
   // 5) Auth bo'lgan oddiy user — talaba dashboardiga
@@ -35,11 +35,11 @@ function pickHome(
     }
     if (user.role === 'org_admin' || user.role === 'admin') {
       return user.org_slug
-        ? { to: `/${user.org_slug}/admin`, label: 'Markaz paneliga qaytish' }
+        ? { to: `/${user.org_slug}/admin`, label: 'Back to center panel' }
         : { to: '/admin', label: 'Admin paneliga qaytish' }
     }
     if (user.role === 'teacher') {
-      return { to: '/teacher', label: 'Ustoz paneliga qaytish' }
+      return { to: '/teacher', label: 'Back to teacher panel' }
     }
     return { to: '/dashboard', label: 'Dashboard ga qaytish' }
   }

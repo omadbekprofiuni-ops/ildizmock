@@ -124,8 +124,8 @@ export default function MockResultsPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
-                      <th className="px-4 py-3">Sana</th>
-                      <th className="px-4 py-3">Sessiya</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Session</th>
                       <th className="px-4 py-3 text-center">L</th>
                       <th className="px-4 py-3 text-center">R</th>
                       <th className="px-4 py-3 text-center">W</th>

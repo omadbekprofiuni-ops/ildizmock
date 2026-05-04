@@ -98,12 +98,12 @@ export default function PracticeHistoryPage() {
       <main className="container space-y-8 py-10">
         {query.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {query.isError && (
-          <p className="text-destructive">Tarixni yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Couldn't load history.</p>
         )}
 
         {stats && (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <SummaryCard title="Jami urinishlar" value={stats.total} />
+            <SummaryCard title="Total attempts" value={stats.total} />
             <SummaryCard
               title="Listening"
               value={stats.by_module.listening.completed}
@@ -138,7 +138,7 @@ export default function PracticeHistoryPage() {
           {rows.length === 0 && !query.isLoading ? (
             <Card>
               <CardContent className="p-10 text-center text-muted-foreground">
-                Hali practice qilmadingiz.
+                You haven't practiced yet.
               </CardContent>
             </Card>
           ) : (
@@ -147,10 +147,10 @@ export default function PracticeHistoryPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
-                      <th className="px-4 py-3">Sana</th>
+                      <th className="px-4 py-3">Date</th>
                       <th className="px-4 py-3">Module</th>
                       <th className="px-4 py-3">Test</th>
-                      <th className="px-4 py-3 text-center">Natija</th>
+                      <th className="px-4 py-3 text-center">Result</th>
                       <th className="px-4 py-3 text-center">Band</th>
                       <th className="px-4 py-3 text-center">Vaqt</th>
                       <th className="px-4 py-3"></th>
@@ -196,7 +196,7 @@ export default function PracticeHistoryPage() {
                         <td className="px-4 py-3 text-right">
                           {a.status === 'in_progress' ? (
                             <Link to={`/take/${a.id}`}>
-                              <Button size="sm">Davom etish</Button>
+                              <Button size="sm">Continue</Button>
                             </Link>
                           ) : (
                             <Link to={`/result/${a.id}`}>

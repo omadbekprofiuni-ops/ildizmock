@@ -1,12 +1,12 @@
 """ETAP 15 — auto-generate attendance sessions from active schedules.
 
 Har guruhning haftalik jadvali asosida keyingi N kunlar (default 30) uchun
-AttendanceSession yozuvlarini avtomatik yaratadi. Talaba records'lari
+AttendanceSession yozuvlarini avtomatik yaratadi. Student records'lari
 default 'present' bilan to'ldiriladi.
 
 Foydalanish:
-    python manage.py generate_sessions               # +30 kun
-    python manage.py generate_sessions --days 60     # +60 kun
+    python manage.py generate_sessions               # +30 days
+    python manage.py generate_sessions --days 60     # +60 days
     python manage.py generate_sessions --org edutech # faqat bitta markaz
 """
 
@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--days', type=int, default=30,
-                            help='Necha kun oldinga (default: 30)')
+                            help='How many days ahead (default: 30)')
         parser.add_argument('--org', type=str, default=None,
                             help='Faqat berilgan markaz (slug)')
 
@@ -64,7 +64,7 @@ class Command(BaseCommand):
                         end_time=sch.end_time,
                         created_by=None,
                     )
-                    # Talaba yozuvlari default present
+                    # Student yozuvlari default present
                     students = group.members.filter(role='student', is_active=True)
                     AttendanceRecord.objects.bulk_create([
                         AttendanceRecord(session=session, student=s, status='present')
@@ -81,5 +81,5 @@ class Command(BaseCommand):
                 total_created += created_for_group
 
         self.stdout.write(self.style.SUCCESS(
-            f'=== {total_created} ta sessiya yaratildi ({days} kun ichida) ==='
+            f'=== {total_created} sessions generated ({days} days) ==='
         ))

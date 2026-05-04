@@ -381,18 +381,18 @@ export default function AdminTestEditPage({
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
           <Link to={listPath} className="hover:text-red-600">Testlar</Link>
           <span>/</span>
-          <span className="text-slate-900">{isNew ? 'Yangi' : 'Tahrirlash'}</span>
+          <span className="text-slate-900">{isNew ? 'New' : 'Edit'}</span>
         </div>
 
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              {isNew ? 'Yangi test' : draft.name || 'Test tahriri'}
+              {isNew ? 'New test' : draft.name || 'Test edit'}
             </h1>
             <p className="mt-1 text-slate-500">
-              {draft.module === 'listening' && 'IELTS Listening — qism va savollarni qo‘shing'}
-              {draft.module === 'reading'   && 'IELTS Reading — passage va savollarni qo‘shing'}
+              {draft.module === 'listening' && 'IELTS Listening — add parts and questions'}
+              {draft.module === 'reading'   && 'IELTS Reading — add passages and questions'}
               {draft.module === 'writing'   && 'IELTS Writing — Task 1 va Task 2 sharti'}
               {draft.module === 'speaking'  && 'IELTS Speaking — savollarni tayyorlang'}
             </p>
@@ -408,7 +408,7 @@ export default function AdminTestEditPage({
               disabled={saveMutation.isPending}
               className="rounded-xl bg-red-600 hover:bg-red-700"
             >
-              {saveMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+              {saveMutation.isPending ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </div>
@@ -613,10 +613,10 @@ export default function AdminTestEditPage({
           className="w-full rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-6 font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
         >
           <Plus className="mr-2 h-4 w-4" />
-          {draft.module === 'listening' && "Yangi Qism (Part) qo'shish"}
-          {draft.module === 'reading'   && "Yangi Passage qo'shish"}
-          {draft.module === 'writing'   && "Yangi Task qo'shish"}
-          {draft.module === 'speaking'  && "Yangi qism qo'shish"}
+          {draft.module === 'listening' && "Add new part"}
+          {draft.module === 'reading'   && "Add new passage"}
+          {draft.module === 'writing'   && "Add new task"}
+          {draft.module === 'speaking'  && "Add new part"}
         </Button>
       </div>
       </div>
@@ -904,9 +904,9 @@ function QuestionImageField({
         { headers: { 'Content-Type': 'multipart/form-data' } },
       )
       onUploaded(data.path, data.url)
-      toast.success('Rasm yuklandi')
+      toast.success('Image uploaded')
     } catch {
-      toast.error('Rasm yuklanmadi')
+      toast.error('Image failed to upload')
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -932,7 +932,7 @@ function QuestionImageField({
           disabled={uploading}
         >
           <ImageIcon className="mr-2 h-4 w-4" />
-          {uploading ? 'Yuklanmoqda…' : currentPath ? "O'zgartirish" : 'Rasm tanlash'}
+          {uploading ? 'Loading…' : currentPath ? "O'zgartirish" : 'Choose image'}
         </Button>
         {currentPath && (
           <Button type="button" variant="ghost" size="sm" onClick={onClear}>

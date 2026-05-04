@@ -91,9 +91,9 @@ export default function OrgTestsPage() {
           <div className="flex items-center gap-3">
             <FileText className="h-6 w-6 text-slate-700" />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Markaz testlari</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Center tests</h1>
               <p className="text-sm text-muted-foreground">
-                {orgName ? `${orgName} — testlar boshqaruvi` : 'Markaz tanlanmagan'}
+                {orgName ? `${orgName} — tests management` : 'No center selected'}
               </p>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function OrgTestsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
           >
             <Plus className="h-4 w-4" />
-            Yangi test
+            New test
           </Link>
         </div>
       </header>
@@ -111,7 +111,7 @@ export default function OrgTestsPage() {
         {!orgId ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-500">
-              Avval markazni tanlang.
+              First select a center.
             </CardContent>
           </Card>
         ) : (
@@ -123,7 +123,7 @@ export default function OrgTestsPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Test nomi yoki kategoriya..."
+                  placeholder="Test name or category..."
                   className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
@@ -132,7 +132,7 @@ export default function OrgTestsPage() {
                 onChange={(e) => setModuleFilter(e.target.value)}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="all">Barcha modul</option>
+                <option value="all">All modules</option>
                 <option value="listening">Listening</option>
                 <option value="reading">Reading</option>
                 <option value="writing">Writing</option>
@@ -144,13 +144,13 @@ export default function OrgTestsPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="all">Barcha holat</option>
+                <option value="all">All statuses</option>
                 <option value="draft">Qoralama</option>
                 <option value="published">Chop etilgan</option>
                 <option value="archived">Arxiv</option>
               </select>
               <span className="text-sm text-slate-500">
-                Jami: <strong>{filtered.length}</strong> / {tests.length}
+                Total: <strong>{filtered.length}</strong> / {tests.length}
               </span>
             </div>
 
@@ -160,14 +160,14 @@ export default function OrgTestsPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 text-left">Test nomi</th>
+                      <th className="px-4 py-3 text-left">Test name</th>
                       <th className="px-4 py-3 text-left">Modul</th>
                       <th className="px-4 py-3 text-left">Kategoriya</th>
                       <th className="px-4 py-3 text-center">Davomiyligi</th>
                       <th className="px-4 py-3 text-center">Urinishlar</th>
-                      <th className="px-4 py-3 text-center">Holat</th>
+                      <th className="px-4 py-3 text-center">Status</th>
                       <th className="px-4 py-3 text-left">Yaratuvchi</th>
-                      <th className="px-4 py-3 text-left">Sana</th>
+                      <th className="px-4 py-3 text-left">Date</th>
                       <th className="px-4 py-3 text-right">Amal</th>
                     </tr>
                   </thead>
@@ -182,7 +182,7 @@ export default function OrgTestsPage() {
                     {!query.isLoading && filtered.length === 0 && (
                       <tr>
                         <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
-                          Test topilmadi.
+                          Test not found.
                         </td>
                       </tr>
                     )}
@@ -219,7 +219,7 @@ export default function OrgTestsPage() {
                             to={`/super/org/${orgId}/tests/${t.id}/results`}
                             className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
                           >
-                            Natijalar →
+                            Results →
                           </Link>
                         </td>
                       </tr>
@@ -230,8 +230,8 @@ export default function OrgTestsPage() {
             </Card>
 
             <p className="text-xs text-slate-500">
-              ⓘ Yangi test yaratish va savollarni qo'shish uchun "Yangi test" tugmasini bosing.
-              Test natijalarini ko'rish uchun har bir qatordagi "Natijalar" linkidan foydalaning.
+              ⓘ Click the "New test" button to create a new test and add questions.
+              Use the "Results" link in each row to view test results.
             </p>
           </>
         )}

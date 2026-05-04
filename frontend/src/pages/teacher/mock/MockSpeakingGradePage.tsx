@@ -63,7 +63,7 @@ export default function MockSpeakingGradePage() {
         }
         setFeedback(r.data.speaking_feedback ?? '')
       })
-      .catch(() => setError('Talaba topilmadi yoki ruxsat yo‘q.'))
+      .catch(() => setError('Student not found or access denied.'))
   }, [id])
 
   const avg = useMemo(() => {
@@ -82,7 +82,7 @@ export default function MockSpeakingGradePage() {
     for (const c of CRITERIA) {
       const n = parseFloat(vals[c.key])
       if (!Number.isFinite(n) || n < 0 || n > 9) {
-        setError(`${c.label} 0–9 oralig'ida bo'lsin.`)
+        setError(`${c.label} must be between 0 and 9.`)
         return
       }
     }
@@ -99,7 +99,7 @@ export default function MockSpeakingGradePage() {
       }
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail ?? 'Saqlashda xatolik')
+      setError(err.response?.data?.detail ?? 'Save failed')
     } finally {
       setBusy(false)
     }
@@ -114,7 +114,7 @@ export default function MockSpeakingGradePage() {
   if (!detail)
     return (
       <TeacherLayout>
-        <div className="p-8 text-slate-500">Yuklanmoqda…</div>
+        <div className="p-8 text-slate-500">Loading…</div>
       </TeacherLayout>
     )
 
@@ -173,7 +173,7 @@ export default function MockSpeakingGradePage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium">
-              Talaba uchun izoh (ixtiyoriy)
+              Note for student (optional)
             </label>
             <textarea
               rows={4}
@@ -202,7 +202,7 @@ export default function MockSpeakingGradePage() {
               disabled={busy}
               className="rounded-full bg-emerald-600 px-8 py-3 text-base font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
             >
-              {busy ? 'Saqlanyapti…' : 'Saqlash'}
+              {busy ? 'Saving…' : 'Save'}
             </button>
           </div>
         </form>

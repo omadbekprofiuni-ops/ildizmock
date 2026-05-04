@@ -24,7 +24,7 @@ class ClassScheduleSerializer(serializers.ModelSerializer):
         end = attrs.get('end_time') or getattr(self.instance, 'end_time', None)
         if start and end and end <= start:
             raise serializers.ValidationError(
-                'Tugash vaqti boshlanish vaqtidan kech bo\'lishi kerak.',
+                'End time must be later than start time.',
             )
         return attrs
 

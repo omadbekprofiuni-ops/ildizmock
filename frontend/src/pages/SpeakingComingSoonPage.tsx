@@ -31,7 +31,7 @@ export default function SpeakingComingSoonPage() {
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
           <Mic className="h-8 w-8 text-purple-700" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">Speaking modul tez kunda</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Speaking module coming soon</h1>
         <p className="mt-3 text-[var(--muted)]">
           AI conversation and Cambridge-format analysis — launches in <strong>May 2026</strong>.
         </p>

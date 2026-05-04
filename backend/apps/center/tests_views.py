@@ -1,4 +1,4 @@
-"""Markaz testlari API — Mening testlarim + Global katalog + Klon."""
+"""Center tests API — Mening testlarim + Global katalog + Klon."""
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -130,7 +130,7 @@ def _create_question(*, passage=None, listening_part=None, q):
 
 
 class CenterTestViewSet(viewsets.ModelViewSet):
-    """Markaz testlari (Mening testlarim + Global katalog + Klon)."""
+    """Center tests (Mening testlarim + Global katalog + Klon)."""
 
     permission_classes = [permissions.IsAuthenticated, IsCenterAdmin]
 
@@ -138,7 +138,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
         slug = self.kwargs['org_slug']
         org = get_object_or_404(Organization, slug=slug)
         if org.status != 'active':
-            raise PermissionDenied('Markaz faol holatda emas.')
+            raise PermissionDenied('Center is not active.')
         if self.request.user.role != 'superadmin':
             if not OrganizationMembership.objects.filter(
                 user=self.request.user, organization=org,
@@ -150,7 +150,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         org = self.get_organization()
         qs = Test.objects.filter(organization=org).order_by('-created_at')
-        # Default: o'chirilganlarni yashiramiz. ?archived=1 bo'lsa faqat
+        # Default: deletedlarni yashiramiz. ?archived=1 bo'lsa faqat
         # arxivni qaytaramiz (ETAP 13 soft-delete).
         archived = self.request.query_params.get('archived')
         if archived in ('1', 'true', 'yes'):
@@ -175,7 +175,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None, org_slug=None):
-        """Markaz testini draft -> published holatga o'tkazish."""
+        """Center testini draft -> published holatga o'tkazish."""
         from django.utils import timezone
         test = self.get_object()
 
@@ -223,16 +223,16 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def unpublish(self, request, pk=None, org_slug=None):
-        """Markaz testini published -> draft holatga qaytarish."""
+        """Center testini published -> draft holatga qaytarish."""
         test = self.get_object()
         test.status = 'draft'
         test.is_published = False
         test.save(update_fields=['status', 'is_published', 'updated_at'])
-        return Response({'detail': 'Test draft holatiga qaytarildi', 'status': 'draft'})
+        return Response({'detail': 'Test moved back to draft', 'status': 'draft'})
 
     @action(detail=True, methods=['patch'], url_path='toggle-practice')
     def toggle_practice(self, request, pk=None, org_slug=None):
-        """ETAP 14 BUG #9 — Markaz testi practice mode toggle."""
+        """ETAP 14 BUG #9 — Center testi practice mode toggle."""
         test = self.get_object()
         test.is_practice_enabled = not test.is_practice_enabled
         if 'practice_time_limit' in request.data:
@@ -259,11 +259,11 @@ class CenterTestViewSet(viewsets.ModelViewSet):
         test.deleted_at = None
         test.deleted_by = None
         test.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
-        return Response({'detail': 'Test qaytarildi.'})
+        return Response({'detail': 'Test restored.'})
 
     @action(detail=True, methods=['delete'], url_path='hard-delete')
     def hard_delete(self, request, pk=None, org_slug=None):
-        """Doimiy o'chirish — faqat arxivdagi testlar uchun.
+        """Permanently delete — faqat arxivdagi testlar uchun.
 
         Bu xavfli amal — barcha bog'liq passages/questions/attempts ham
         cascade qilib o'chiriladi.
@@ -271,7 +271,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
         test = self.get_object()
         if not test.is_deleted:
             return Response(
-                {'detail': "Avval testni arxivga o'tkazing, keyin doimiy o'chirib bo'ladi."},
+                {'detail': "Archive the test first, then it can be permanently deleted."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         test.delete()
@@ -463,7 +463,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Noto‘g‘ri module qiymati.'}, status=400)
         name = (d.get('name') or '').strip()
         if not name:
-            return Response({'name': 'Test nomini kiriting.'}, status=400)
+            return Response({'name': 'Enter the test name.'}, status=400)
 
         is_published = bool(d.get('is_published', False))
 
@@ -561,7 +561,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
 
         if test.is_global:
             return Response(
-                {'detail': "Global testni markazdan tahrirlab bo'lmaydi."},
+                {'detail': "Global tests cannot be edited from the center."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -591,7 +591,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Noto‘g‘ri module qiymati.'}, status=400)
         new_name = (d.get('name') or test.name or '').strip()
         if not new_name:
-            return Response({'name': 'Test nomini kiriting.'}, status=400)
+            return Response({'name': 'Enter the test name.'}, status=400)
 
         with transaction.atomic():
             # Asosiy fieldlar
@@ -822,7 +822,7 @@ class CenterTestViewSet(viewsets.ModelViewSet):
             )
         if pdf.size > 20 * 1024 * 1024:
             return Response(
-                {'detail': 'PDF 20 MB dan oshmasligi kerak.'},
+                {'detail': 'PDF must not exceed 20 MB.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

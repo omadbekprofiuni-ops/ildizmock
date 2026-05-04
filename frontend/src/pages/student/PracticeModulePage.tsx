@@ -89,7 +89,7 @@ export default function PracticeModulePage() {
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response
         ?.data?.detail
-      toast.error(detail || 'Practice testni boshlashda xatolik')
+      toast.error(detail || 'Failed to start the practice test')
     },
   })
 
@@ -126,7 +126,7 @@ export default function PracticeModulePage() {
 
         {query.isLoading && <p className="text-muted-foreground">Loading…</p>}
         {query.isError && (
-          <p className="text-destructive">Testlarni yuklab bo‘lmadi.</p>
+          <p className="text-destructive">Couldn't load tests.</p>
         )}
 
         {!query.isLoading && tests.length === 0 && (

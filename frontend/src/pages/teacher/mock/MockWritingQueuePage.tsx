@@ -32,21 +32,21 @@ export default function MockWritingQueuePage() {
       <header className="border-b bg-white px-8 py-5">
         <h1 className="text-2xl font-bold">Mock Writing baholash navbati</h1>
         <p className="text-sm text-slate-500">
-          Talabalar topshirgan Writing matnlarini 8 ta criteria bo'yicha baholang.
+          Grade students' Writing submissions across 8 criteria.
         </p>
       </header>
 
       <div className="p-8">
         {loading ? (
-          <p className="text-slate-500">Yuklanmoqda…</p>
+          <p className="text-slate-500">Loading…</p>
         ) : rows.length === 0 ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-12 text-center">
             <div className="mb-2 text-3xl">✓</div>
             <p className="text-lg font-medium text-emerald-800">
-              Baholash uchun Writing yo'q
+              No Writing to grade
             </p>
             <p className="text-sm text-emerald-600">
-              Barcha topshirilgan Writing'lar baholangan.
+              All submitted Writing has been graded.
             </p>
           </div>
         ) : (
@@ -54,9 +54,9 @@ export default function MockWritingQueuePage() {
             <table className="w-full">
               <thead className="border-b bg-slate-50">
                 <tr className="text-left text-xs uppercase tracking-widest text-slate-500">
-                  <th className="p-4">Talaba</th>
-                  <th className="p-4">Sessiya</th>
-                  <th className="p-4 text-center">Sana</th>
+                  <th className="p-4">Student</th>
+                  <th className="p-4">Session</th>
+                  <th className="p-4 text-center">Date</th>
                   <th className="p-4 text-center">L</th>
                   <th className="p-4 text-center">R</th>
                   <th className="p-4 text-center">S</th>

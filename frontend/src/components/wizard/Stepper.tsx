@@ -1,9 +1,9 @@
 const STEPS = [
   { n: 1, label: 'Test turi' },
-  { n: 2, label: 'Ma\'lumotlar' },
+  { n: 2, label: 'Informationlar' },
   { n: 3, label: 'Kontent' },
   { n: 4, label: 'Savollar' },
-  { n: 5, label: 'E\'lon qilish' },
+  { n: 5, label: 'Publish' },
 ]
 
 export function Stepper({ currentStep }: { currentStep: number }) {

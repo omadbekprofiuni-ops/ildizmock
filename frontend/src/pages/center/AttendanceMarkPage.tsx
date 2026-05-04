@@ -59,7 +59,7 @@ type SessionDetail = {
 const STATUS_META: globalThis.Record<Status, {
   label: string
   chip: 'emerald' | 'rose' | 'amber' | 'blue' | 'violet'
-  activeBg: string  // Tailwind JIT topishi uchun explicit class
+  activeBg: string  // explicit class so Tailwind JIT can find it
   Icon: typeof CheckCircle2
 }> = {
   present:  { label: 'Keldi',     chip: 'emerald', activeBg: 'bg-emerald-600 hover:bg-emerald-700 text-white', Icon: CheckCircle2 },
@@ -127,7 +127,7 @@ export default function AttendanceMarkPage() {
     mutationFn: async () =>
       (await api.post(`/center/${slug}/attendance/sessions/${sessionId}/finalize/`)).data,
     onSuccess: () => {
-      toast.success('Sessiya yakunlandi')
+      toast.success('Session ended')
       qc.invalidateQueries({ queryKey: ['attendance-session', slug, sessionId] })
       qc.invalidateQueries({ queryKey: ['attendance-sessions', slug] })
     },
@@ -137,7 +137,7 @@ export default function AttendanceMarkPage() {
     mutationFn: async () =>
       (await api.post(`/center/${slug}/attendance/sessions/${sessionId}/reopen/`)).data,
     onSuccess: () => {
-      toast.success('Sessiya qayta ochildi')
+      toast.success('Session reopened')
       qc.invalidateQueries({ queryKey: ['attendance-session', slug, sessionId] })
     },
   })
@@ -146,7 +146,7 @@ export default function AttendanceMarkPage() {
     return (
       <PageShell>
         <div className="flex items-center gap-2 text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin" /> Yuklanmoqda…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       </PageShell>
     )
@@ -156,7 +156,7 @@ export default function AttendanceMarkPage() {
   if (!session) {
     return (
       <PageShell>
-        <SurfaceCard>Sessiya topilmadi.</SurfaceCard>
+        <SurfaceCard>Session not found.</SurfaceCard>
       </PageShell>
     )
   }
@@ -182,17 +182,17 @@ export default function AttendanceMarkPage() {
         }
         actions={
           <Link to={`/${slug}/admin/attendance`} className={btnOutline}>
-            <ArrowLeft size={16} /> Davomat
+            <ArrowLeft size={16} /> Attendance
           </Link>
         }
       />
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Jami" value={session.total_count} tone="slate" />
+        <StatCard label="Total" value={session.total_count} tone="slate" />
         <StatCard label="Keldi" value={session.present_count} tone="emerald" />
         <StatCard label="Kelmadi" value={session.absent_count} tone="rose" />
         <StatCard
-          label="Davomat"
+          label="Attendance"
           value={`${session.attendance_rate}%`}
           tone="blue"
         />
@@ -201,7 +201,7 @@ export default function AttendanceMarkPage() {
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Input
-          placeholder="Talaba qidirish…"
+          placeholder="Search student…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -232,7 +232,7 @@ export default function AttendanceMarkPage() {
                 className={btnPrimary}
                 disabled={dirtyCount === 0 || saveMut.isPending}
               >
-                {saveMut.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+                {saveMut.isPending ? 'Saving…' : 'Save'}
               </button>
               <button
                 onClick={() => {
@@ -254,7 +254,7 @@ export default function AttendanceMarkPage() {
         <div className="divide-y divide-slate-100">
           {records.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
-              {search ? 'Talaba topilmadi' : 'Bu guruhda talaba yo\'q'}
+              {search ? 'Student not found' : 'No students in this group'}
             </div>
           ) : records.map((rec) => {
             const draft = drafts.get(rec.id)

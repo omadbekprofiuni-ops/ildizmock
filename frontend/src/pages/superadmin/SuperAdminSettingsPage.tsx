@@ -94,13 +94,13 @@ export default function SuperAdminSettingsPage() {
       return (await api.post('/super/plans/', payload)).data
     },
     onSuccess: () => {
-      toast.success('Plan saqlandi')
+      toast.success('Plan saved')
       qc.invalidateQueries({ queryKey: ['super-plans'] })
       setEditing(null)
     },
     onError: (err) => {
       const data = (err as { response?: { data?: unknown } })?.response?.data
-      toast.error(formatApiError(data, 'Saqlashda xatolik yuz berdi'))
+      toast.error(formatApiError(data, 'Save failed'))
     },
   })
 
@@ -114,7 +114,7 @@ export default function SuperAdminSettingsPage() {
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })
         ?.response?.data?.detail
-      toast.error(detail || 'O‘chirib bo‘lmadi')
+      toast.error(detail || 'Couldn't delete')
     },
   })
 
@@ -138,7 +138,7 @@ export default function SuperAdminSettingsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Platforma tariflari (Plans). Markaz yaratganda tanlanadi.
+              Platform plans. Selected when creating a center.
             </p>
           </div>
           <Button
@@ -147,7 +147,7 @@ export default function SuperAdminSettingsPage() {
               const free = CODE_OPTIONS.find((o) => !used.has(o.value))
               if (!free) {
                 toast.error(
-                  'Barcha 4 ta plan kodi (trial/starter/pro/enterprise) band. Mavjud planni tahrirlang.',
+                  'All 4 plan codes (trial/starter/pro/enterprise) are taken. Edit an existing plan.',
                 )
                 return
               }
@@ -155,13 +155,13 @@ export default function SuperAdminSettingsPage() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Yangi plan
+            New plan
           </Button>
         </div>
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Plans yuklab bo‘lmadi.</p>
+          <p className="text-rose-600">Couldn't load plans.</p>
         )}
 
         {query.data && (
@@ -172,11 +172,11 @@ export default function SuperAdminSettingsPage() {
                   <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Kod</th>
-                      <th className="px-4 py-3">Nomi</th>
-                      <th className="px-4 py-3 text-center">Talabalar</th>
-                      <th className="px-4 py-3 text-center">Ustozlar</th>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3 text-center">Students</th>
+                      <th className="px-4 py-3 text-center">Teachers</th>
                       <th className="px-4 py-3 text-center">Davomiylik</th>
-                      <th className="px-4 py-3 text-right">Narx ($)</th>
+                      <th className="px-4 py-3 text-right">Price ($)</th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
@@ -191,7 +191,7 @@ export default function SuperAdminSettingsPage() {
                         <td className="px-4 py-3 text-center">
                           {p.max_teachers === -1 ? '∞' : p.max_teachers}
                         </td>
-                        <td className="px-4 py-3 text-center">{p.duration_days} kun</td>
+                        <td className="px-4 py-3 text-center">{p.duration_days} days</td>
                         <td className="px-4 py-3 text-right font-mono">
                           ${Number(p.price_usd).toFixed(2)}
                         </td>
@@ -280,7 +280,7 @@ function PlanModal({
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {form.id ? 'Planni tahrirlash' : 'Yangi plan'}
+            {form.id ? 'Edit plan' : 'New plan'}
           </h2>
           <button onClick={onClose} className="rounded p-1 hover:bg-slate-100">
             <X className="h-4 w-4" />
@@ -305,17 +305,17 @@ function PlanModal({
                 ))}
               </select>
             </Field>
-            <Field label="Nomi">
+            <Field label="Name">
               <input
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="Pro markaz"
+                placeholder="Pro center"
                 className="w-full rounded-md border px-3 py-2 focus:border-slate-900 focus:outline-none"
               />
             </Field>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Talabalar (-1 = ∞)">
+            <Field label="Students (-1 = ∞)">
               <input
                 type="number"
                 value={form.max_students}
@@ -323,7 +323,7 @@ function PlanModal({
                 className="w-full rounded-md border px-3 py-2 font-mono focus:border-slate-900 focus:outline-none"
               />
             </Field>
-            <Field label="Ustozlar (-1 = ∞)">
+            <Field label="Teachers (-1 = ∞)">
               <input
                 type="number"
                 value={form.max_teachers}
@@ -331,7 +331,7 @@ function PlanModal({
                 className="w-full rounded-md border px-3 py-2 font-mono focus:border-slate-900 focus:outline-none"
               />
             </Field>
-            <Field label="Davomiylik (kun)">
+            <Field label="Duration (days)">
               <input
                 type="number"
                 value={form.duration_days}
@@ -340,7 +340,7 @@ function PlanModal({
               />
             </Field>
           </div>
-          <Field label="Narx (USD)">
+          <Field label="Price (USD)">
             <input
               value={form.price_usd}
               onChange={(e) => set('price_usd', e.target.value)}
@@ -348,7 +348,7 @@ function PlanModal({
               className="w-full rounded-md border px-3 py-2 font-mono focus:border-slate-900 focus:outline-none"
             />
           </Field>
-          <Field label="Xususiyatlar (har qatorda bittadan)">
+          <Field label="Features (one per line)">
             <textarea
               rows={4}
               value={form.features}
@@ -361,16 +361,16 @@ function PlanModal({
 
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Bekor
+            Cancel
           </Button>
           <Button onClick={onSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saqlanmoqda…
+                Saving…
               </>
             ) : (
-              'Saqlash'
+              'Save'
             )}
           </Button>
         </div>

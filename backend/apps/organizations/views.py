@@ -414,7 +414,7 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         try:
             test = Test.objects.get(pk=test_id, organization=org)
         except Test.DoesNotExist:
-            return Response({'detail': 'Test topilmadi.'}, status=404)
+            return Response({'detail': 'Test not found.'}, status=404)
 
         attempts = Attempt.objects.filter(test=test).select_related('user').order_by('-started_at')
         rows = []
@@ -505,7 +505,7 @@ class SuperAdminPlanViewSet(viewsets.ModelViewSet):
         plan = self.get_object()
         if plan.organizations.exists():
             return Response(
-                {'detail': 'Bu plan markazlarga biriktirilgan, o‘chirib bo‘lmaydi.'},
+                {'detail': 'This plan is assigned to centers and cannot be deleted.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().destroy(request, *args, **kwargs)
@@ -522,7 +522,7 @@ class SuperAdminPaymentViewSet(viewsets.ReadOnlyModelViewSet):
 # =====================================================================
 
 class PublicOrganizationView(RetrieveAPIView):
-    """Markaz brand info — talaba register sahifasi uchun."""
+    """Center brand info — talaba register sahifasi uchun."""
 
     queryset = Organization.objects.filter(status__in=['active', 'trial'])
     lookup_field = 'slug'
@@ -553,16 +553,16 @@ class PublicStudentRegisterView(APIView):
         try:
             org = Organization.objects.get(slug=slug)
         except Organization.DoesNotExist:
-            return Response({'detail': 'Markaz topilmadi.'}, status=404)
+            return Response({'detail': 'Center not found.'}, status=404)
         if org.status not in ('active', 'trial'):
             return Response(
-                {'detail': 'Markaz faol emas. Administratorga murojaat qiling.'},
+                {'detail': 'Center is not active. Please contact the administrator.'},
                 status=403,
             )
         if org.plan.max_students > 0 and org.students_count >= org.plan.max_students:
             return Response(
-                {'detail': f'Markaz tarif limiti to‘ldi ({org.plan.max_students} ta talaba). '
-                           'Markaz adminiga murojaat qiling.'},
+                {'detail': f'Center plan limit reached ({org.plan.max_students} students). '
+                           'Center adminiga murojaat qiling.'},
                 status=400,
             )
 

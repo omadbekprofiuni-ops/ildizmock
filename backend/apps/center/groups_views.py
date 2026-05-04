@@ -1,7 +1,7 @@
-"""ETAP 11 — Talabalar guruhlari API.
+"""ETAP 11 — Student groups API.
 
 CenterAdmin markazning barcha guruhlarini ko'radi va boshqaradi.
-O'qituvchi faqat o'zining (teaching_groups) guruhlarini ko'radi
+Teacher faqat o'zining (teaching_groups) guruhlarini ko'radi
 (read-only — talabani guruhdan o'chirish faqat admin huquqida).
 """
 
@@ -160,18 +160,18 @@ class CenterGroupViewSet(viewsets.ModelViewSet):
         slug = self.kwargs['org_slug']
         org = get_object_or_404(Organization, slug=slug)
         if org.status != 'active':
-            raise PermissionDenied('Markaz faol holatda emas.')
+            raise PermissionDenied('Center is not active.')
 
         user = self.request.user
         if user.role == 'superadmin':
             return org
-        # Markaz admini bo'lsin
+        # Center admini bo'lsin
         is_admin = OrganizationMembership.objects.filter(
             user=user, organization=org, role__in=['admin', 'owner'],
         ).exists()
         if is_admin:
             return org
-        # O'qituvchi — read-only access faqat o'z guruhlariga
+        # Teacher — read-only access faqat o'z guruhlariga
         if user.role == 'teacher' and user.organization_id == org.id:
             return org
         raise PermissionDenied('Siz bu markazga ulanmagansiz.')
@@ -210,7 +210,7 @@ class CenterGroupViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat markaz admini guruh yarata oladi.')
+            raise PermissionDenied('Only the center admin can create a group.')
         ser = self.get_serializer(data=request.data)
         ser.is_valid(raise_exception=True)
         group = ser.save()
@@ -221,17 +221,17 @@ class CenterGroupViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat admin tahrirlay oladi.')
+            raise PermissionDenied('Only an admin can edit.')
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat admin tahrirlay oladi.')
+            raise PermissionDenied('Only an admin can edit.')
         return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat admin o‘chira oladi.')
+            raise PermissionDenied('Only an admin can delete.')
         return super().destroy(request, *args, **kwargs)
 
     # ---------- list / detail ----------
@@ -279,11 +279,11 @@ class CenterGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='add-students')
     def add_students(self, request, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat admin talaba qo‘sha oladi.')
+            raise PermissionDenied('Only an admin can add students.')
         group = self.get_object()
         ids = request.data.get('student_ids') or []
         if not isinstance(ids, list):
-            raise ValidationError('student_ids array bo‘lishi kerak.')
+            raise ValidationError('student_ids must be an array.')
 
         org = self.get_organization()
         added = 0
@@ -305,15 +305,15 @@ class CenterGroupViewSet(viewsets.ModelViewSet):
     )
     def remove_student(self, request, student_id=None, *args, **kwargs):
         if not self._is_admin():
-            raise PermissionDenied('Faqat admin talabani guruhdan chiqara oladi.')
+            raise PermissionDenied('Only an admin can remove a student from the group.')
         group = self.get_object()
         try:
             u = User.objects.get(id=student_id, group=group)
         except User.DoesNotExist:
-            raise ValidationError('Talaba bu guruhda emas.')
+            raise ValidationError('Student is not in this group.')
         u.group = None
         u.save(update_fields=['group'])
-        return Response({'detail': 'O‘chirildi.'})
+        return Response({'detail': 'Deleted.'})
 
     # ---------- comparison ----------
 

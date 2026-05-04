@@ -75,7 +75,7 @@ export default function GroupSchedulePage() {
     mutationFn: async () =>
       api.post(`/center/${slug}/groups/${groupId}/schedules/`, form),
     onSuccess: () => {
-      toast.success('Jadval qo\'shildi')
+      toast.success('Schedule qo\'shildi')
       setOpen(false)
       qc.invalidateQueries({ queryKey: ['group-schedules', slug, groupId] })
     },
@@ -95,20 +95,20 @@ export default function GroupSchedulePage() {
   })
 
   const schedules = schedQ.data ?? []
-  const groupName = groupQ.data?.name ?? 'Guruh'
+  const groupName = groupQ.data?.name ?? 'Group'
 
   return (
     <PageShell>
       <PageHeader
-        title={`${groupName} — Dars jadvali`}
-        subtitle="Haftalik dars kunlari va vaqtlari. Generate Sessions buyrug'i shu jadval asosida sessiya yaratadi."
+        title={`${groupName} — Class schedule`}
+        subtitle="Weekly class days and times. The Generate Sessions command creates sessions based on this schedule."
         actions={
           <>
             <Link to={`/${slug}/admin/groups/${groupId}`} className={btnOutline}>
-              <ArrowLeft size={16} /> Guruh
+              <ArrowLeft size={16} /> Group
             </Link>
             <button className={btnPrimary} onClick={() => setOpen(true)}>
-              <Plus size={16} /> Jadval qo'shish
+              <Plus size={16} /> Schedule qo'shish
             </button>
           </>
         }
@@ -116,16 +116,16 @@ export default function GroupSchedulePage() {
 
       {schedQ.isLoading ? (
         <div className="flex items-center gap-2 text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin" /> Yuklanmoqda…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       ) : schedules.length === 0 ? (
         <StateCard
           Icon={CalendarDays}
-          title="Hali jadval yo'q"
+          title="No schedule yet"
           description="Birinchi dars kunini qo'shing — masalan Dushanba 18:00–20:00"
           action={
             <button className={btnPrimary} onClick={() => setOpen(true)}>
-              <Plus size={16} /> Jadval qo'shish
+              <Plus size={16} /> Schedule qo'shish
             </button>
           }
         />
@@ -146,7 +146,7 @@ export default function GroupSchedulePage() {
                   </p>
                 </div>
                 <Chip tone={s.is_active ? 'emerald' : 'slate'}>
-                  {s.is_active ? 'Faol' : 'Nofaol'}
+                  {s.is_active ? 'Active' : 'Inactive'}
                 </Chip>
                 <button
                   onClick={() => {
@@ -165,11 +165,11 @@ export default function GroupSchedulePage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Yangi dars vaqti</DialogTitle>
+            <DialogTitle>New class time</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Hafta kuni</Label>
+              <Label>Day of week</Label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 value={form.day_of_week}
@@ -210,13 +210,13 @@ export default function GroupSchedulePage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <button
               className={btnPrimary}
               onClick={() => createMut.mutate()}
               disabled={createMut.isPending}
             >
-              {createMut.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+              {createMut.isPending ? 'Saving…' : 'Save'}
             </button>
           </DialogFooter>
         </DialogContent>

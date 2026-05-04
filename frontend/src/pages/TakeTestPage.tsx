@@ -387,7 +387,7 @@ function LiveAttemptView({
     const removeTabHide = ieltsRules.onTabHide(() => {
       exitCount += 1
       if (exitCount === 1) {
-        toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
+        toast.warning('⚠️ Don't leave the test! This is your first warning.')
       } else if (exitCount === 2) {
         toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
@@ -406,7 +406,7 @@ function LiveAttemptView({
         !submitMutation.isSuccess
       ) {
         toast.warning(
-          'Test fullscreen rejimida bajarilishi kerak — qayta to\'liq ekranga o\'tkazildi.',
+          'The test must run in fullscreen — switched back to fullscreen.',
         )
         setTimeout(() => ieltsRules.enterFullscreen(), 50)
       }
@@ -556,7 +556,7 @@ function LiveAttemptView({
             className="h-8 px-2 text-white hover:bg-slate-800 hover:text-white"
             title={
               isFullscreen
-                ? 'Ekranni kichraytirish (favqulodda holat uchun)'
+                ? 'Minimize screen (for emergencies)'
                 : 'Full screen rejimiga o‘tish'
             }
           >
@@ -863,7 +863,7 @@ function TestGate({ attempt }: { attempt: Attempt }) {
       setPhase('started')
     },
     onError: () => {
-      toast.error('Test boshlashda xatolik. Qayta urinib ko\'ring.')
+      toast.error('Failed to start the test. Please try again.')
       // Bounce back so user can retry the click.
       setPhase(hasListeningAudio ? 'preloading' : 'rules')
     },
@@ -1077,7 +1077,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     const removeTabHide = ieltsRules.onTabHide(() => {
       exitCount += 1
       if (exitCount === 1) {
-        toast.warning('⚠️ Testdan chiqmang! Bu birinchi ogohlantirish.')
+        toast.warning('⚠️ Don't leave the test! This is your first warning.')
       } else if (exitCount === 2) {
         toast.warning('⚠️ Second warning. If you exit again the test will auto-submit.')
       } else if (exitCount >= 3 && !submitMutation.isPending) {
@@ -1095,7 +1095,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
         !submitMutation.isSuccess
       ) {
         toast.warning(
-          'Test fullscreen rejimida bajarilishi kerak — qayta to\'liq ekranga o\'tkazildi.',
+          'The test must run in fullscreen — switched back to fullscreen.',
         )
         setTimeout(() => ieltsRules.enterFullscreen(), 50)
       }
@@ -1147,7 +1147,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     }
   }, [timeUp, submitMutation])
 
-  // Faol task ma'lumotlari
+  // Active task ma'lumotlari
   const activeTask = tasks.find((t) => t.id === activeTaskId) ?? tasks[0]
   const taskTitle = activeTask ? `Task ${activeTask.task_number}` : 'Writing task'
   const taskPrompt = activeTask?.prompt ?? ''
@@ -1205,7 +1205,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
             className="h-8 px-2 text-white hover:bg-slate-800 hover:text-white"
             title={
               isFullscreen
-                ? 'Ekranni kichraytirish (favqulodda holat uchun)'
+                ? 'Minimize screen (for emergencies)'
                 : 'Full screen rejimiga o‘tish'
             }
           >
@@ -1337,7 +1337,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
           <DialogHeader>
             <DialogTitle>Yuborishni tasdiqlaysizmi?</DialogTitle>
             <DialogDescription>
-              Yuborilgandan keyin o'zgartirib bo'lmaydi. Ustoz qo'lda baholaydi.
+              After submission you can't edit. The teacher will grade manually.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
@@ -1358,18 +1358,18 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
                   <span
                     className={ok ? 'text-emerald-700' : 'text-rose-700'}
                   >
-                    {wc} / {need} so'z {ok ? '✓' : `(${need - wc} kerak)`}
+                    {wc} / {need} words {ok ? '✓' : `(${need - wc} needed)`}
                   </span>
                 </div>
               )
             })}
             <p className="pt-2 text-xs text-slate-500">
-              Jami: <strong>{totalWords}</strong> so'z
+              Total: <strong>{totalWords}</strong> words
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Bekor
+              Cancel
             </Button>
             <Button
               onClick={() => {
@@ -1380,9 +1380,9 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
               className={!allTasksMet ? 'bg-amber-600 hover:bg-amber-700' : ''}
             >
               {submitMutation.isPending
-                ? 'Yuborilmoqda…'
+                ? 'Submitting…'
                 : allTasksMet
-                  ? 'Yuborish'
+                  ? 'Submit'
                   : "Baribir yuborish"}
             </Button>
           </DialogFooter>

@@ -93,7 +93,7 @@ export default function PracticeListPage() {
           <div className="flex items-center gap-2">
             <Link to="/practice/history">
               <Button variant="ghost" size="sm">
-                <History className="mr-2 h-4 w-4" /> Tarix
+                <History className="mr-2 h-4 w-4" /> History
               </Button>
             </Link>
             <UserMenu />
@@ -107,7 +107,7 @@ export default function PracticeListPage() {
           <h2 className="text-3xl font-bold">Practice Mode</h2>
           <p className="mt-2 text-red-100">
             O‘zingizga qulay vaqtda mashq qiling — javob bergandan keyin
-            darhol natijani va to‘g‘ri javoblarni ko‘ring.
+            see the result and correct answers immediately.
           </p>
         </section>
 
@@ -141,7 +141,7 @@ export default function PracticeListPage() {
                       </div>
                     </div>
                     <div className={`rounded-lg ${meta.bg} px-2 py-2`}>
-                      <div className="text-xs text-slate-500">Eng yaxshi</div>
+                      <div className="text-xs text-slate-500">Best</div>
                       <div className={`text-lg font-semibold ${meta.band}`}>
                         {s?.best_band != null ? s.best_band.toFixed(1) : '—'}
                       </div>
@@ -198,7 +198,7 @@ export default function PracticeListPage() {
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
-              Hali biron-bir mashq yo‘q. Yuqoridagi modullardan boshlang.
+              No exercises yet. Start with one of the modules above.
             </div>
           )}
         </section>

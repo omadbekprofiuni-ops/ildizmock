@@ -61,7 +61,7 @@ function TrendBadge({ trend }: { trend: Group['trend'] }) {
   }
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-500">
-      Ma'lumot yetarli emas
+      Not enough data
     </span>
   )
 }
@@ -92,7 +92,7 @@ export default function GroupsListPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Talabalar guruhlari"
+        title="Student groups"
         subtitle="Guruhlarning o‘rtacha balli va progressini bir joyda kuzating"
         actions={
           <>
@@ -103,7 +103,7 @@ export default function GroupsListPage() {
               Taqqoslash
             </Link>
             <Link to={`/${slug}/admin/groups/new`} className={btnPrimary}>
-              <Plus size={16} /> Yangi guruh
+              <Plus size={16} /> New group
             </Link>
           </>
         }
@@ -119,26 +119,26 @@ export default function GroupsListPage() {
             <input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Guruh yoki o‘qituvchi nomi…"
+              placeholder="Group or teacher name…"
               className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             />
           </div>
           <span className="text-xs text-slate-500">
-            Jami: <strong className="text-slate-900">{groups.length}</strong>
+            Total: <strong className="text-slate-900">{groups.length}</strong>
           </span>
         </div>
       </SurfaceCard>
 
       {loading ? (
-        <StateCard Icon={Users} title="Yuklanmoqda…" />
+        <StateCard Icon={Users} title="Loading…" />
       ) : filtered.length === 0 ? (
         <StateCard
           Icon={Users}
-          title="Hali guruh yo‘q"
+          title="No groups yet"
           description="Birinchi guruhni yarating va talabalarni qo‘shing."
           action={
             <Link to={`/${slug}/admin/groups/new`} className={btnPrimary}>
-              <Plus size={16} /> Yangi guruh
+              <Plus size={16} /> New group
             </Link>
           }
         />
@@ -157,8 +157,8 @@ export default function GroupsListPage() {
                   </h3>
                   <p className="mt-0.5 text-xs text-slate-500">
                     {g.teacher
-                      ? `O‘qituvchi: ${g.teacher.full_name}`
-                      : 'O‘qituvchi tayinlanmagan'}
+                      ? `Teacher: ${g.teacher.full_name}`
+                      : 'Teacher tayinlanmagan'}
                   </p>
                 </div>
                 {g.target_band_score && (
@@ -172,7 +172,7 @@ export default function GroupsListPage() {
                     {g.student_count}
                   </div>
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">
-                    Talabalar
+                    Students
                   </div>
                 </div>
                 <div className="rounded-lg bg-emerald-50 px-3 py-2 text-center">

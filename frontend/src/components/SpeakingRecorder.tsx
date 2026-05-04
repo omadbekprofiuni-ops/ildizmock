@@ -171,7 +171,7 @@ export function SpeakingRecorder({
           ✓ Audio muvaffaqiyatli yuborildi
         </p>
         <p className="mt-1 text-sm text-emerald-700">
-          Ustoz baholashni kutmoqdasiz.
+          Waiting for the teacher's grading.
         </p>
       </div>
     )
@@ -229,7 +229,7 @@ export function SpeakingRecorder({
         {state === 'paused' && (
           <>
             <Button onClick={resume} className="bg-emerald-600 hover:bg-emerald-700">
-              <Play className="mr-2 h-4 w-4" /> Davom etish
+              <Play className="mr-2 h-4 w-4" /> Continue
             </Button>
             <Button variant="outline" onClick={stop}>
               <Square className="mr-2 h-4 w-4" /> Tugatish
@@ -242,20 +242,20 @@ export function SpeakingRecorder({
               <RotateCw className="mr-2 h-4 w-4" /> Qayta yozish
             </Button>
             <Button onClick={upload} className="bg-emerald-600 hover:bg-emerald-700">
-              <Send className="mr-2 h-4 w-4" /> Yuborish
+              <Send className="mr-2 h-4 w-4" /> Submit
             </Button>
           </>
         )}
         {state === 'uploading' && (
           <Button disabled>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Yuklanmoqda…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
           </Button>
         )}
       </div>
 
       <p className="mt-4 text-xs text-slate-500">
         Maks vaqt: {Math.floor(maxDurationSec / 60)} daqiqa.
-        Yakunlangach Yuborish tugmasini bosing.
+        Yakunlangach Submit tugmasini bosing.
       </p>
     </div>
   )

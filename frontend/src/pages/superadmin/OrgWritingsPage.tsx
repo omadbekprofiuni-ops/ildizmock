@@ -67,7 +67,7 @@ export default function OrgWritingsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Writing topshiriqlar</h1>
             <p className="text-sm text-muted-foreground">
-              {orgName ? `${orgName} markazi yozma ishlari` : 'Markaz tanlanmagan'}
+              {orgName ? `${orgName} center writings` : 'No center selected'}
             </p>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function OrgWritingsPage() {
         {!orgId ? (
           <Card>
             <CardContent className="p-10 text-center text-slate-500">
-              Avval markazni tanlang.
+              First select a center.
             </CardContent>
           </Card>
         ) : (
@@ -88,7 +88,7 @@ export default function OrgWritingsPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Talaba yoki test nomi..."
+                  placeholder="Student or test name..."
                   className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
@@ -97,12 +97,12 @@ export default function OrgWritingsPage() {
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'graded')}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="all">Barcha holat</option>
+                <option value="all">All statuses</option>
                 <option value="pending">Kutilmoqda</option>
                 <option value="graded">Baholangan</option>
               </select>
               <span className="text-sm text-slate-500">
-                Jami: <strong>{filtered.length}</strong>
+                Total: <strong>{filtered.length}</strong>
               </span>
             </div>
 
@@ -111,11 +111,11 @@ export default function OrgWritingsPage() {
                 <table className="w-full text-sm">
                   <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 text-left">Talaba</th>
+                      <th className="px-4 py-3 text-left">Student</th>
                       <th className="px-4 py-3 text-left">Test</th>
                       <th className="px-4 py-3 text-center">So'zlar</th>
                       <th className="px-4 py-3 text-center">Band</th>
-                      <th className="px-4 py-3 text-center">Holat</th>
+                      <th className="px-4 py-3 text-center">Status</th>
                       <th className="px-4 py-3 text-left">Yuborilgan</th>
                       <th className="px-4 py-3 text-left">Baholagan</th>
                     </tr>

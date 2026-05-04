@@ -93,7 +93,7 @@ STATIC_ROOT = config('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles'))
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# File upload limits (50 MB) — listening MP3 uchun
+# File upload limits (50 MB) — for listening MP3 files
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52_428_800  # 50 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52_428_800
 

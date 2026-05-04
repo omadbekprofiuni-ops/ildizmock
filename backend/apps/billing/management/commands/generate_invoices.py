@@ -1,4 +1,4 @@
-"""ETAP 16 — oylik invoice'larni generatsiya qilish.
+"""ETAP 16 — generate monthly invoices.
 
 Har markaz uchun shu davrda yaratilgan, lekin hali biron BillingCycle'ga
 biriktirilmagan MockSessionCharge'larni shu oyning BillingCycle'iga ulaydi.
@@ -36,7 +36,7 @@ def _month_range(year: int, month: int) -> tuple[date, date]:
 
 
 class Command(BaseCommand):
-    help = 'ETAP 16 — oylik invoice generatsiya (har markaz uchun BillingCycle).'
+    help = 'ETAP 16 — monthly invoice generation (a BillingCycle per center).'
 
     def add_arguments(self, parser):
         parser.add_argument('--month', type=int, default=None)
@@ -92,12 +92,12 @@ class Command(BaseCommand):
             label = '+' if created else '~'
             self.stdout.write(self.style.SUCCESS(
                 f'  {label} {org.slug}: {cycle.invoice_number} · '
-                f'{cycle.total_sessions} sessiya · '
-                f'{cycle.total_students} talaba · '
+                f'{cycle.total_sessions} sessions · '
+                f'{cycle.total_students} students · '
                 f'{cycle.total_amount:,.0f} so\'m'
             ))
             total_created += 1
 
         self.stdout.write(self.style.SUCCESS(
-            f'=== Jami {total_created} ta invoice yaratildi ==='
+            f'=== Total {total_created} invoices generated ==='
         ))

@@ -38,7 +38,7 @@ export function RequireCenterMember() {
   if (!initialised || (user && isMember === null)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Yuklanmoqda…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     )
   }

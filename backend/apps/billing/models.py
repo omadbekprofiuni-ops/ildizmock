@@ -46,27 +46,27 @@ class SubscriptionTier(models.Model):
     monthly_price = models.DecimalField(
         max_digits=12, decimal_places=2,
         default=Decimal('0'),
-        help_text='Oylik obuna narxi (pay_per_test uchun 0)',
+        help_text='Monthly subscription price (0 for pay_per_test)',
     )
     monthly_quota = models.PositiveIntegerField(
         null=True, blank=True,
-        help_text='Oyda nechta mock test (NULL = cheksiz)',
+        help_text='How many mock tests per month (NULL = unlimited)',
     )
 
     # Pay-per-test progressive pricing
     pay_per_test_threshold = models.PositiveIntegerField(
         default=100,
-        help_text='Progressiv narx chegarasi (umumiy hisoblangan testlar)',
+        help_text='Progressive pricing threshold (total billed tests)',
     )
     pay_per_test_first_price = models.DecimalField(
         max_digits=10, decimal_places=2,
         default=Decimal('30000.00'),
-        help_text='Threshold ichidagi har test narxi',
+        help_text='Per-test price under the threshold',
     )
     pay_per_test_after_price = models.DecimalField(
         max_digits=10, decimal_places=2,
         default=Decimal('50000.00'),
-        help_text='Threshold dan keyingi har test narxi',
+        help_text='Per-test price above the threshold',
     )
 
     starts_at = models.DateField(default=timezone.now)
@@ -106,7 +106,7 @@ class SubscriptionTier(models.Model):
 
 
 class PricingTier(models.Model):
-    """Markaz uchun individual narx jadvallari (so'mda)."""
+    """Center uchun individual narx jadvallari (so'mda)."""
 
     PERIOD_CHOICES = [
         ('monthly', 'Oylik'),
@@ -123,17 +123,17 @@ class PricingTier(models.Model):
     price_per_session_tier_1 = models.DecimalField(
         max_digits=10, decimal_places=2,
         default=Decimal('30000.00'),
-        help_text='0–100 sessiya: bitta sessiya narxi (so‘m)',
+        help_text='0–100 sessions: price per session (UZS)',
     )
     price_per_session_tier_2 = models.DecimalField(
         max_digits=10, decimal_places=2,
         default=Decimal('15000.00'),
-        help_text='101–500 sessiya: bitta sessiya narxi',
+        help_text='101–500 sessions: price per session',
     )
     price_per_session_tier_3 = models.DecimalField(
         max_digits=10, decimal_places=2,
         default=Decimal('10000.00'),
-        help_text='501+ sessiya: bitta sessiya narxi',
+        help_text='501+ sessions: price per session',
     )
 
     contract_start_date = models.DateField(null=True, blank=True)
@@ -165,7 +165,7 @@ class PricingTier(models.Model):
 class BillingCycle(models.Model):
     """Oylik hisobot davri (ETAP 16: month+year asoslangan).
 
-    `period_start`/`period_end` legacy uchun saqlanadi (ETAP 8). Yangi
+    `period_start`/`period_end` legacy uchun saqlanadi (ETAP 8). New
     yondashuv `year` + `month` orqali aniqlanadi.
     """
 
@@ -173,7 +173,7 @@ class BillingCycle(models.Model):
         ('pending', 'To‘lanmagan'),
         ('paid', 'To‘langan'),
         ('overdue', 'Muddati o‘tgan'),
-        ('cancelled', 'Bekor qilingan'),
+        ('cancelled', 'Revoked'),
     ]
 
     PAYMENT_METHOD_CHOICES = [
@@ -202,11 +202,11 @@ class BillingCycle(models.Model):
 
     total_sessions = models.PositiveIntegerField(
         default=0,
-        help_text='Bu davrda yakunlangan mock sessiyalar (charge yaratilgan)',
+        help_text='Mock sessions completed in this period (charges generated)',
     )
     total_students = models.PositiveIntegerField(
         default=0,
-        help_text='Charge qilingan unique talabalar soni',
+        help_text='Number of unique students charged',
     )
     total_amount = models.DecimalField(
         max_digits=12, decimal_places=2, default=Decimal('0'),
@@ -344,7 +344,7 @@ class MockSessionCharge(models.Model):
     )
     is_charged = models.BooleanField(
         default=True,
-        help_text='False — bepul/test sessiya, billing\'da hisoblanmaydi',
+        help_text='False — free/test session, not counted in billing',
     )
 
     billing_cycle = models.ForeignKey(

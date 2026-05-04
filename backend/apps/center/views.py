@@ -28,7 +28,7 @@ class _OrgScopedViewSetMixin:
         slug = self.kwargs['org_slug']
         org = get_object_or_404(Organization, slug=slug)
         if org.status != 'active':
-            raise PermissionDenied('Markaz faol holatda emas.')
+            raise PermissionDenied('Center is not active.')
 
         if self.request.user.role != 'superadmin':
             is_admin = OrganizationMembership.objects.filter(
@@ -41,7 +41,7 @@ class _OrgScopedViewSetMixin:
 
 
 class CenterStudentViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
-    """Markaz talabalari CRUD."""
+    """Center talabalari CRUD."""
 
     permission_classes = [permissions.IsAuthenticated, IsCenterAdmin]
     lookup_field = 'pk'
@@ -93,18 +93,18 @@ class CenterStudentViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
         student = self.get_object()
         student.is_active = False
         student.save(update_fields=['is_active'])
-        return Response({'detail': 'Talaba o‘chirildi (deactivated).'})
+        return Response({'detail': 'Student deleted (deactivated).'})
 
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None, **kwargs):
         student = self.get_object()
         student.is_active = True
         student.save(update_fields=['is_active'])
-        return Response({'detail': 'Talaba qayta faollashtirildi.'})
+        return Response({'detail': 'Student reactivated.'})
 
     @action(detail=True, methods=['get'])
     def stats(self, request, pk=None, **kwargs):
-        """Markaz admini talabasining barcha urinishlari va statistikasini ko'radi."""
+        """Center admini talabasining barcha urinishlari va statistikasini ko'radi."""
         from django.db.models import Avg, Max
         from apps.attempts.models import Attempt
         from apps.mock.models import MockParticipant
@@ -176,7 +176,7 @@ class CenterStudentViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
 
 
 class CenterTeacherViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
-    """Markaz ustozlari CRUD."""
+    """Center ustozlari CRUD."""
 
     permission_classes = [permissions.IsAuthenticated, IsCenterAdmin]
     lookup_field = 'pk'
@@ -228,4 +228,4 @@ class CenterTeacherViewSet(_OrgScopedViewSetMixin, viewsets.ModelViewSet):
         teacher = self.get_object()
         teacher.is_active = False
         teacher.save(update_fields=['is_active'])
-        return Response({'detail': 'Ustoz o‘chirildi (deactivated).'})
+        return Response({'detail': 'Teacher deleted (deactivated).'})

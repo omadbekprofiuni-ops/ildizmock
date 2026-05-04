@@ -34,14 +34,14 @@ export default function GroupCreatePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    document.title = 'ILDIZmock — Yangi guruh'
+    document.title = 'ILDIZmock — New group'
     if (!slug) return
     api.get<Teacher[]>(`/center/${slug}/teachers/`).then((r) => setTeachers(r.data))
   }, [slug])
 
   const onSave = async () => {
     if (!name.trim()) {
-      toast.error('Guruh nomini kiriting')
+      toast.error('Enter the group name')
       return
     }
     setSaving(true)
@@ -55,7 +55,7 @@ export default function GroupCreatePage() {
         start_date: startDate || null,
         end_date: endDate || null,
       })
-      toast.success('Guruh yaratildi')
+      toast.success('Group created')
       navigate(`/${slug}/admin/groups/${res.data.id}`)
     } catch (err) {
       const data = (err as { response?: { data?: unknown } })?.response?.data
@@ -71,12 +71,12 @@ export default function GroupCreatePage() {
         to={`/${slug}/admin/groups`}
         className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
       >
-        <ArrowLeft size={14} /> Guruhlar
+        <ArrowLeft size={14} /> Groups
       </Link>
 
       <PageHeader
-        title="Yangi guruh"
-        subtitle="Talabalar guruhini yarating va o‘qituvchini biriktiring"
+        title="New group"
+        subtitle="Create a student group and assign a teacher"
         actions={
           <>
             <button
@@ -84,7 +84,7 @@ export default function GroupCreatePage() {
               onClick={() => navigate(`/${slug}/admin/groups`)}
               className={btnOutline}
             >
-              Bekor
+              Cancel
             </button>
             <button
               type="button"
@@ -94,10 +94,10 @@ export default function GroupCreatePage() {
             >
               {saving ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" /> Saqlanmoqda…
+                  <Loader2 size={16} className="animate-spin" /> Saving…
                 </>
               ) : (
-                <>Saqlash</>
+                <>Save</>
               )}
             </button>
           </>
@@ -106,7 +106,7 @@ export default function GroupCreatePage() {
 
       <SurfaceCard>
         <div className="space-y-4">
-          <Field label="Guruh nomi *">
+          <Field label="Group name *">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -153,7 +153,7 @@ export default function GroupCreatePage() {
             </Field>
           </div>
 
-          <Field label="Dars jadvali">
+          <Field label="Class schedule">
             <input
               value={schedule}
               onChange={(e) => setSchedule(e.target.value)}
@@ -163,7 +163,7 @@ export default function GroupCreatePage() {
           </Field>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Boshlanish sanasi">
+            <Field label="Start date">
               <input
                 type="date"
                 value={startDate}
@@ -171,7 +171,7 @@ export default function GroupCreatePage() {
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
             </Field>
-            <Field label="Tugash sanasi">
+            <Field label="End date">
               <input
                 type="date"
                 value={endDate}

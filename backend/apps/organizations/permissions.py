@@ -14,7 +14,7 @@ class IsSuperAdmin(BasePermission):
 class IsOrgAdmin(BasePermission):
     """Org admin yoki superadmin."""
 
-    message = 'Markaz administratori huquqi talab qilinadi.'
+    message = 'Center administratori huquqi talab qilinadi.'
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
@@ -36,7 +36,7 @@ class IsOrgMember(BasePermission):
 
 
 class IsTeacherInOrg(BasePermission):
-    message = 'Ustoz huquqi talab qilinadi.'
+    message = 'Teacher huquqi talab qilinadi.'
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
@@ -45,7 +45,7 @@ class IsTeacherInOrg(BasePermission):
 
 
 class IsCenterAdmin(BasePermission):
-    """Markaz admini (URL dagi <slug:org_slug> kontekstida)."""
+    """Center admini (URL dagi <slug:org_slug> kontekstida)."""
 
     message = 'Siz bu markaz admini emassiz.'
 

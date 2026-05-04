@@ -72,7 +72,7 @@ export default function StudentsPage() {
   }
 
   const deactivate = async (id: number) => {
-    if (!slug || !window.confirm("Talabani o'chirmoqchimisiz?")) return
+    if (!slug || !window.confirm("Delete this student?")) return
     await api.post(`/center/${slug}/students/${id}/deactivate/`)
     load()
   }
@@ -80,11 +80,11 @@ export default function StudentsPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Talabalar"
-        subtitle="Markazga ro'yxatdan o'tgan barcha talabalar"
+        title="Students"
+        subtitle="All students registered in the center"
         actions={
           <button type="button" onClick={() => setShowAdd(true)} className={btnPrimary}>
-            <Plus size={16} /> Yangi talaba
+            <Plus size={16} /> New student
           </button>
         }
       />
@@ -93,8 +93,8 @@ export default function StudentsPage() {
         <StateCard
           Icon={Users}
           tone="indigo"
-          title="Hali talaba yo'q"
-          description="“Yangi talaba” tugmasini bosib birinchi talabani qo'shing."
+          title="No students yet"
+          description="Click the “New Student” button to add the first student."
         />
       ) : (
         <TableCard
@@ -105,7 +105,7 @@ export default function StudentsPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
-                placeholder="Ism yoki login bo'yicha qidirish..."
+                placeholder="Search by name or login..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -116,11 +116,11 @@ export default function StudentsPage() {
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr>
-                <th className={adminTable.th}>Talaba</th>
+                <th className={adminTable.th}>Student</th>
                 <th className={adminTable.th}>Login</th>
                 <th className={adminTable.th}>Maqsad</th>
                 <th className={adminTable.th}>Testlar</th>
-                <th className={adminTable.th}>Holat</th>
+                <th className={adminTable.th}>Status</th>
                 <th className={adminTable.th + ' text-right'}>Amal</th>
               </tr>
             </thead>
@@ -128,13 +128,13 @@ export default function StudentsPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Yuklanmoqda…
+                    Loading…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                    Qidiruv bo'yicha hech narsa topilmadi.
+                    Nothing matched the search.
                   </td>
                 </tr>
               ) : (
@@ -163,7 +163,7 @@ export default function StudentsPage() {
                       </td>
                       <td className={adminTable.td}>{s.tests_taken ?? 0} ta</td>
                       <td className={adminTable.td}>
-                        {s.is_active ? <Chip tone="emerald">Faol</Chip> : <Chip>O'chirilgan</Chip>}
+                        {s.is_active ? <Chip tone="emerald">Active</Chip> : <Chip>Deleted</Chip>}
                       </td>
                       <td className={adminTable.td + ' text-right'}>
                         <div className="inline-flex items-center gap-1">
@@ -172,7 +172,7 @@ export default function StudentsPage() {
                             onClick={() => setEditing(s)}
                             className={btnGhost}
                           >
-                            Tahrirlash
+                            Edit
                           </button>
                           <button
                             type="button"
@@ -187,7 +187,7 @@ export default function StudentsPage() {
                               onClick={() => deactivate(s.id)}
                               className="rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
                             >
-                              O'chirish
+                              Delete
                             </button>
                           )}
                         </div>
@@ -283,7 +283,7 @@ function AddStudentModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Yangi talaba</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">New student</h2>
 
         <div className="space-y-3">
           <Input
@@ -313,13 +313,13 @@ function AddStudentModal({
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
 
         <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-700">
-          💡 Parol avtomatik yaratiladi va keyingi ekranda ko'rsatiladi. Eslab
-          qoling, talabaga bering.
+          💡 Parol avtomatik yaratiladi va keyingi ekranda shown. Eslab
+          and give it to the student.
         </div>
 
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
-            Bekor qilish
+            Cancel
           </button>
           <button
             type="button"
@@ -327,7 +327,7 @@ function AddStudentModal({
             disabled={submitting}
             className={btnPrimary + ' flex-1 justify-center'}
           >
-            {submitting ? 'Saqlanmoqda…' : 'Saqlash va parol olish'}
+            {submitting ? 'Saving…' : 'Save and get password'}
           </button>
         </div>
       </div>
@@ -396,7 +396,7 @@ function EditStudentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">
-          Talabani tahrirlash
+          Edit student
         </h2>
         <div className="space-y-3">
           <Input
@@ -442,7 +442,7 @@ function EditStudentModal({
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
-            Bekor
+            Cancel
           </button>
           <button
             type="button"
@@ -450,7 +450,7 @@ function EditStudentModal({
             disabled={saving}
             className={btnPrimary + ' flex-1 justify-center'}
           >
-            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
       </div>

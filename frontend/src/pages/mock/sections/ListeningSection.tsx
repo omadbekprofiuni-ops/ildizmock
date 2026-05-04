@@ -223,7 +223,7 @@ export function ListeningSection({
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
                 Real IELTS kabi: audio ketma-ket bir marta o&apos;ynaydi. Tab
-                almashganingizda audio davom etaveradi.
+                the audio keeps playing while you switch.
               </p>
             </div>
           </div>

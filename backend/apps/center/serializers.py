@@ -61,7 +61,7 @@ class StudentReadSerializer(serializers.ModelSerializer):
 
 
 class StudentUpdateSerializer(serializers.ModelSerializer):
-    """Markaz admini talaba ma'lumotlarini tahrirlash."""
+    """Center admini talaba ma'lumotlarini tahrirlash."""
 
     teacher_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -78,11 +78,11 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
         try:
             t = User.objects.get(id=value, role='teacher')
         except User.DoesNotExist:
-            raise serializers.ValidationError("O'qituvchi topilmadi.")
+            raise serializers.ValidationError("Teacher not found.")
         # Bir xil markazga tegishli bo'lishi shart
         student = self.instance
         if student and t.organization_id != student.organization_id:
-            raise serializers.ValidationError("O'qituvchi boshqa markazdan.")
+            raise serializers.ValidationError("Teacher boshqa markazdan.")
         return value
 
     def update(self, instance, validated_data):
@@ -117,7 +117,7 @@ class StudentCreateSerializer(serializers.Serializer):
         if not User.objects.filter(
             pk=value, role='teacher', organization=org,
         ).exists():
-            raise serializers.ValidationError('Ustoz topilmadi yoki shu markazda emas')
+            raise serializers.ValidationError('Teacher not found or not in this center')
         return value
 
     @transaction.atomic

@@ -1,4 +1,4 @@
-"""Audio fayl uchun validator (MP3/WAV)."""
+"""Audio file uchun validator (MP3/WAV)."""
 
 import os
 
