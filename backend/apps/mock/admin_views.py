@@ -1,4 +1,4 @@
-"""Markaz admini uchun mock sessiyalar API."""
+"""Center admini uchun mock sessiyalar API."""
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -76,7 +76,16 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         org = self.get_organization()
-        return MockSession.objects.filter(organization=org).order_by('-created_at')
+        qs = MockSession.objects.filter(organization=org).order_by('-created_at')
+        archived = self.request.query_params.get('archived', '').lower()
+        # Detail / write actions need to find archived sessions too, otherwise
+        # the user can't perform a permanent-delete from the archive tab.
+        if self.action in ('list',):
+            if archived in ('1', 'true', 'yes'):
+                qs = qs.filter(is_archived=True)
+            else:
+                qs = qs.filter(is_archived=False)
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -113,7 +122,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             if not MockSession.objects.filter(access_code=code).exists():
                 break
         else:
-            raise ValidationError('Access code yaratib bo‘lmadi, qayta urinib ko‘ring.')
+            raise ValidationError("Couldn't create access code, please try again.")
 
         try:
             session = MockSession.objects.create(
@@ -173,7 +182,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='available-tests')
     def available_tests(self, request, org_slug=None):
-        """Sessiya yaratish uchun: markazning + published global testlar."""
+        """Session yaratish uchun: markazning + published global testlar."""
         from django.db.models import Q
 
         org = self.get_organization()
@@ -266,7 +275,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None, org_slug=None):
         """Sessiyani bekor qilish — natijalar saqlanmaydi.
 
-        ETAP 12: tugatishdan farqli, bekor qilingan sessiya statistikaga
+        ETAP 12: tugatishdan farqli, revoked sessiya statistikaga
         kiritilmaydi.
         """
         session = self.get_object()
@@ -286,10 +295,10 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         return Response(MockSessionDetailSerializer(session).data)
 
     def destroy(self, request, *args, **kwargs):
-        """Mock sessiyani doimiy o'chirish (cascade: barcha participants/answers).
-
-        Faqat finished yoki cancelled sessiyalar uchun ruxsat etiladi —
-        faol sessiyalarni avval bekor qilish kerak.
+        """Two-step delete:
+        1. First DELETE on a non-archived session → mark archived (soft delete).
+        2. DELETE on an already archived session → permanent cascade delete.
+        Active sessions must be cancelled first.
         """
         session = self.get_object()
         if session.status not in ('finished', 'cancelled', 'waiting'):
@@ -297,11 +306,33 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 {'detail': "Cancel the active session first, then you can delete it."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if not session.is_archived:
+            session.is_archived = True
+            session.archived_at = timezone.now()
+            session.save(update_fields=['is_archived', 'archived_at'])
+            return Response(
+                {'detail': 'archived', 'archived': True, 'id': session.id},
+                status=status.HTTP_200_OK,
+            )
         return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None, org_slug=None):
+        """Bring an archived session back to the active list."""
+        session = self.get_object()
+        if not session.is_archived:
+            return Response(
+                {'detail': 'Session is not archived.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        session.is_archived = False
+        session.archived_at = None
+        session.save(update_fields=['is_archived', 'archived_at'])
+        return Response(MockSessionDetailSerializer(session).data)
+
+    @action(detail=True, methods=['post'])
     def reopen(self, request, pk=None, org_slug=None):
-        """Tugagan / bekor qilingan sessiyani 24 soat ichida qayta ochish."""
+        """Tugagan / revoked sessiyani 24 soat ichida qayta ochish."""
         from datetime import timedelta
 
         session = self.get_object()
@@ -337,7 +368,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         url_path=r'participants/(?P<participant_id>\d+)/score-writing',
     )
     def score_writing(self, request, pk=None, org_slug=None, participant_id=None):
-        """Markaz admini Writing baholini qo'lda qo'yadi (0.0–9.0)."""
+        """Center admini Writing baholini qo'lda qo'yadi (0.0–9.0)."""
         session = self.get_object()
         try:
             score = float(request.data.get('score'))
@@ -401,7 +432,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
     def eligible_students(self, request, pk=None, org_slug=None):
         """Markazdagi talabalar ro'yxati (pre-registration uchun).
 
-        Sessiyaga allaqachon qo'shilganlar `is_added=True` bilan ko'rsatiladi.
+        Sessiyaga allaqachon qo'shilganlar `is_added=True` bilan shown.
         """
         session = self.get_object()
         org = self.get_organization()
@@ -515,7 +546,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         participant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # ===== ETAP 20 — Sertifikat berish / bekor qilish =====
+    # ===== ETAP 20 — Certificate berish / bekor qilish =====
 
     @action(
         detail=True, methods=['post'],
@@ -524,7 +555,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
     def issue_certificate(self, request, pk=None, org_slug=None, participant_id=None):
         """Teacher participantga rasmiy sertifikat beradi (PDF + DB record).
 
-        Talaba barcha 4 modulni topshirgan va overall_band_score hisoblangan
+        Student barcha 4 modulni topshirgan va overall_band_score hisoblangan
         bo'lishi shart.
         """
         from django.core.files.base import ContentFile
@@ -616,7 +647,7 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
             )
         if certificate.is_revoked:
             return Response(
-                {'detail': 'Sertifikat allaqachon bekor qilingan.'},
+                {'detail': 'Certificate allaqachon revoked.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         certificate.is_revoked = True

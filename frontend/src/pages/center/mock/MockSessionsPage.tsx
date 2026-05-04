@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarPlus, Plus, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, CalendarPlus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -13,6 +13,7 @@ import {
   btnPrimary,
 } from '@/components/admin-shell'
 import { useConfirm } from '@/components/ConfirmDialog'
+import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 interface SessionRow {
@@ -23,7 +24,11 @@ interface SessionRow {
   access_code: string
   participants_count: number
   created_at: string
+  is_archived?: boolean
+  archived_at?: string | null
 }
+
+type Tab = 'active' | 'archive'
 
 const STATUS_LABEL: Record<string, string> = {
   waiting: 'Waiting',
@@ -47,22 +52,81 @@ export default function MockSessionsPage() {
   const { slug } = useParams<{ slug: string }>()
   const confirm = useConfirm()
   const [sessions, setSessions] = useState<SessionRow[]>([])
+  const [archivedCount, setArchivedCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [tab, setTab] = useState<Tab>('active')
 
   const load = () => {
     if (!slug) return
     setLoading(true)
+    const url =
+      tab === 'archive'
+        ? `/center/${slug}/mock/?archived=true`
+        : `/center/${slug}/mock/`
     api
-      .get<SessionRow[]>(`/center/${slug}/mock/`)
+      .get<SessionRow[]>(url)
       .then((r) => setSessions(Array.isArray(r.data) ? r.data : []))
       .finally(() => setLoading(false))
+    // Refresh archive badge count separately
+    api
+      .get<SessionRow[]>(`/center/${slug}/mock/?archived=true`)
+      .then((r) =>
+        setArchivedCount(Array.isArray(r.data) ? r.data.length : 0),
+      )
+      .catch(() => undefined)
   }
 
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug])
+  }, [slug, tab])
+
+  const handleDelete = async (s: SessionRow) => {
+    if (tab === 'archive') {
+      const ok = await confirm({
+        title: 'Permanently delete session?',
+        description: `"${s.name}" will be removed forever, along with student answers. This cannot be undone.`,
+        confirmText: 'Delete forever',
+        tone: 'danger',
+      })
+      if (!ok) return
+      try {
+        await api.delete(`/center/${slug}/mock/${s.id}/`)
+        toast.success('Session permanently deleted')
+        load()
+      } catch (err: unknown) {
+        toast.error(extractError(err, 'Could not delete session'))
+      }
+      return
+    }
+    const ok = await confirm({
+      title: 'Move to archive?',
+      description: `"${s.name}" will be moved to the Archive tab. From there you can restore it or delete it permanently.`,
+      confirmText: 'Move to archive',
+      tone: 'danger',
+    })
+    if (!ok) return
+    try {
+      await api.delete(`/center/${slug}/mock/${s.id}/`)
+      toast.success(
+        'Moved to archive — open the Archive tab to permanently delete it later.',
+      )
+      load()
+    } catch (err: unknown) {
+      toast.error(extractError(err, 'Could not archive session'))
+    }
+  }
+
+  const handleRestore = async (s: SessionRow) => {
+    try {
+      await api.post(`/center/${slug}/mock/${s.id}/restore/`)
+      toast.success('Session restored')
+      load()
+    } catch (err: unknown) {
+      toast.error(extractError(err, 'Could not restore session'))
+    }
+  }
 
   return (
     <PageShell>
@@ -70,22 +134,71 @@ export default function MockSessionsPage() {
         title="Mock sessions"
         subtitle="Synchronous mock tests — students join via a single link and start together."
         actions={
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className={btnPrimary}
-          >
-            <Plus size={16} /> New session
-          </button>
+          tab === 'active' ? (
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className={btnPrimary}
+            >
+              <Plus size={16} /> New session
+            </button>
+          ) : null
         }
       />
 
+      <div className="mb-4 inline-flex rounded-xl border border-slate-200 bg-white p-1 text-sm">
+        <button
+          type="button"
+          onClick={() => setTab('active')}
+          className={`rounded-lg px-4 py-1.5 font-medium transition ${
+            tab === 'active'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          Active
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('archive')}
+          className={`inline-flex items-center gap-1 rounded-lg px-4 py-1.5 font-medium transition ${
+            tab === 'archive'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          <Archive size={14} /> Archive
+          {archivedCount > 0 && (
+            <span
+              className={`ml-1 rounded-full px-1.5 text-xs ${
+                tab === 'archive'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {archivedCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {tab === 'archive' && archivedCount > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          These sessions are archived. Restore them to make them active again,
+          or delete them permanently to free up space.
+        </div>
+      )}
+
       {!loading && sessions.length === 0 ? (
         <StateCard
-          Icon={CalendarPlus}
+          Icon={tab === 'archive' ? Archive : CalendarPlus}
           tone="indigo"
-          title="No sessions yet"
-          description="Click “New session” to schedule your first mock session."
+          title={tab === 'archive' ? 'Archive is empty' : 'No sessions yet'}
+          description={
+            tab === 'archive'
+              ? 'Sessions you archive will appear here.'
+              : 'Click “New session” to schedule your first mock session.'
+          }
         />
       ) : (
         <TableCard>
@@ -125,34 +238,41 @@ export default function MockSessionsPage() {
                     </td>
                     <td className={adminTable.td + ' text-right'}>
                       <div className="inline-flex items-center gap-2">
+                        {tab === 'archive' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRestore(s)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-50"
+                            title="Restore session to the active list"
+                          >
+                            <ArchiveRestore size={12} /> Restore
+                          </button>
+                        )}
                         {(s.status === 'finished' ||
                           s.status === 'cancelled' ||
                           s.status === 'waiting') && (
                           <button
                             type="button"
-                            onClick={async () => {
-                              const ok = await confirm({
-                                title: 'Delete session?',
-                                description: `Permanently delete "${s.name}". Student answers will also be deleted.`,
-                                confirmText: 'Delete',
-                                tone: 'danger',
-                              })
-                              if (!ok) return
-                              await api.delete(`/center/${slug}/mock/${s.id}/`)
-                              load()
-                            }}
+                            onClick={() => handleDelete(s)}
                             className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
-                            title="Permanently delete session"
+                            title={
+                              tab === 'archive'
+                                ? 'Delete session forever'
+                                : 'Move session to archive'
+                            }
                           >
-                            <Trash2 size={12} /> Delete
+                            <Trash2 size={12} />
+                            {tab === 'archive' ? 'Delete forever' : 'Archive'}
                           </button>
                         )}
-                        <Link
-                          to={`/${slug}/admin/mock/${s.id}`}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
-                        >
-                          Manage <ArrowRight size={14} />
-                        </Link>
+                        {tab === 'active' && (
+                          <Link
+                            to={`/${slug}/admin/mock/${s.id}`}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
+                          >
+                            Manage <ArrowRight size={14} />
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -178,6 +298,18 @@ export default function MockSessionsPage() {
 }
 
 void btnOutline
+
+function extractError(err: unknown, fallback: string): string {
+  const e = err as {
+    response?: { status?: number; data?: { detail?: string } }
+    message?: string
+  }
+  return (
+    e.response?.data?.detail ||
+    (e.response?.status ? `Request failed (HTTP ${e.response.status})` : e.message) ||
+    fallback
+  )
+}
 
 interface TestPick {
   id: string

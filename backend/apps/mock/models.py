@@ -16,12 +16,12 @@ def generate_browser_session_id() -> str:
 
 
 def generate_verification_code() -> str:
-    """ETAP 20 — Sertifikat verification kodini yaratish (URL-safe token)."""
+    """ETAP 20 — Certificate verification kodini yaratish (URL-safe token)."""
     return secrets.token_urlsafe(32)
 
 
 class MockSession(models.Model):
-    """Markaz admini yaratadigan sinxron mock sessiya."""
+    """Center admini yaratadigan sinxron mock sessiya."""
 
     STATUS_CHOICES = [
         ('waiting', 'Kutilmoqda'),
@@ -30,7 +30,7 @@ class MockSession(models.Model):
         ('writing', 'Writing'),
         ('speaking', 'Speaking'),
         ('finished', 'Tugagan'),
-        ('cancelled', 'Bekor qilingan'),
+        ('cancelled', 'Revoked'),
     ]
 
     organization = models.ForeignKey(
@@ -75,7 +75,7 @@ class MockSession(models.Model):
         on_delete=models.SET_NULL,
         related_name='+',
         limit_choices_to={'module': 'speaking'},
-        help_text='Speaking test (ixtiyoriy — mavjud bo\'lsa speaking bosqichi qo\'shiladi)',
+        help_text='Speaking test (optional — adds the speaking stage if present)',
     )
 
     listening_duration = models.PositiveIntegerField(default=30)
@@ -97,16 +97,19 @@ class MockSession(models.Model):
     # ETAP 19 — Link amal qilish muddati va kech qo'shilish ruxsati
     link_expires_at = models.DateTimeField(
         null=True, blank=True,
-        help_text='Linkning amal qilish muddati (bo\'sh bo\'lsa cheksiz)',
+        help_text='Link expiration time (empty = unlimited)',
     )
     allow_late_join = models.BooleanField(
         default=True,
-        help_text='Sessiya boshlangandan keyin ham qo\'shilishga ruxsat',
+        help_text='Allow joining after the session starts',
     )
     allow_guests = models.BooleanField(
         default=True,
-        help_text='Ro\'yxatda yo\'q talabalar ham ism kiritib qo\'shilsinmi',
+        help_text='Whether students not on the roster can join by entering their name',
     )
+
+    is_archived = models.BooleanField(default=False, db_index=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -168,7 +171,7 @@ class MockParticipant(models.Model):
         settings.AUTH_USER_MODEL, null=True, blank=True,
         related_name='mock_participations',
         on_delete=models.SET_NULL,
-        help_text='Login qilingan talaba bo\'lsa unga link',
+        help_text='Direct link if the student is logged in',
     )
 
     listening_answers = models.JSONField(default=dict, blank=True)
@@ -219,7 +222,7 @@ class MockParticipant(models.Model):
     speaking_audio = models.FileField(
         upload_to='speaking_recordings/%Y/%m/',
         null=True, blank=True,
-        help_text='Talaba yozib olgan speaking audio (webm/mp3/m4a)',
+        help_text='Speaking audio recorded by the student (webm/mp3/m4a)',
     )
     speaking_uploaded_at = models.DateTimeField(null=True, blank=True)
     speaking_duration_seconds = models.PositiveIntegerField(null=True, blank=True)
@@ -300,7 +303,7 @@ class MockParticipant(models.Model):
 
     overall_band_score = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True,
-        help_text='IELTS Overall: (L+R+W+S)/4, 0.5 stepda yaxlitlanadi',
+        help_text='IELTS Overall: (L+R+W+S)/4, rounded to 0.5',
     )
 
     class Meta:
@@ -402,26 +405,26 @@ class MockStateLog(models.Model):
 class Certificate(models.Model):
     """ETAP 20 — Persistent IELTS Mock Certificate.
 
-    Teacher participantni baholab bo'lganidan keyin "Sertifikat berish"
+    Teacher participantni baholab bo'lganidan keyin "Certificate berish"
     tugmasini bosadi va shu yerda yaratiladi (PDF ham yoziladi).
-    Talaba o'z dashboardida ko'radi va PDF yuklab oladi.
+    Student o'z dashboardida ko'radi va PDF yuklab oladi.
     """
 
     participant = models.OneToOneField(
         MockParticipant,
         on_delete=models.CASCADE,
         related_name='certificate',
-        help_text='Sertifikat berilgan mock participant',
+        help_text='Mock participant the certificate was issued to',
     )
 
     # Unique identifiers
     certificate_number = models.CharField(
         max_length=50, unique=True,
-        help_text='ORG-YYYY-MM-NNN formatida (e.g. ILDIZ-2026-05-001)',
+        help_text='Format: ORG-YYYY-MM-NNN (e.g. ILDIZ-2026-05-001)',
     )
     verification_code = models.CharField(
         max_length=64, unique=True, default=generate_verification_code,
-        help_text='QR/URL orqali tekshirish uchun token',
+        help_text='Token for verification via QR or URL',
     )
 
     # Snapshot of scores (immutable — sertifikat berilganda yozilgan)

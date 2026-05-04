@@ -23,6 +23,7 @@ class MockSessionListSerializer(serializers.ModelSerializer):
             'created_at', 'participants_count',
             'listening_test', 'reading_test', 'writing_test', 'speaking_test',
             'allow_late_join', 'allow_guests', 'link_expires_at',
+            'is_archived', 'archived_at',
         ]
 
 
@@ -106,7 +107,7 @@ class MockSessionDetailSerializer(serializers.ModelSerializer):
 # --- Student-facing serializers ----------------------------------------------
 
 class PublicSessionSerializer(serializers.ModelSerializer):
-    """Talaba `/join/<code>/` ga kirganda ko'radigan minimal info."""
+    """Student `/join/<code>/` ga kirganda ko'radigan minimal info."""
 
     participants_count = serializers.IntegerField(
         source='participants.count', read_only=True,
