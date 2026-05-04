@@ -62,7 +62,7 @@ export default function ResultPage() {
       return res.data.id
     },
     onSuccess: (newId) => navigate(`/take/${newId}`),
-    onError: () => toast.error('Couldn't start a retry'),
+    onError: () => toast.error("Couldn't start a retry"),
   })
 
   if (!attemptId) return <Navigate to="/" replace />

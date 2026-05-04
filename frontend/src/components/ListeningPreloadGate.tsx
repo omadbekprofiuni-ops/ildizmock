@@ -67,7 +67,7 @@ export function ListeningPreloadGate({
     }
     const handleError = () => {
       setError(
-        'Couldn't load audio — please check your internet and try again.',
+        "Couldn't load audio — please check your internet and try again.",
       )
     }
 

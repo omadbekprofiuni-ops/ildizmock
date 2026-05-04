@@ -114,7 +114,7 @@ export default function SuperAdminSettingsPage() {
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })
         ?.response?.data?.detail
-      toast.error(detail || 'Couldn't delete')
+      toast.error(detail || "Couldn't delete")
     },
   })
 

@@ -79,7 +79,7 @@ export default function CenterAnalyticsPage() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     },
-    onError: () => toast.error('Couldn't download Excel'),
+    onError: () => toast.error("Couldn't download Excel"),
   })
 
   const data = query.data
