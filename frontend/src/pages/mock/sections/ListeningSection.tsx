@@ -42,6 +42,9 @@ export function ListeningSection({
     'loading',
   )
   const [progress, setProgress] = useState(0)
+  // Brauzer autoplay siyosati audio.play()'ni rad etsa, talaba o'zi
+  // tugma orqali boshlaydi. Bir marta bosilgandan keyin audio to'xtatib bo'lmaydi.
+  const [needsUserStart, setNeedsUserStart] = useState(false)
 
   const submittedRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -100,7 +103,19 @@ export function ListeningSection({
         setProgress((el.currentTime / el.duration) * 100)
       }
     }
-    const handlePlay = () => setAudioStatus('playing')
+    const handlePlay = () => {
+      setAudioStatus('playing')
+      setNeedsUserStart(false)
+    }
+    // Audio bir marta boshlangach to'xtatib bo'lmaydi — IELTS qoidasi.
+    // Brauzer/talaba pause qilsa, darhol davom ettiramiz.
+    const handlePause = () => {
+      if (!el.ended) {
+        el.play().catch(() => {
+          /* foydalanuvchi yana ruxsat berishi kerak */
+        })
+      }
+    }
     const handleEnded = () => {
       setFinished((prev) => {
         const next = [...prev]
@@ -123,17 +138,21 @@ export function ListeningSection({
     el.addEventListener('seeking', handleSeeking)
     el.addEventListener('timeupdate', handleTimeUpdate)
     el.addEventListener('play', handlePlay)
+    el.addEventListener('pause', handlePause)
     el.addEventListener('ended', handleEnded)
     el.addEventListener('contextmenu', handleContextMenu)
 
     el.play().catch(() => {
-      // autoplay block — status saqlanadi
+      // Autoplay rad etildi — overlay tugma orqali talaba o'zi boshlaydi.
+      setNeedsUserStart(true)
+      setAudioStatus('loading')
     })
 
     return () => {
       el.removeEventListener('seeking', handleSeeking)
       el.removeEventListener('timeupdate', handleTimeUpdate)
       el.removeEventListener('play', handlePlay)
+      el.removeEventListener('pause', handlePause)
       el.removeEventListener('ended', handleEnded)
       el.removeEventListener('contextmenu', handleContextMenu)
     }
@@ -175,8 +194,44 @@ export function ListeningSection({
     return `Audio: Part ${playingPart?.part_number} of ${parts.length}`
   })()
 
+  // Audio start ni qo'lda boshlash — autoplay siyosati rad etgan bo'lsa.
+  const handleManualStart = () => {
+    const el = audioRef.current
+    if (!el) return
+    el.play()
+      .then(() => setNeedsUserStart(false))
+      .catch(() => {
+        // Hali ham rad etgan bo'lsa — masalan media format yo'q
+      })
+  }
+
   return (
     <FullscreenGate title="Listening Test">
+      {needsUserStart && parts.length > 0 && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/80 p-4">
+          <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+              <Volume2 className="h-8 w-8 text-brand-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-slate-900">
+              Click to start the Listening audio
+            </h2>
+            <p className="mb-6 text-sm text-slate-600">
+              The browser blocked automatic playback. Click the button below to
+              start. Once started, the audio plays continuously and cannot be
+              paused or rewound — just like the real IELTS exam.
+            </p>
+            <button
+              type="button"
+              onClick={handleManualStart}
+              className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-8 py-3 text-base font-semibold text-white hover:bg-brand-700"
+            >
+              <Headphones className="h-5 w-5" /> Start audio
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex h-screen flex-col bg-slate-50">
         <header className="border-b bg-white shadow-sm">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
