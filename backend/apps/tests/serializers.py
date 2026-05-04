@@ -31,7 +31,15 @@ def _absolute_url(file_field, context):
         return None
     request = context.get('request')
     if request is not None:
-        return request.build_absolute_uri(url)
+        absolute = request.build_absolute_uri(url)
+        # Production safety net: if the page is HTTPS but Django didn't see
+        # X-Forwarded-Proto (mis-configured nginx), build_absolute_uri() will
+        # return http://, which the browser blocks as mixed content. Force
+        # https when DEBUG is off — same domain, just upgrade the scheme.
+        from django.conf import settings
+        if not settings.DEBUG and absolute.startswith('http://'):
+            absolute = 'https://' + absolute[len('http://'):]
+        return absolute
     # Dev fallback: assume Django on localhost:8000 if no request context
     return url if url.startswith('http') else f'http://localhost:8000{url}'
 

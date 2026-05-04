@@ -1,8 +1,28 @@
-"""Talabaga test ma'lumotini yuborish uchun serializer'lar — to'g'ri javoblarsiz."""
+"""Student-facing serializers for mock test data — without correct answers."""
 
+from django.conf import settings
 from rest_framework import serializers
 
 from apps.tests.models import ListeningPart, Passage, Question, WritingTask
+
+
+def _absolute_media_url(file_field, request):
+    """Build a full media URL, with a production safety-net that upgrades
+    http:// to https:// when DEBUG is off (in case nginx forgot to send
+    X-Forwarded-Proto and Django thinks it's serving plain HTTP).
+    """
+    if not file_field:
+        return None
+    try:
+        url = file_field.url
+    except (ValueError, AttributeError):
+        return None
+    if request is None:
+        return url
+    absolute = request.build_absolute_uri(url)
+    if not settings.DEBUG and absolute.startswith('http://'):
+        absolute = 'https://' + absolute[len('http://'):]
+    return absolute
 
 
 class StudentQuestionSerializer(serializers.ModelSerializer):
@@ -17,11 +37,7 @@ class StudentQuestionSerializer(serializers.ModelSerializer):
         ]
 
     def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            url = obj.image.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_media_url(obj.image, self.context.get('request'))
 
 
 class StudentListeningPartSerializer(serializers.ModelSerializer):
@@ -37,18 +53,10 @@ class StudentListeningPartSerializer(serializers.ModelSerializer):
         ]
 
     def get_audio_url(self, obj):
-        if obj.audio_file:
-            request = self.context.get('request')
-            url = obj.audio_file.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_media_url(obj.audio_file, self.context.get('request'))
 
     def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            url = obj.image.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_media_url(obj.image, self.context.get('request'))
 
 
 class StudentPassageSerializer(serializers.ModelSerializer):
@@ -63,11 +71,7 @@ class StudentPassageSerializer(serializers.ModelSerializer):
         ]
 
     def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            url = obj.image.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_media_url(obj.image, self.context.get('request'))
 
 
 class StudentWritingTaskSerializer(serializers.ModelSerializer):
@@ -81,8 +85,4 @@ class StudentWritingTaskSerializer(serializers.ModelSerializer):
         ]
 
     def get_chart_image_url(self, obj):
-        if obj.chart_image:
-            request = self.context.get('request')
-            url = obj.chart_image.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_media_url(obj.chart_image, self.context.get('request'))
