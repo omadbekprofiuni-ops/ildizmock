@@ -267,7 +267,15 @@ class MockParticipant(models.Model):
     # tugaganini bilib ularni qayta o'ynashga ruxsat bermaydi.
     audio_played_parts = models.JSONField(
         default=list, blank=True,
-        help_text="List of part orders whose audio has finished: [1, 2, ...]",
+        help_text="List of part orders whose audio has STARTED (click): [1, 2, ...]",
+    )
+    # DEFINITIVE FIX — spec talab qildi: 'started' va 'finished' alohida
+    # tracker bo'lishi kerak. Bu maydon faqat audio TO'LIQ tugagan
+    # part'larni saqlaydi. Bitta audio fayl yarim qoldirilsa,
+    # audio_played_parts'da bo'ladi-yu, audio_finished_parts'da bo'lmaydi.
+    audio_finished_parts = models.JSONField(
+        default=list, blank=True,
+        help_text="List of part orders whose audio fully ENDED: [1, 2, ...]",
     )
 
     # ETAP 14 BUG #11 — Speaking audio recording
