@@ -201,16 +201,31 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         # Test modelida 2 ta status indikatori bor — yangi 'status' (CharField)
         # va eski 'is_published' (Bool). Eski testlar status maydoniga ega
         # bo'lmasligi mumkin (default='draft'), lekin is_published=True bo'ladi.
-        # Shu sabab — ikkala holatni ham qabul qilamiz va is_deleted=False filteri.
-        regular = Test.objects.filter(
-            Q(organization=org) | Q(is_global=True, organization__isnull=True),
-            Q(status='published') | Q(is_published=True),
-            is_deleted=False,
-        ).distinct().order_by('name')
+        #
+        # Default: faqat published testlar. ?include_drafts=1 bo'lsa, admin
+        # uchun draft testlar ham qaytariladi (frontend ularni 'disabled'
+        # holda ko'rsatadi va 'Avval publish qiling' hint beradi).
+        include_drafts = request.query_params.get('include_drafts') in (
+            '1', 'true', 'yes',
+        )
+
+        scope = Q(organization=org) | Q(is_global=True, organization__isnull=True)
+        if include_drafts:
+            regular = Test.objects.filter(scope, is_deleted=False).distinct().order_by('name')
+        else:
+            regular = Test.objects.filter(
+                scope,
+                Q(status='published') | Q(is_published=True),
+                is_deleted=False,
+            ).distinct().order_by('name')
+
         # PDF testlar global emas — faqat shu markazga tegishli, published.
         pdfs = PDFTest.objects.filter(
             organization=org, status='published',
         ).order_by('name')
+
+        def _is_test_published(t) -> bool:
+            return t.status == 'published' or t.is_published
 
         def _regular(t):
             return {
@@ -220,6 +235,8 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 'difficulty': t.difficulty,
                 'category': getattr(t, 'category', '') or '',
                 'kind': 'regular',
+                'is_published': _is_test_published(t),
+                'status': t.status,
             }
 
         def _pdf(t):
@@ -230,6 +247,8 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 'difficulty': t.difficulty,
                 'category': '',
                 'kind': 'pdf',
+                'is_published': True,
+                'status': 'published',
             }
 
         result = {'listening': [], 'reading': [], 'writing': [], 'speaking': []}

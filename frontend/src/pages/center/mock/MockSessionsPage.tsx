@@ -317,6 +317,8 @@ interface TestPick {
   module: string
   difficulty: string
   kind?: 'regular' | 'pdf'
+  is_published?: boolean
+  status?: 'draft' | 'published' | 'archived'
 }
 
 function CreateSessionDialog({
@@ -350,8 +352,10 @@ function CreateSessionDialog({
   })
 
   useEffect(() => {
+    // include_drafts=1 — draft testlarni ham qaytaradi (disabled holda ko'rsatamiz)
+    // shunda admin "mening testim qayerda?" deb adashmaydi.
     api
-      .get(`/center/${slug}/mock/available-tests/`)
+      .get(`/center/${slug}/mock/available-tests/?include_drafts=1`)
       .then((r) => setTests(r.data))
       .finally(() => setLoading(false))
   }, [slug])
@@ -545,6 +549,8 @@ function TestSelect({
   onChange: (v: string) => void
   tests: TestPick[]
 }) {
+  const published = tests.filter((t) => t.is_published !== false)
+  const drafts = tests.filter((t) => t.is_published === false)
   return (
     <Field label={label}>
       <select
@@ -553,16 +559,32 @@ function TestSelect({
         className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
         <option value="">— Select —</option>
-        {tests.map((t) => (
+        {published.map((t) => (
           <option key={t.id} value={t.id}>
             {t.kind === 'pdf' ? `[PDF] ${t.name}` : t.name}
           </option>
         ))}
+        {drafts.length > 0 && (
+          <optgroup label="── Draft (publish qiling) ──">
+            {drafts.map((t) => (
+              <option key={t.id} value={t.id} disabled>
+                [DRAFT] {t.name} — publish qiling
+              </option>
+            ))}
+          </optgroup>
+        )}
       </select>
-      {tests.length === 0 && (
+      {published.length === 0 && drafts.length === 0 && (
         <p className="mt-1 text-xs text-amber-600">
-          No published tests for this module yet. Clone a test from the global
-          catalog and publish it first.
+          No tests for this module yet. Create one from the Tests page or clone
+          from the global catalog.
+        </p>
+      )}
+      {published.length === 0 && drafts.length > 0 && (
+        <p className="mt-1 text-xs text-amber-700">
+          You have {drafts.length} draft test{drafts.length === 1 ? '' : 's'} for
+          this module. Open the Tests page and click the green{' '}
+          <strong>"Nashr"</strong> button to publish, then they will appear here.
         </p>
       )}
     </Field>
