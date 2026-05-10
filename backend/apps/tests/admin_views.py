@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +14,7 @@ from .admin_serializers import (
     AdminTestSerializer,
 )
 from .models import Passage, Question, Test
+from .publish_validators import validate_test_for_publish
 
 User = get_user_model()
 
@@ -76,9 +77,43 @@ class AdminTestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
         test = self.get_object()
-        test.is_published = not test.is_published
-        test.save(update_fields=['is_published'])
+        # Toggling OFF (unpublish) is always allowed; toggling ON runs validators.
+        if not test.is_published:
+            errors = validate_test_for_publish(test)
+            if errors:
+                return Response(
+                    {'ok': False, 'errors': errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            test.is_published = True
+            from django.utils import timezone
+            test.published_at = timezone.now()
+            test.status = 'published'
+            test.save(update_fields=['is_published', 'published_at', 'status'])
+        else:
+            test.is_published = False
+            test.status = 'draft'
+            test.save(update_fields=['is_published', 'status'])
         return Response(self.get_serializer(test).data)
+
+    @action(detail=True, methods=['get'])
+    def validate(self, request, pk=None):
+        """Pre-flight check used by the admin UI before showing Publish."""
+        test = self.get_object()
+        errors = validate_test_for_publish(test)
+        return Response({
+            'ok': not errors,
+            'error_count': len(errors),
+            'errors': [
+                {**e, 'section_id': str(e['section_id'])}
+                if 'section_id' in e else e
+                for e in [
+                    {**e, 'question_id': str(e['question_id'])}
+                    if 'question_id' in e else e
+                    for e in errors
+                ]
+            ],
+        })
 
 
 class AdminPassageViewSet(viewsets.ModelViewSet):

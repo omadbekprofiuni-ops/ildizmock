@@ -34,6 +34,9 @@ class StudentQuestionSerializer(serializers.ModelSerializer):
             'id', 'question_number', 'question_type',
             'prompt', 'text', 'options', 'instruction', 'points', 'order',
             'image_url',
+            # ETAP 22 — group-form payload (e.g. matching_headings).
+            # Note: answer_key is intentionally NOT exposed (would leak answers).
+            'payload',
         ]
 
     def get_image_url(self, obj):

@@ -179,6 +179,14 @@ class Question(models.Model):
         help_text='Image for the question (map, diagram, chart) — optional',
     )
 
+    # ETAP 22 — type-specific JSON shape (admin builder + student renderer
+    # agree on it). For matching_headings (group form): payload holds
+    # {headings:[...], paragraphs:[...]} and answer_key holds
+    # {matches:{B:'i', C:'iv', ...}}. Existing legacy fields above remain
+    # the source of truth for older types until those types are migrated.
+    payload = models.JSONField(default=dict, blank=True)
+    answer_key = models.JSONField(default=dict, blank=True)
+
     class Meta:
         ordering = ['order']
 

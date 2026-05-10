@@ -3,8 +3,24 @@
 import re
 from decimal import Decimal
 
-from apps.attempts.grading import convert_raw_to_band, grade_answer
+from apps.attempts.grading import (
+    convert_raw_to_band,
+    grade_answer,
+    grade_matching_headings_partial,
+    is_matching_headings_group,
+)
 from apps.tests.models import PDFTest, Test
+
+
+def _score_one(q, user):
+    """Return (correct_points, max_points) for a single question.
+
+    Group-form Matching Headings counts each paragraph as 1 raw point
+    instead of all-or-nothing.
+    """
+    if is_matching_headings_group(q):
+        return grade_matching_headings_partial(q, user)
+    return (1 if grade_answer(q, user) else 0, 1)
 
 
 def _iter_listening_questions(test: Test):
@@ -24,10 +40,10 @@ def grade_listening(test: Test, answers: dict):
     correct = 0
     total = 0
     for q in _iter_listening_questions(test):
-        total += 1
         user = answers.get(str(q.id)) if answers else None
-        if grade_answer(q, user):
-            correct += 1
+        got, mx = _score_one(q, user)
+        correct += got
+        total += mx
     band = convert_raw_to_band(correct, total) if total else Decimal('0.0')
     return correct, total, band
 
@@ -36,10 +52,10 @@ def grade_reading(test: Test, answers: dict):
     correct = 0
     total = 0
     for q in _iter_reading_questions(test):
-        total += 1
         user = answers.get(str(q.id)) if answers else None
-        if grade_answer(q, user):
-            correct += 1
+        got, mx = _score_one(q, user)
+        correct += got
+        total += mx
     band = convert_raw_to_band(correct, total) if total else Decimal('0.0')
     return correct, total, band
 

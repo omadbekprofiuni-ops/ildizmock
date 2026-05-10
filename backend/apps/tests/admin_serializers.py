@@ -14,6 +14,7 @@ class AdminQuestionSerializer(serializers.ModelSerializer):
             'id', 'passage', 'order', 'question_type', 'text', 'options',
             'correct_answer', 'acceptable_answers', 'group_id', 'instruction',
             'points', 'image', 'image_path',
+            'payload', 'answer_key',
         ]
 
     def get_image(self, obj):
@@ -72,6 +73,7 @@ class _NestedQuestionSerializer(serializers.ModelSerializer):
             'order', 'question_type', 'text', 'options', 'correct_answer',
             'acceptable_answers', 'group_id', 'instruction', 'points',
             'image_path',
+            'payload', 'answer_key',
         ]
         extra_kwargs = {
             'options': {'required': False, 'default': list},
@@ -79,6 +81,11 @@ class _NestedQuestionSerializer(serializers.ModelSerializer):
             'group_id': {'required': False, 'default': 0},
             'instruction': {'required': False, 'default': ''},
             'points': {'required': False, 'default': 1},
+            'payload': {'required': False, 'default': dict},
+            'answer_key': {'required': False, 'default': dict},
+            # For group-form matching_headings the real data lives in
+            # payload/answer_key — accept empty correct_answer.
+            'correct_answer': {'required': False, 'default': ''},
         }
 
 
@@ -135,11 +142,11 @@ class AdminTestSerializer(serializers.ModelSerializer):
             setattr(instance, key, value)
         instance.save()
         if passages_data is not None:
-            instance.passages.all().delete()
-            self._rebuild_passages(instance, passages_data)
+            self._upsert_passages(instance, passages_data)
         return instance
 
     def _rebuild_passages(self, test, passages_data):
+        """Used on create — no existing rows to preserve."""
         for p_data in passages_data:
             questions_data = p_data.pop('questions', [])
             audio_path = p_data.pop('audio_file_path', None)
@@ -153,6 +160,69 @@ class AdminTestSerializer(serializers.ModelSerializer):
                 if image_path:
                     question.image.name = _normalize_media_path(image_path)
                     question.save(update_fields=['image'])
+
+    def _upsert_passages(self, test, passages_data):
+        """ETAP 22 — idempotent passage/question sync.
+
+        Matches existing rows by (test, part_number) so that autosave PATCHes
+        don't churn IDs (which would orphan student attempts) and don't
+        cascade-delete on every keystroke. Anything not in the incoming
+        payload is removed.
+        """
+        existing_passages = {p.part_number: p for p in test.passages.all()}
+        seen_passage_ids: set[int] = set()
+
+        for p_data in passages_data:
+            data = dict(p_data)
+            questions_data = data.pop('questions', [])
+            audio_path = data.pop('audio_file_path', None)
+            part_number = data.get('part_number')
+            passage = existing_passages.get(part_number)
+
+            if passage is None:
+                passage = Passage.objects.create(test=test, **data)
+            else:
+                for k, v in data.items():
+                    setattr(passage, k, v)
+                passage.save()
+            seen_passage_ids.add(passage.id)
+
+            if audio_path is not None:
+                normalised = _normalize_audio_path(audio_path) if audio_path else ''
+                if (passage.audio_file.name or '') != normalised:
+                    passage.audio_file.name = normalised
+                    passage.save(update_fields=['audio_file'])
+
+            self._upsert_questions(passage, questions_data)
+
+        # Drop passages no longer in the payload.
+        test.passages.exclude(id__in=seen_passage_ids).delete()
+
+    def _upsert_questions(self, passage, questions_data):
+        existing = {q.order: q for q in passage.questions.all()}
+        seen_q_ids: set[int] = set()
+
+        for q_data in questions_data:
+            data = dict(q_data)
+            image_path = data.pop('image_path', None)
+            order = data.get('order')
+            q = existing.get(order)
+
+            if q is None:
+                q = Question.objects.create(passage=passage, **data)
+            else:
+                for k, v in data.items():
+                    setattr(q, k, v)
+                q.save()
+            seen_q_ids.add(q.id)
+
+            if image_path is not None:
+                normalised = _normalize_media_path(image_path) if image_path else ''
+                if (q.image.name or '') != normalised:
+                    q.image.name = normalised
+                    q.save(update_fields=['image'])
+
+        passage.questions.exclude(id__in=seen_q_ids).delete()
 
 
 def _normalize_audio_path(value: str) -> str:
