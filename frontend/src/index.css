@@ -123,6 +123,27 @@
   }
 }
 
+/* ETAP 29 — Strict Test Mode: matn tanlash va rasm tortishni cheklash.
+   `data-strict-mode="true"` test player ildizida o'rnatiladi. Input/textarea
+   ichidagi javob maydonlarida text-selection ruxsat etiladi. */
+[data-strict-mode="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+[data-strict-mode="true"] input,
+[data-strict-mode="true"] textarea,
+[data-strict-mode="true"] select,
+[data-strict-mode="true"] [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+[data-strict-mode="true"] img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
 @layer components {
   /* Eyebrow pill */
   .eyebrow {
