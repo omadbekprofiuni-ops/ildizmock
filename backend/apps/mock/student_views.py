@@ -271,6 +271,9 @@ def section_data_view(request, browser_session_id):
         payload['audio_finished_parts'] = list(
             participant.audio_finished_parts or [],
         )
+        # FINAL FIX — refresh-safe answers: per-input autosave orqali
+        # backend'da turgan javoblarni qaytaramiz.
+        payload['answers'] = dict(participant.listening_answers or {})
     elif session.status == 'reading':
         payload['passages'] = StudentPassageSerializer(
             test.passages.all().order_by('order', 'part_number'),
@@ -372,6 +375,48 @@ def mark_audio_finished(request, browser_session_id):
         'audio_played_parts': played,
         'audio_finished_parts': finished,
     })
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def save_listening_answers(request, browser_session_id):
+    """FINAL FIX — Per-input autosave (refresh-safety).
+
+    Body: {"answers": {qid: value, ...}}  yoki  {"question_id": id, "answer": v}
+
+    Talaba savol yozish vaqtida debounced'ly chaqiriladi. Saqlash
+    listening_submitted_at'ni belgilamaydi — bu faqat draft holatdagi
+    javoblarni saqlash. Submit'ga yetganda submit_listening grading
+    qiladi.
+    """
+    participant = get_object_or_404(
+        MockParticipant, browser_session_id=browser_session_id,
+    )
+    if participant.listening_submitted_at:
+        return Response({'detail': 'Already submitted.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+    if participant.session.status != 'listening':
+        return Response({'detail': 'Session is not in the listening stage.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    # Ikkita format: to'liq answers dict OR single question_id+answer.
+    current = dict(participant.listening_answers or {})
+    payload_answers = request.data.get('answers')
+    if isinstance(payload_answers, dict):
+        # Merge — frontend bir nechta o'zgarishni birga yuborishi mumkin.
+        for k, v in payload_answers.items():
+            current[str(k)] = v
+    else:
+        qid = request.data.get('question_id')
+        if qid is None:
+            return Response(
+                {'detail': 'Provide "answers" object or "question_id"+"answer".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        current[str(qid)] = request.data.get('answer')
+    participant.listening_answers = current
+    participant.save(update_fields=['listening_answers'])
+    return Response({'saved': True, 'count': len(current)})
 
 
 @api_view(['POST'])
