@@ -4,7 +4,6 @@ import {
   Award,
   Dumbbell,
   FilePen,
-  FileText,
   GraduationCap,
   History,
   Play,
@@ -285,7 +284,10 @@ export default function StudentDashboard() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             <ActionCard to="/home" label="New test" Icon={ArrowRight} tone="brand" />
             <ActionCard to="/practice" label="Practice" Icon={Dumbbell} hint="Mustaqil mashq" tone="accent" />
+            {/* PDF tests action card vaqtincha yashirilgan — ETAP 30 HTML
+                test platformasi tugagunicha bekitamiz.
             <ActionCard to="/pdf-tests" label="PDF tests" Icon={FileText} hint="Cambridge-style" tone="cta" />
+            */}
             <ActionCard
               to="/student/mock"
               label="Mock results"

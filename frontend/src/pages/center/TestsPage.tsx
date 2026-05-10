@@ -300,12 +300,16 @@ export default function TestsPage() {
         subtitle="Tests in the center's database and the global catalog prepared by SuperAdmin"
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            {/* PDF Test (Quick) tugmasi vaqtincha yashirilgan — ETAP 30
+                HTML test platformasi tugagunicha bekitamiz. Route saqlanadi,
+                kerak bo'lganda quyidagi blokni qayta yoqing.
             <Link
               to={`/${slug}/admin/tests/pdf-create`}
               className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
             >
               <FileText size={16} /> PDF Test (Quick)
             </Link>
+            */}
             <Link to={`/${slug}/admin/tests/new`} className={btnPrimary}>
               <Plus size={16} /> New test
             </Link>
