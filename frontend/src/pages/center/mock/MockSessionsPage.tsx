@@ -563,7 +563,7 @@ function CreateSessionDialog({
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-slate-700">
@@ -601,13 +601,20 @@ function TestSelect({
   }
 
   return (
-    <Field label={label}>
+    <Field
+      label={
+        <>
+          {label}{' '}
+          <span className="font-normal text-slate-400">(optional)</span>
+        </>
+      }
+    >
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
-        <option value="">— Select —</option>
+        <option value="">— None (skip {moduleLabel}) —</option>
         {published.map((t) => (
           <option key={t.id} value={t.id}>
             {renderName(t)}
