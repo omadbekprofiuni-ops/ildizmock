@@ -56,6 +56,8 @@ export function ListeningSection({
   const [finished, setFinished] = useState<boolean[]>([])
   const [audioStatus, setAudioStatus] = useState<AudioStatus>('idle')
   const [progress, setProgress] = useState(0)
+  // HOTFIX — aniq audio xato xabarini ko'rsatish uchun (alert o'rniga).
+  const [audioError, setAudioError] = useState<string | null>(null)
 
   const submittedRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -230,17 +232,46 @@ export function ListeningSection({
   // ── PLAY button click handler ───────────────────────────────────────
   const handlePlayClick = () => {
     const el = audioRef.current
-    if (!el) return
+    if (!el) {
+      setAudioError('Audio player not initialized. Please reload the page.')
+      return
+    }
+    // HOTFIX: src bo'sh yoki null bo'lsa, oldindan ushlaymiz.
+    if (!el.src || el.src.endsWith('null') || el.src.endsWith('undefined')) {
+      setAudioError(
+        'Audio file URL is missing for this part. Contact your center admin '
+        + '— they may need to re-upload the audio.',
+      )
+      return
+    }
+    setAudioError(null)
     el.play()
       .then(() => {
         startedRef.current = true
         setAudioStatus('playing')
       })
-      .catch(() => {
-        // Should be impossible inside a click handler unless the file is
-        // missing or unsupported — surface the error to the user.
+      .catch((err: unknown) => {
+        // HOTFIX — error.name'ga qarab aniq sabab xabarini ko'rsatamiz.
+        const e = err as { name?: string; message?: string }
+        let detail: string
+        switch (e?.name) {
+          case 'NotAllowedError':
+            detail = 'Your browser blocked autoplay. Please click "Try again".'
+            break
+          case 'NotSupportedError':
+            detail = 'Your browser does not support this audio format.'
+            break
+          case 'AbortError':
+            detail = 'Audio loading was interrupted. Check your internet connection.'
+            break
+          default:
+            detail = e?.message || 'Unknown error.'
+        }
+        // eslint-disable-next-line no-console
+        console.error('Audio play failed:', err, 'src:', el.src,
+          'readyState:', el.readyState)
         setAudioStatus('idle')
-        alert('Audio could not be played. Please reload and try again.')
+        setAudioError(`Audio playback failed: ${detail}`)
       })
   }
 
@@ -386,6 +417,42 @@ export function ListeningSection({
                   <Play className="h-5 w-5 fill-current" />
                   START Part {playingPart.part_number}
                 </button>
+                {/* HOTFIX — audio xato banneri aniq sabab + 3 ta amal:
+                    qayta urinish / sahifani yangilash / audio'ni alohida
+                    ochish (debug). */}
+                {audioError && (
+                  <div className="mt-4 rounded-lg border-2 border-rose-300 bg-rose-50 p-4 text-left">
+                    <p className="text-sm font-medium text-rose-800">
+                      {audioError}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handlePlayClick}
+                        className="rounded bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-700"
+                      >
+                        Try again
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        Reload page
+                      </button>
+                      {playingPart?.audio_url && (
+                        <a
+                          href={playingPart.audio_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Open audio directly
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
