@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 
 import { AdminRoute } from '@/components/AdminRoute'
 import { ConfirmProvider } from '@/components/ConfirmDialog'
@@ -95,6 +95,13 @@ import MockWritingQueuePage from './pages/teacher/mock/MockWritingQueuePage'
 import TestListPage from './pages/TestListPage'
 import WritingSentPage from './pages/WritingSentPage'
 
+// ETAP 25 PART 6 — eski `/edit/tests/:id` URL'lari `/admin/tests/:id/edit` ga
+// redirect qilinsin (404 oldini olish uchun).
+function EditTestRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/admin/tests/${id}/edit`} replace />
+}
+
 // useNavigate / useLocation faqat BrowserRouter ichida ishlaydi —
 // shuning uchun idle-logout hook'ini ichki komponent'da chaqiramiz.
 function AppRoutes() {
@@ -111,6 +118,13 @@ function AppRoutes() {
           <Route path="/tests/:module" element={<TestListPage />} />
           <Route path="/take/:attemptId" element={<TakeTestPage />} />
           <Route path="/result/:attemptId" element={<ResultPage />} />
+
+          {/* ETAP 25 — student loop aliases (TakeTestPage handles attempts). */}
+          <Route path="/student/attempts/:attemptId" element={<TakeTestPage />} />
+          <Route path="/student/attempts/:attemptId/result" element={<ResultPage />} />
+
+          {/* ETAP 25 PART 6 — legacy /edit/tests/:id redirect bug-fix */}
+          <Route path="/edit/tests/:id" element={<EditTestRedirect />} />
 
           {/* Mock session — public student routes */}
           <Route path="/mock/join/:code" element={<MockJoinPage />} />

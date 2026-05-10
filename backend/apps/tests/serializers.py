@@ -12,7 +12,8 @@ class QuestionPublicSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['id', 'order', 'question_number', 'question_type',
                   'text', 'prompt', 'options',
-                  'group_id', 'instruction', 'points', 'image_url']
+                  'group_id', 'instruction', 'points', 'image_url',
+                  'payload']
 
     def get_image_url(self, obj):
         if not obj.image:

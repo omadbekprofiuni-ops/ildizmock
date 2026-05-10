@@ -26,6 +26,12 @@ type ResultTest = {
   practice_time_limit?: number | null
 }
 
+type SectionBand = {
+  raw: number
+  max: number
+  band: number
+}
+
 type ResultResponse = {
   id: string
   test: ResultTest | null
@@ -36,6 +42,7 @@ type ResultResponse = {
   raw_score: number | null
   total_questions: number | null
   band_score: string | null
+  section_band_scores?: Record<string, SectionBand>
   essay_text: string
   word_count: number | null
   answers: AnswerRow[]
@@ -282,6 +289,40 @@ export default function ResultPage() {
           <StatBox label="Unanswered" value={unanswered} tone="slate" />
           <StatBox label="Accuracy" value={`${percentage}%`} tone="brand" />
         </div>
+
+        {/* ETAP 25 — Per-skill band scores (only when grader produced them) */}
+        {r.section_band_scores &&
+          Object.keys(r.section_band_scores).length > 0 && (
+            <div
+              className="rounded-[20px] border border-slate-100 bg-white p-6"
+              style={{ boxShadow: 'var(--shadow-sm)' }}
+            >
+              <h3 className="mb-3 text-base font-extrabold text-slate-900">
+                Per-skill bands
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {Object.entries(r.section_band_scores).map(([skill, s]) => {
+                  if (skill === 'other' || s.max === 0) return null
+                  return (
+                    <div
+                      key={skill}
+                      className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+                        {skill}
+                      </p>
+                      <p className="mt-1 text-3xl font-extrabold tabular-nums text-brand-700">
+                        {s.band.toFixed(1)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {s.raw} / {s.max}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
         {/* Question analysis */}
         {sortedAnswers.length > 0 && (

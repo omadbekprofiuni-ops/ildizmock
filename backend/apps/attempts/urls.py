@@ -2,6 +2,15 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .practice_views import PracticeHistoryView
+from .student_views import (
+    StudentAttemptDetailView,
+    StudentSaveAnswerView,
+    StudentStartTestView,
+    StudentSubmitView,
+    StudentTestDetailView,
+    StudentTestListView,
+    StudentUploadRecordingView,
+)
 from .student_writing_views import MyDashboardView, MyWritingsView, SubmitWritingView
 from .teacher_views import (
     TeacherQueueView,
@@ -26,4 +35,17 @@ urlpatterns = [
     path('teacher/queue/', TeacherQueueView.as_view()),
     path('teacher/students/', TeacherStudentsView.as_view()),
     path('teacher/students/<int:student_id>/stats/', TeacherStudentStatsView.as_view()),
+
+    # ETAP 25 — /student/* aliases for the new mock-test loop.
+    path('student/tests/', StudentTestListView.as_view()),
+    path('student/tests/<uuid:test_id>/', StudentTestDetailView.as_view()),
+    path('student/tests/<uuid:test_id>/start/', StudentStartTestView.as_view()),
+    path('student/attempts/<uuid:attempt_id>/',
+         StudentAttemptDetailView.as_view()),
+    path('student/attempts/<uuid:attempt_id>/answer/',
+         StudentSaveAnswerView.as_view()),
+    path('student/attempts/<uuid:attempt_id>/submit/',
+         StudentSubmitView.as_view()),
+    path('student/attempts/<uuid:attempt_id>/upload-recording/',
+         StudentUploadRecordingView.as_view()),
 ] + router.urls

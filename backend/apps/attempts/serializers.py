@@ -74,6 +74,7 @@ class AttemptResultSerializer(serializers.ModelSerializer):
         model = Attempt
         fields = ['id', 'test', 'test_name', 'module', 'status', 'started_at',
                   'submitted_at', 'raw_score', 'total_questions', 'band_score',
+                  'section_band_scores',
                   'essay_text', 'word_count', 'teacher_feedback',
                   'graded_by_name', 'graded_at', 'answers']
 
