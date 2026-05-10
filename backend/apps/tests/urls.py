@@ -15,6 +15,16 @@ from .super_views import (
     SuperWritingTaskViewSet,
 )
 from .super_audio_views import SuperAdminAudioListView
+from .pdf_views import (
+    create_pdf_test,
+    delete_pdf_test,
+    get_pdf_test,
+    list_all_tests_for_center,
+    list_pdf_tests,
+    list_student_pdf_tests,
+    submit_pdf_test,
+    update_pdf_test,
+)
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
 
@@ -46,4 +56,17 @@ urlpatterns = [
     path('tests/counts/', TestCountsView.as_view()),
     path('practice/stats/', PracticeStatsView.as_view()),
     path('super/audio/', SuperAdminAudioListView.as_view(), name='super-audio'),
+
+    # PDF Tests (PDF + audio + answer key)
+    path('pdf-tests/create/', create_pdf_test, name='create-pdf-test'),
+    path('pdf-tests/', list_pdf_tests, name='list-pdf-tests'),
+    path('pdf-tests/student/', list_student_pdf_tests, name='list-student-pdf-tests'),
+    path('pdf-tests/<uuid:test_id>/', get_pdf_test, name='get-pdf-test'),
+    path('pdf-tests/<uuid:test_id>/update/', update_pdf_test, name='update-pdf-test'),
+    path('pdf-tests/<uuid:test_id>/delete/', delete_pdf_test, name='delete-pdf-test'),
+    path('pdf-tests/<uuid:test_id>/submit/', submit_pdf_test, name='submit-pdf-test'),
+    path(
+        'center/<slug:slug>/tests/all/', list_all_tests_for_center,
+        name='list-all-tests-for-center',
+    ),
 ] + router.urls

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from apps.organizations.models import Organization, OrganizationMembership
 from apps.organizations.permissions import IsCenterAdmin
-from apps.tests.models import Test
+from apps.tests.models import PDFTest, Test
 
 from .certificate import render_certificate_pdf
 from .models import (
@@ -52,6 +52,11 @@ def _next_configured_section(session, after=None):
             return None
     for sec in SECTION_ORDER[start_idx:]:
         if getattr(session, f'{sec}_test_id', None):
+            return sec
+        # Listening/Reading uchun PDFTest ham biriktirilgan bo'lishi mumkin
+        if sec in ('listening', 'reading') and getattr(
+            session, f'{sec}_pdf_test_id', None,
+        ):
             return sec
     return None
 
@@ -182,20 +187,54 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='available-tests')
     def available_tests(self, request, org_slug=None):
-        """Session yaratish uchun: markazning + published global testlar."""
+        """Session yaratish uchun: markazning + published global testlar.
+
+        Reguliar `Test` va `PDFTest`'larni bitta listga birlashtiradi —
+        PDF testning ID'si `pdf:<public_id>` shaklida prefiksli string
+        bo'lib qaytariladi, va `kind` maydoni 'regular' yoki 'pdf'
+        qiymatini oladi. Frontend dropdown shu prefix bilan id'ni qaytarib
+        yuboradi, backend create-session vaqtida tegishli FK'ga yozadi.
+        """
         from django.db.models import Q
 
         org = self.get_organization()
-        qs = Test.objects.filter(
+        regular = Test.objects.filter(
             Q(organization=org) | Q(is_global=True, organization__isnull=True),
             status='published',
         ).order_by('name')
-        return Response({
-            'listening': TestPickSerializer(qs.filter(module='listening'), many=True).data,
-            'reading': TestPickSerializer(qs.filter(module='reading'), many=True).data,
-            'writing': TestPickSerializer(qs.filter(module='writing'), many=True).data,
-            'speaking': TestPickSerializer(qs.filter(module='speaking'), many=True).data,
-        })
+        # PDF testlar global emas — faqat shu markazga tegishli, published.
+        pdfs = PDFTest.objects.filter(
+            organization=org, status='published',
+        ).order_by('name')
+
+        def _regular(t):
+            return {
+                'id': str(t.id),
+                'name': t.name,
+                'module': t.module,
+                'difficulty': t.difficulty,
+                'category': getattr(t, 'category', '') or '',
+                'kind': 'regular',
+            }
+
+        def _pdf(t):
+            return {
+                'id': f'pdf:{t.public_id}',
+                'name': t.name,
+                'module': t.module,
+                'difficulty': t.difficulty,
+                'category': '',
+                'kind': 'pdf',
+            }
+
+        result = {'listening': [], 'reading': [], 'writing': [], 'speaking': []}
+        for t in regular:
+            if t.module in result:
+                result[t.module].append(_regular(t))
+        for t in pdfs:
+            if t.module in result:
+                result[t.module].append(_pdf(t))
+        return Response(result)
 
     @action(detail=True, methods=['post'])
     def start(self, request, pk=None, org_slug=None):

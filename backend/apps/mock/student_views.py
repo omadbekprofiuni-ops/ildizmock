@@ -6,7 +6,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from .grading import grade_listening, grade_reading
+from .grading import grade_listening, grade_pdf, grade_reading
 from .models import MockParticipant, MockSession
 from .serializers import (
     MockParticipantListSerializer,
@@ -140,6 +140,7 @@ def state_view(request, browser_session_id):
         'current_section': session.status if session.status in (
             'listening', 'reading', 'writing', 'speaking',
         ) else None,
+        'current_section_kind': session.current_test_kind,
         'seconds_remaining': _seconds_remaining(session),
         'submitted_for_current': submitted_for_current,
         'scores': {
@@ -155,14 +156,35 @@ def state_view(request, browser_session_id):
     })
 
 
+def _pdf_audio_urls(request, pdf_test):
+    urls = {}
+    for i in (1, 2, 3, 4):
+        f = getattr(pdf_test, f'audio_part{i}', None)
+        if f:
+            urls[f'part{i}'] = request.build_absolute_uri(f.url)
+    return urls
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def section_data_view(request, browser_session_id):
-    """Joriy bo'limning test ma'lumotlari (savollar, audio, passagelar)."""
+    """Joriy bo'limning test ma'lumotlari (savollar, audio, passagelar).
+
+    Listening/Reading uchun bo'limga PDFTest biriktirilgan bo'lsa, payload
+    `kind: 'pdf'` bilan keladi va `pdf_url`, `audio_urls`,
+    `answer_key_questions` qaytariladi (mavjud `PDFTestTaking` viewer
+    iste'mol qiladigan formatda).
+    """
     participant = get_object_or_404(
         MockParticipant, browser_session_id=browser_session_id,
     )
     session = participant.session
+
+    if session.status not in ('listening', 'reading', 'writing', 'speaking'):
+        return Response({'detail': 'The session has not started yet.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    kind = session.current_test_kind
     test = session.current_test
     if not test:
         return Response({'detail': 'No test attached to the current section.'},
@@ -170,14 +192,25 @@ def section_data_view(request, browser_session_id):
 
     payload = {
         'section': session.status,
+        'kind': kind,
         'test': {
-            'id': str(test.id),
+            'id': f'pdf:{test.public_id}' if kind == 'pdf' else str(test.id),
             'name': test.name,
             'module': test.module,
             'duration_minutes': session.current_duration_minutes,
         },
         'seconds_remaining': _seconds_remaining(session),
     }
+
+    if kind == 'pdf':
+        # PDFTest payload — frontend mavjud PDF viewer komponentini ishlatadi
+        payload['pdf_url'] = request.build_absolute_uri(test.pdf_file.url)
+        payload['audio_urls'] = _pdf_audio_urls(request, test)
+        payload['answer_key_questions'] = sorted(
+            int(k) for k in test.answer_key.keys() if str(k).isdigit()
+        )
+        payload['total_questions'] = test.total_questions
+        return Response(payload)
 
     ctx = {'request': request}
     if session.status == 'listening':
@@ -199,9 +232,6 @@ def section_data_view(request, browser_session_id):
         payload['speaking_tasks'] = StudentWritingTaskSerializer(
             test.writing_tasks.all(), many=True, context=ctx,
         ).data
-    else:
-        return Response({'detail': 'The session has not started yet.'},
-                        status=status.HTTP_400_BAD_REQUEST)
 
     return Response(payload)
 
@@ -229,12 +259,15 @@ def submit_listening(request, browser_session_id):
                         status=status.HTTP_400_BAD_REQUEST)
 
     answers = request.data.get('answers') or {}
-    test = participant.session.listening_test
-    if not test:
+    session = participant.session
+    if session.listening_test_id:
+        correct, total, band = grade_listening(session.listening_test, answers)
+    elif session.listening_pdf_test_id:
+        correct, total, band = grade_pdf(session.listening_pdf_test, answers)
+    else:
         return Response({'detail': 'No Listening test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    correct, total, band = grade_listening(test, answers)
     participant.listening_answers = answers
     participant.listening_correct = correct
     participant.listening_total = total
@@ -261,12 +294,15 @@ def submit_reading(request, browser_session_id):
                         status=status.HTTP_400_BAD_REQUEST)
 
     answers = request.data.get('answers') or {}
-    test = participant.session.reading_test
-    if not test:
+    session = participant.session
+    if session.reading_test_id:
+        correct, total, band = grade_reading(session.reading_test, answers)
+    elif session.reading_pdf_test_id:
+        correct, total, band = grade_pdf(session.reading_pdf_test, answers)
+    else:
         return Response({'detail': 'No Reading test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    correct, total, band = grade_reading(test, answers)
     participant.reading_answers = answers
     participant.reading_correct = correct
     participant.reading_total = total

@@ -253,6 +253,139 @@ class WritingTask(models.Model):
         return f'{self.test.name} — Task {self.task_number}'
 
 
+class PDFTest(models.Model):
+    """PDF + audio + answer key dan tashkil topgan oddiy test (2 daqiqada yaratiladi)."""
+
+    public_id = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True,
+        help_text='URLs use this UUID instead of the sequential int PK.',
+    )
+
+    MODULE_CHOICES = [
+        ('reading', 'Reading'),
+        ('listening', 'Listening'),
+    ]
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard'),
+    ]
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+    ]
+
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.CASCADE,
+        related_name='pdf_tests',
+    )
+    name = models.CharField(max_length=200)
+    module = models.CharField(max_length=20, choices=MODULE_CHOICES)
+    difficulty = models.CharField(
+        max_length=20, choices=DIFFICULTY_CHOICES, default='medium',
+    )
+
+    pdf_file = models.FileField(upload_to='test_pdfs/')
+
+    audio_part1 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
+    audio_part2 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
+    audio_part3 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
+    audio_part4 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
+
+    # {"1": "C", "2": "B", "3": "NOT GIVEN", ...}
+    answer_key = models.JSONField()
+
+    total_questions = models.IntegerField(default=40)
+    duration_minutes = models.IntegerField(default=60)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published')
+    is_published = models.BooleanField(default=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='pdf_tests_created',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tests_pdftest'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
+class PDFTestAttempt(models.Model):
+    """Talabaning PDFTest urinishi — auto-grading qiladi."""
+
+    test = models.ForeignKey(
+        PDFTest, on_delete=models.CASCADE, related_name='attempts',
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='pdf_test_attempts',
+    )
+
+    # {"1": "C", "2": "B", ...}
+    answers = models.JSONField(default=dict)
+
+    score = models.IntegerField(null=True, blank=True)
+    total_questions = models.IntegerField()
+    percentage = models.FloatField(null=True, blank=True)
+
+    # {"1": true, "2": false, ...}
+    results = models.JSONField(default=dict)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    time_taken_seconds = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tests_pdfattempt'
+        ordering = ['-started_at']
+        unique_together = [('test', 'student')]
+        indexes = [models.Index(fields=['test', 'student'])]
+
+    @staticmethod
+    def _normalize_answer(value):
+        """Compare-friendly: trim, uppercase, multiple spaces → single space."""
+        import re
+        if value is None:
+            return ''
+        s = str(value).strip().upper()
+        s = re.sub(r'\s+', ' ', s)
+        return s
+
+    def auto_grade(self):
+        correct_count = 0
+        results = {}
+        norm = self._normalize_answer
+        for q_num, correct_answer in self.test.answer_key.items():
+            student_answer = self.answers.get(str(q_num), '')
+            # Correct answer can be a list (multiple acceptable) or a string with `/` separator.
+            if isinstance(correct_answer, list):
+                acceptable = {norm(a) for a in correct_answer}
+            else:
+                acceptable = {norm(p) for p in str(correct_answer).split('/')}
+            is_correct = norm(student_answer) in acceptable
+            if is_correct:
+                correct_count += 1
+            results[str(q_num)] = is_correct
+
+        total = len(self.test.answer_key) or 1
+        self.score = correct_count
+        self.total_questions = len(self.test.answer_key)
+        self.percentage = (correct_count / total) * 100
+        self.results = results
+        self.save()
+        return self.score
+
+    def __str__(self):
+        return f'{self.student} — {self.test.name}'
+
+
 class TestClone(models.Model):
     """Center qaysi global testni nusxalaganini kuzatish (audit)."""
 

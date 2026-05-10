@@ -78,6 +78,21 @@ class MockSession(models.Model):
         help_text='Speaking test (optional — adds the speaking stage if present)',
     )
 
+    listening_pdf_test = models.ForeignKey(
+        'tests.PDFTest',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        limit_choices_to={'module': 'listening'},
+    )
+    reading_pdf_test = models.ForeignKey(
+        'tests.PDFTest',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        limit_choices_to={'module': 'reading'},
+    )
+
     listening_duration = models.PositiveIntegerField(default=30)
     reading_duration = models.PositiveIntegerField(default=60)
     writing_duration = models.PositiveIntegerField(default=60)
@@ -135,13 +150,32 @@ class MockSession(models.Model):
     @property
     def current_test(self):
         if self.status == 'listening':
-            return self.listening_test
+            return self.listening_test or self.listening_pdf_test
         if self.status == 'reading':
-            return self.reading_test
+            return self.reading_test or self.reading_pdf_test
         if self.status == 'writing':
             return self.writing_test
         if self.status == 'speaking':
             return self.speaking_test
+        return None
+
+    @property
+    def current_test_kind(self):
+        """'regular' (Test) | 'pdf' (PDFTest) | None — current section uchun."""
+        if self.status == 'listening':
+            if self.listening_test_id:
+                return 'regular'
+            if self.listening_pdf_test_id:
+                return 'pdf'
+        elif self.status == 'reading':
+            if self.reading_test_id:
+                return 'regular'
+            if self.reading_pdf_test_id:
+                return 'pdf'
+        elif self.status == 'writing' and self.writing_test_id:
+            return 'regular'
+        elif self.status == 'speaking' and self.speaking_test_id:
+            return 'regular'
         return None
 
     @property
