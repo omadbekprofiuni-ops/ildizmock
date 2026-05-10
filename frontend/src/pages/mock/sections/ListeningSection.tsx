@@ -49,8 +49,11 @@ export function ListeningSection({
   //   idle       → waiting for the user to press PLAY
   //   playing    → audio is playing
   //   between    → part finished, 2s pause before advancing to next
-  //   ended      → all parts have played
-  type AudioStatus = 'idle' | 'playing' | 'between' | 'ended'
+  //   ended      → all parts have actually played (NOT when all are null)
+  //   no_audio   → ETAP 30 HOTFIX: bo'lim'ga umuman audio biriktirilmagan.
+  //                Bu holatda 'All audio finished' KO'RSATILMAYDI — aks
+  //                holda admin xato qildi degan signal beriladi.
+  type AudioStatus = 'idle' | 'playing' | 'between' | 'ended' | 'no_audio'
 
   const [playingIdx, setPlayingIdx] = useState(0)
   const [finished, setFinished] = useState<boolean[]>([])
@@ -74,10 +77,37 @@ export function ListeningSection({
       .then((r) => {
         const ps: ListeningPart[] = r.data.listening_parts || []
         setParts(ps)
-        setFinished(new Array(ps.length).fill(false))
-        // Skip leading parts that have no audio.
-        const firstAudio = ps.findIndex((p) => !!p.audio_url)
-        setPlayingIdx(firstAudio >= 0 ? firstAudio : 0)
+
+        // HOTFIX — refresh-safe: backend qaysi part'lar tugaganini biladi
+        const playedOrders: number[] = Array.isArray(r.data.audio_played_parts)
+          ? r.data.audio_played_parts
+          : []
+        const initialFinished = ps.map((p) => playedOrders.includes(p.part_number))
+        setFinished(initialFinished)
+
+        // HOTFIX — agar HECH BIR partda audio bo'lmasa, 'ended' o'rniga
+        // 'no_audio' state'ga o'tamiz va admin'ga signal beramiz.
+        const hasAnyAudio = ps.some((p) => !!p.audio_url)
+        if (!hasAnyAudio && ps.length > 0) {
+          setAudioStatus('no_audio')
+          return
+        }
+
+        // Birinchi tugamagan audio-li part'ga o'tamiz (refresh holatida
+        // o'rta'dan boshlanmaslik uchun).
+        const firstNotFinished = ps.findIndex(
+          (p, i) => !!p.audio_url && !initialFinished[i],
+        )
+        if (firstNotFinished >= 0) {
+          setPlayingIdx(firstNotFinished)
+        } else if (initialFinished.every(Boolean) && ps.length > 0) {
+          // Hamma audio tugagan — refreshdan keyin to'g'ridan 'ended' ga
+          setAudioStatus('ended')
+          setProgress(100)
+        } else {
+          const firstAudio = ps.findIndex((p) => !!p.audio_url)
+          setPlayingIdx(firstAudio >= 0 ? firstAudio : 0)
+        }
       })
       .finally(() => setLoading(false))
   }, [bsid])
@@ -174,6 +204,13 @@ export function ListeningSection({
         next[playingIdx] = true
         return next
       })
+      // HOTFIX — refresh-safe: serverga part tugaganini xabar beramiz.
+      const partOrder = parts[playingIdx]?.part_number
+      if (partOrder) {
+        api
+          .post(`/mock/audio-played/${bsid}/`, { part_order: partOrder })
+          .catch(() => { /* ignore — best-effort, no UX impact */ })
+      }
       if (playingIdx + 1 < parts.length) {
         setAudioStatus('between')
         // 2-second pause before next part — matches the spec.
@@ -185,12 +222,35 @@ export function ListeningSection({
     }
     const handleContextMenu = (e: Event) => e.preventDefault()
 
+    // HOTFIX — <audio> 'error' event'i: MediaError.code asosida aniq xabar
+    // (MEDIA_ERR_ABORTED=1, NETWORK=2, DECODE=3, SRC_NOT_SUPPORTED=4).
+    const handleError = () => {
+      const err = el.error
+      const detail = !err
+        ? 'Unknown audio error.'
+        : err.code === MediaError.MEDIA_ERR_ABORTED
+          ? 'Audio loading was aborted.'
+          : err.code === MediaError.MEDIA_ERR_NETWORK
+            ? 'Network error while loading audio. Check your internet.'
+            : err.code === MediaError.MEDIA_ERR_DECODE
+              ? 'Audio file is corrupted or could not be decoded.'
+              : err.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+                ? 'Audio format is not supported by your browser.'
+                : 'Unknown audio error.'
+      // eslint-disable-next-line no-console
+      console.error('Audio element error:', err, 'src:', el.src)
+      setAudioError(detail)
+      // Foydalanuvchi qayta urinishi uchun 'idle' ga qaytamiz
+      setAudioStatus('idle')
+    }
+
     el.addEventListener('seeking', handleSeeking)
     el.addEventListener('timeupdate', handleTimeUpdate)
     el.addEventListener('playing', handlePlaying)
     el.addEventListener('pause', handlePause)
     el.addEventListener('ended', handleEnded)
     el.addEventListener('contextmenu', handleContextMenu)
+    el.addEventListener('error', handleError)
 
     return () => {
       el.removeEventListener('seeking', handleSeeking)
@@ -199,8 +259,21 @@ export function ListeningSection({
       el.removeEventListener('pause', handlePause)
       el.removeEventListener('ended', handleEnded)
       el.removeEventListener('contextmenu', handleContextMenu)
+      el.removeEventListener('error', handleError)
     }
-  }, [playingIdx, parts])
+  }, [playingIdx, parts, bsid])
+
+  // HOTFIX — beforeunload warning: audio o'ynayotgan yoki tugamagan
+  // holatda sahifani yopishga urinsa, brauzer tasdiqlash so'raydi.
+  useEffect(() => {
+    if (audioStatus !== 'playing' && audioStatus !== 'between') return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [audioStatus])
 
   // ── Block keyboard shortcuts that could pause/seek the audio ───────
   useEffect(() => {
@@ -307,6 +380,8 @@ export function ListeningSection({
   const playingPart = parts[playingIdx]
 
   const audioStatusLabel = (() => {
+    if (audioStatus === 'no_audio')
+      return 'No audio attached to this test — contact your center admin'
     if (audioStatus === 'idle') {
       return `Press START to play Part ${playingPart?.part_number}`
     }
@@ -394,6 +469,25 @@ export function ListeningSection({
 
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-5xl space-y-4 px-4 py-6">
+            {/* HOTFIX — Hech qanday audio biriktirilmagan bo'lsa, aniq
+                xato banner ko'rsatamiz (false 'All audio finished' o'rniga) */}
+            {audioStatus === 'no_audio' && (
+              <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-8 text-center">
+                <h2 className="mb-2 text-xl font-bold text-rose-800">
+                  No audio attached to this Listening test
+                </h2>
+                <p className="text-sm text-rose-700">
+                  This is a configuration error. The admin needs to upload
+                  audio files for each Listening part before students can
+                  take this test.
+                </p>
+                <p className="mt-2 text-xs text-rose-600">
+                  Admin: open the Tests page → edit this test → upload audio
+                  for each part.
+                </p>
+              </div>
+            )}
+
             {/* Big PLAY card — only visible when waiting for the user to
                 start the currently-playing part. */}
             {audioStatus === 'idle' && playingPart?.audio_url && (
