@@ -70,6 +70,10 @@ export function ListeningSection({
   const audioRef = useRef<HTMLAudioElement>(null)
   const lastTimeRef = useRef(0)
   const startedRef = useRef(false)
+  // Per-input autosave uchun debounce timer (har savol uchun alohida).
+  const saveTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  // Submit tugagandan keyin save chaqirilmasligi uchun.
+  const saveLockedRef = useRef(false)
 
   // ── Load section data ──────────────────────────────────────────────
   useEffect(() => {
@@ -92,6 +96,12 @@ export function ListeningSection({
         // Refresh-safety: birorta marker bo'lsa, audio session tugagan.
         const wasStarted = played.length > 0 || finished.length > 0
         setAudioState(wasStarted ? 'finished' : 'ready')
+
+        // Sync answers from backend on load — refresh paytida talaba
+        // yozgan javoblar tiklanadi (per-input autosave orqali saqlangan).
+        if (r.data.answers && typeof r.data.answers === 'object') {
+          setAnswers(r.data.answers as Record<string, unknown>)
+        }
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -271,20 +281,53 @@ export function ListeningSection({
   }
 
   // ── Save individual answer (best-effort, also batch-on-submit) ────
+  // Per-input autosave: har o'zgarish uchun 600ms debounce, backend'ga
+  // POST mock/listening-answers/<bsid>/ — refresh paytida yo'qolmasin.
+  // Submit tugagandan keyin lock — autosave chaqirilmaydi.
   const handleAnswer = (qid: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }))
+    if (saveLockedRef.current) return
+    const existing = saveTimersRef.current[qid]
+    if (existing) clearTimeout(existing)
+    saveTimersRef.current[qid] = setTimeout(() => {
+      api
+        .post(`/mock/listening-answers/${bsid}/`, {
+          question_id: qid, answer: value,
+        })
+        .catch(() => { /* best-effort — submit batch fallback */ })
+    }, 600)
   }
+
+  // Cleanup: komponent unmount bo'lganda saqlanmagan timer'larni
+  // tozalaymiz (yo'qotilmasligi uchun darrov flush ham qilamiz).
+  useEffect(() => {
+    return () => {
+      const timers = saveTimersRef.current
+      for (const k of Object.keys(timers)) {
+        clearTimeout(timers[k])
+      }
+    }
+  }, [])
 
   // ── Submit handler ─────────────────────────────────────────────────
   const submit = async () => {
     if (submittedRef.current) return
     submittedRef.current = true
+    saveLockedRef.current = true                  // stop autosaves
+    // Saqlanmagan pending timer'larni darrov flush qilamiz emas, balki
+    // submit'ga to'liq answers obyektini berib yuborayotganimiz uchun
+    // ularni shunchaki bekor qilamiz.
+    for (const k of Object.keys(saveTimersRef.current)) {
+      clearTimeout(saveTimersRef.current[k])
+    }
+    saveTimersRef.current = {}
     setSubmitting(true)
     try {
       await api.post(`/mock/submit/listening/${bsid}/`, { answers })
       onSubmit()
     } catch (err) {
       submittedRef.current = false
+      saveLockedRef.current = false               // allow saves to resume
       const detail = (err as { response?: { data?: { detail?: string } } })
         ?.response?.data?.detail
       alert(detail
