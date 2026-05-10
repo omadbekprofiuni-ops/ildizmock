@@ -28,6 +28,7 @@ from .pdf_views import (
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
 from .views_answer_sheet import AnswerSheetPreviewView
+from .views_available_for_mock import AvailableTestsForMockView
 from .views_html_content import HtmlContentPreviewView
 from .views_library import (
     LibraryCloneToOrgView,
@@ -88,6 +89,11 @@ urlpatterns = [
     # ETAP 30 — HTML Test Platform (DSL → HTML preview + validation)
     path('admin/html-content/preview/', HtmlContentPreviewView.as_view(),
          name='html-content-preview'),
+
+    # HOTFIX — Mock session test dropdown'i uchun yagona endpoint
+    # (org-owned + library testlarni birlashtirib qaytaradi)
+    path('admin/available-for-mock/', AvailableTestsForMockView.as_view(),
+         name='admin-available-for-mock'),
 
     # ETAP 27 — Library (superadmin global testlar, markaz clone qiladi)
     path('library/tests/', LibraryTestListView.as_view(),
