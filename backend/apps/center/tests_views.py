@@ -150,6 +150,10 @@ class CenterTestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         org = self.get_organization()
         qs = Test.objects.filter(organization=org).order_by('-created_at')
+        # restore va hard-delete arxivdagi (is_deleted=True) testlar uchun
+        # mo'ljallangan — queryset filteri ularni 404 qilib qo'ymasin.
+        if self.action in ('restore', 'hard_delete'):
+            return qs
         # Default: deletedlarni yashiramiz. ?archived=1 bo'lsa faqat
         # arxivni qaytaramiz (ETAP 13 soft-delete).
         archived = self.request.query_params.get('archived')
@@ -266,15 +270,39 @@ class CenterTestViewSet(viewsets.ModelViewSet):
         """Permanently delete — faqat arxivdagi testlar uchun.
 
         Bu xavfli amal — barcha bog'liq passages/questions/attempts ham
-        cascade qilib o'chiriladi.
+        cascade qilib o'chiriladi. Cascade chuqur bo'lishi mumkin (bir
+        nechta yuzlab javoblar), shuning uchun atomic transaction ichida
+        bajaramiz va xatoni aniq qaytaramiz (raw 500 emas).
         """
+        import logging
+
         test = self.get_object()
         if not test.is_deleted:
             return Response(
-                {'detail': "Archive the test first, then it can be permanently deleted."},
+                {'detail': 'Archive the test first, then it can be permanently deleted.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        test.delete()
+
+        try:
+            with transaction.atomic():
+                # Mock sessions FK = SET_NULL — Test'ni o'chirsa ular tirik qoladi.
+                # Attempts CASCADE — Answer'larni ham olib ketadi.
+                test.delete()
+        except Exception as exc:
+            logging.getLogger(__name__).exception(
+                'hard-delete failed for test %s', pk,
+            )
+            return Response(
+                {
+                    'detail': (
+                        'Failed to permanently delete the test. '
+                        'It may be linked to active mock sessions or other '
+                        'records that block deletion.'
+                    ),
+                    'error': str(exc),
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):

@@ -202,8 +202,12 @@ export default function TestsPage() {
     setBusy(id)
     try {
       await api.delete(`/center/${slug}/tests/${id}/hard-delete/`)
-      setMessage('Test doimiy o\'chirildi.')
+      setMessage('Test permanently deleted.')
       loadArchived()
+    } catch (e: unknown) {
+      // Backend 409 (Conflict) qaytarsa — aniq sababini ko'rsatamiz; aks
+      // holda generic xato xabari (HTTP 500) chiqib qoladi.
+      setMessage(extractError(e))
     } finally {
       setBusy(null)
     }
