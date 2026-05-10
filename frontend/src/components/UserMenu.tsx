@@ -43,12 +43,6 @@ export function UserMenu() {
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-md border border-[var(--border)] bg-white shadow-lg">
-          <div className="border-b px-3 py-2">
-            <div className="text-sm font-medium">
-              {user.first_name} {user.last_name}
-            </div>
-            <div className="font-mono text-xs text-slate-500">{user.phone}</div>
-          </div>
           <Link
             to="/profile"
             onClick={() => setOpen(false)}
