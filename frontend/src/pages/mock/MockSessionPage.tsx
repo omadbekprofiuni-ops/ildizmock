@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { api } from '@/lib/api'
 
+import { PreTestScreen } from './PreTestScreen'
 import { ListeningSection } from './sections/ListeningSection'
 import { MockPdfSection } from './sections/MockPdfSection'
 import { ReadingSection } from './sections/ReadingSection'
 import { SpeakingSection } from './sections/SpeakingSection'
 import { WritingSection } from './sections/WritingSection'
+
+const PRE_TEST_ACK_KEY = (bsid: string, skill: string) =>
+  `mock-pretest-ack:${bsid}:${skill}`
 
 type SessionStatus =
   | 'waiting'
@@ -40,9 +44,34 @@ interface MockState {
 
 export default function MockSessionPage() {
   const { bsid } = useParams<{ bsid: string }>()
+  const navigate = useNavigate()
   const [state, setState] = useState<MockState | null>(null)
   const [notFound, setNotFound] = useState(false)
   const lastStatusRef = useRef<string | null>(null)
+  // DEFINITIVE FIX — pre-test ekrani ko'rilganini bsid + skill bo'yicha
+  // saqlaymiz. Browser autoplay ruxsatlari faqat user gesture bilan
+  // beriladi — pre-test "Start Exam" tugmasi shu gesture'ni yaratadi.
+  const [pretestAcked, setPretestAcked] = useState<Record<string, boolean>>(
+    () => {
+      if (typeof window === 'undefined' || !bsid) return {}
+      const out: Record<string, boolean> = {}
+      for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
+        if (window.localStorage.getItem(PRE_TEST_ACK_KEY(bsid, skill)) === '1') {
+          out[skill] = true
+        }
+      }
+      return out
+    },
+  )
+
+  const ackPretest = useCallback(
+    (skill: string) => {
+      if (!bsid) return
+      window.localStorage.setItem(PRE_TEST_ACK_KEY(bsid, skill), '1')
+      setPretestAcked((prev) => ({ ...prev, [skill]: true }))
+    },
+    [bsid],
+  )
 
   const fetchState = useCallback(async () => {
     if (!bsid) return
@@ -104,6 +133,20 @@ export default function MockSessionPage() {
   }
 
   if (state.session.status === 'listening') {
+    // DEFINITIVE FIX — talaba pre-test ekranini ko'rib "Start Exam"
+    // bosmaguncha audio playerga umuman kirmaymiz. Bu uchta ildiz
+    // sababdan birini bartaraf qiladi (browser autoplay restrictsiyasi
+    // user gesture'siz urilib, komponentni buzuq holatga tushiradi).
+    if (!pretestAcked.listening) {
+      return (
+        <PreTestScreen
+          studentName={state.participant.full_name}
+          skill="listening"
+          onStart={() => ackPretest('listening')}
+          onHomepage={() => navigate('/')}
+        />
+      )
+    }
     if (state.current_section_kind === 'pdf') {
       return (
         <MockPdfSection
