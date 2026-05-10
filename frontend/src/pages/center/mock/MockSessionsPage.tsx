@@ -319,6 +319,8 @@ interface TestPick {
   kind?: 'regular' | 'pdf'
   is_published?: boolean
   status?: 'draft' | 'published' | 'archived'
+  is_library?: boolean
+  is_own_center?: boolean
 }
 
 function CreateSessionDialog({
@@ -352,11 +354,42 @@ function CreateSessionDialog({
   })
 
   useEffect(() => {
-    // include_drafts=1 — draft testlarni ham qaytaradi (disabled holda ko'rsatamiz)
-    // shunda admin "mening testim qayerda?" deb adashmaydi.
-    api
-      .get(`/center/${slug}/mock/available-tests/?include_drafts=1`)
-      .then((r) => setTests(r.data))
+    // HOTFIX — yangi yagona endpoint org-owned + library testlarni
+    // birlashtirib qaytaradi. Har modul uchun alohida so'rov.
+    // include_drafts=1 — draft testlarni ham qaytaradi (disabled holda
+    // ko'rsatamiz, admin "mening testim qayerda?" deb adashmasligi uchun).
+    const modules = ['listening', 'reading', 'writing'] as const
+    Promise.all(
+      modules.map((mod) =>
+        api
+          .get(`/admin/available-for-mock/?type=${mod}&include_drafts=1`)
+          .then((r) => {
+            const arr = (r.data?.results ?? []) as Array<{
+              id: string
+              name: string
+              module: string
+              difficulty: string
+              is_published?: boolean
+              status?: 'draft' | 'published' | 'archived'
+              is_library?: boolean
+              is_own_center?: boolean
+            }>
+            return [mod, arr.map((t) => ({ ...t, kind: 'regular' as const }))] as const
+          })
+          .catch(() => [mod, [] as TestPick[]] as const),
+      ),
+    )
+      .then((entries) => {
+        const next: Record<'listening' | 'reading' | 'writing', TestPick[]> = {
+          listening: [],
+          reading: [],
+          writing: [],
+        }
+        for (const [mod, arr] of entries) {
+          next[mod] = arr as TestPick[]
+        }
+        setTests(next)
+      })
       .finally(() => setLoading(false))
   }, [slug])
 
@@ -447,18 +480,21 @@ function CreateSessionDialog({
 
             <TestSelect
               label="Listening test"
+              moduleLabel="Listening"
               value={form.listening_test}
               onChange={(v) => setForm({ ...form, listening_test: v })}
               tests={tests.listening}
             />
             <TestSelect
               label="Reading test"
+              moduleLabel="Reading"
               value={form.reading_test}
               onChange={(v) => setForm({ ...form, reading_test: v })}
               tests={tests.reading}
             />
             <TestSelect
               label="Writing test"
+              moduleLabel="Writing"
               value={form.writing_test}
               onChange={(v) => setForm({ ...form, writing_test: v })}
               tests={tests.writing}
@@ -540,17 +576,30 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function TestSelect({
   label,
+  moduleLabel,
   value,
   onChange,
   tests,
 }: {
   label: string
+  moduleLabel: string
   value: string
   onChange: (v: string) => void
   tests: TestPick[]
 }) {
   const published = tests.filter((t) => t.is_published !== false)
   const drafts = tests.filter((t) => t.is_published === false)
+
+  const renderName = (t: TestPick) => {
+    const prefix = t.kind === 'pdf' ? '[PDF] ' : ''
+    const suffix = t.is_library
+      ? '  (Library)'
+      : t.is_own_center
+        ? '  (Your center)'
+        : ''
+    return `${prefix}${t.name}${suffix}`
+  }
+
   return (
     <Field label={label}>
       <select
@@ -561,11 +610,11 @@ function TestSelect({
         <option value="">— Select —</option>
         {published.map((t) => (
           <option key={t.id} value={t.id}>
-            {t.kind === 'pdf' ? `[PDF] ${t.name}` : t.name}
+            {renderName(t)}
           </option>
         ))}
         {drafts.length > 0 && (
-          <optgroup label="── Draft testlaringiz (avval Nashr qiling) ──">
+          <optgroup label="── Your drafts (publish them first) ──">
             {drafts.map((t) => (
               <option key={t.id} value={t.id} disabled>
                 [DRAFT] {t.name}
@@ -575,17 +624,18 @@ function TestSelect({
         )}
       </select>
       {published.length === 0 && drafts.length === 0 && (
-        <p className="mt-1 text-xs text-amber-600">
-          Hozircha bu modul uchun test yo'q. <strong>Tests</strong> sahifasiga
-          o'tib o'zingiz test yarating va publish qiling.
+        <p className="mt-1 text-xs text-amber-700">
+          No published {moduleLabel} tests yet. Go to the{' '}
+          <strong>Tests</strong> page to create one, or wait for ILDIZ to add
+          tests to the Library.
         </p>
       )}
       {published.length === 0 && drafts.length > 0 && (
         <p className="mt-1 text-xs text-amber-700">
-          Sizda bu modul uchun {drafts.length} ta draft test bor.{' '}
-          <strong>Tests</strong> sahifasiga o'tib yashil{' '}
-          <strong>"Nashr"</strong> tugmasini bosing — test publish bo'lgach
-          shu yerda ko'rinadi.
+          You have {drafts.length} draft {moduleLabel} test
+          {drafts.length === 1 ? '' : 's'}. Go to the <strong>Tests</strong>{' '}
+          page and click the green <strong>Nashr</strong> button to publish —
+          they will appear here after that.
         </p>
       )}
     </Field>
