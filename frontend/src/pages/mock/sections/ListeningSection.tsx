@@ -371,6 +371,10 @@ export function ListeningSection({
   }
 
   // ── Continue to Part N+1 click ─────────────────────────────────────
+  // Note: don't auto-play; user will click START Part N (spec talabi).
+  // handleContinue faqat activeIdx'ni keyingisiga o'tkazadi va keyingi
+  // partni 'ready' qiladi — actual audio play uchun foydalanuvchi
+  // alohida "START Part N+1" tugmasini bosishi kerak.
   const handleContinue = () => {
     const nextIdx = activeIdx + 1
     if (nextIdx >= parts.length) return
@@ -647,16 +651,17 @@ export function ListeningSection({
                   Part {part.part_number} audio finished
                 </h2>
                 <p className="mt-1 text-sm text-emerald-700">
-                  When ready, click below to start Part{' '}
+                  When ready, continue to Part{' '}
                   {parts[activeIdx + 1]?.part_number ?? activeIdx + 2}.
+                  You&apos;ll then click START to begin the audio.
                 </p>
                 <button
                   type="button"
                   onClick={handleContinue}
                   className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-700"
                 >
-                  <Play className="h-4 w-4 fill-current" />
-                  START Part {parts[activeIdx + 1]?.part_number ?? activeIdx + 2}
+                  Continue to Part{' '}
+                  {parts[activeIdx + 1]?.part_number ?? activeIdx + 2}
                 </button>
               </div>
             )}
