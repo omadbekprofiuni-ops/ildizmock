@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/toaster'
+import { useAutosave } from '@/hooks/useAutosave'
 import { api } from '@/lib/api'
 
 import AdminLayout from './AdminLayout'
@@ -22,6 +23,11 @@ type Props = {
 
 type QType = 'mcq' | 'tfng' | 'fill' | 'matching' | 'matching_headings'
 
+// ETAP 22 — group-form Matching Headings payload contract.
+type MHHeading = { id: string; text: string }
+type MHPayload = { headings: MHHeading[]; paragraphs: string[] }
+type MHAnswer = { matches: Record<string, string> }
+
 type QDraft = {
   order: number
   question_type: QType
@@ -34,6 +40,10 @@ type QDraft = {
   points: number
   image_path?: string | null
   image?: string | null  // read-only preview URL
+  // Group-form payload (currently used for matching_headings).
+  // Empty/absent means legacy single-heading form is in use.
+  payload?: Partial<MHPayload> & Record<string, unknown>
+  answer_key?: Partial<MHAnswer> & Record<string, unknown>
 }
 
 type PDraft = {
@@ -71,6 +81,28 @@ const blankQuestion = (order: number): QDraft => ({
   points: 1,
   image_path: null,
   image: null,
+  payload: {},
+  answer_key: {},
+})
+
+const ROMAN_HEADINGS = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii']
+
+const blankMatchingHeadings = (order: number): QDraft => ({
+  ...blankQuestion(order),
+  question_type: 'matching_headings',
+  text: 'Match each paragraph with the correct heading from the list below.',
+  options: [],
+  correct_answer: '',
+  payload: {
+    headings: [
+      { id: 'i', text: '' },
+      { id: 'ii', text: '' },
+      { id: 'iii', text: '' },
+      { id: 'iv', text: '' },
+    ],
+    paragraphs: ['B', 'C', 'D'],
+  },
+  answer_key: { matches: {} },
 })
 
 const blankPassage = (partNumber: number): PDraft => ({
@@ -96,6 +128,16 @@ const blankTest = (): TestDraft => ({
   passages: [blankPassage(1)],
 })
 
+function formatRelative(d: Date): string {
+  const sec = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000))
+  if (sec < 5) return 'just now'
+  if (sec < 60) return `${sec}s ago`
+  const min = Math.round(sec / 60)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.round(min / 60)
+  return `${hr}h ago`
+}
+
 function deriveAudioPath(value: string | null | undefined): string | null {
   if (!value) return null
   let s = String(value).trim()
@@ -112,12 +154,17 @@ function deriveAudioPath(value: string | null | undefined): string | null {
 }
 
 function normaliseOnChangeType(q: QDraft, newType: QType): QDraft {
-  if (newType === 'mcq') return { ...q, question_type: 'mcq', options: ['', '', '', ''], correct_answer: '' }
-  if (newType === 'tfng') return { ...q, question_type: 'tfng', options: ['True', 'False', 'Not Given'], correct_answer: '' }
-  if (newType === 'fill') return { ...q, question_type: 'fill', options: [], correct_answer: '' }
-  if (newType === 'matching_headings')
-    return { ...q, question_type: 'matching_headings', options: q.options.length ? q.options : ['', '', '', ''], correct_answer: '' }
-  return { ...q, question_type: 'matching', options: q.options.length ? q.options : ['', ''], correct_answer: '' }
+  if (newType === 'mcq') return { ...q, question_type: 'mcq', options: ['', '', '', ''], correct_answer: '', payload: {}, answer_key: {} }
+  if (newType === 'tfng') return { ...q, question_type: 'tfng', options: ['True', 'False', 'Not Given'], correct_answer: '', payload: {}, answer_key: {} }
+  if (newType === 'fill') return { ...q, question_type: 'fill', options: [], correct_answer: '', payload: {}, answer_key: {} }
+  if (newType === 'matching_headings') {
+    // Group-form (ETAP 22). Reuse existing payload if it already looks like one.
+    const hasGroup = Array.isArray((q.payload as MHPayload | undefined)?.headings)
+    if (hasGroup) return { ...q, question_type: 'matching_headings' }
+    const fresh = blankMatchingHeadings(q.order)
+    return { ...fresh, instruction: q.instruction, points: q.points }
+  }
+  return { ...q, question_type: 'matching', options: q.options.length ? q.options : ['', ''], correct_answer: '', payload: {}, answer_key: {} }
 }
 
 function draftFromServer(data: {
@@ -134,7 +181,7 @@ function draftFromServer(data: {
     title: string
     content: string
     order: number
-    questions: Array<QDraft>
+    questions: Array<QDraft & { payload?: unknown; answer_key?: unknown }>
   }>
 }): TestDraft {
   return {
@@ -175,6 +222,16 @@ function draftFromServer(data: {
         points: q.points ?? 1,
         image: (q as { image?: string | null }).image ?? null,
         image_path: (q as { image_path?: string | null }).image_path ?? null,
+        payload:
+          ((q as { payload?: Record<string, unknown> }).payload
+            && typeof (q as { payload?: unknown }).payload === 'object')
+            ? ((q as { payload?: Record<string, unknown> }).payload as Record<string, unknown>)
+            : {},
+        answer_key:
+          ((q as { answer_key?: Record<string, unknown> }).answer_key
+            && typeof (q as { answer_key?: unknown }).answer_key === 'object')
+            ? ((q as { answer_key?: Record<string, unknown> }).answer_key as Record<string, unknown>)
+            : {},
       })),
     })),
   }
@@ -227,6 +284,21 @@ export default function AdminTestEditPage({
       const data = (err as { response?: { data?: unknown } })?.response?.data
       toast.error('Failed to save: ' + JSON.stringify(data).slice(0, 200))
     },
+  })
+
+  // ETAP 22 — autosave fixes the refresh-loses-data bug.
+  // Only enabled for existing drafts (a test must have an id first); for a
+  // brand-new test, the user clicks Save once which POSTs and routes them
+  // to /:id/edit, after which autosave takes over.
+  const autosave = useAutosave<TestDraft>({
+    url: !isNew && testId ? `/admin/tests/${testId}/` : null,
+    data: !isNew && testId ? draft : null,
+    serialize: (d) => {
+      const { passages: _p, ...body } = d
+      void _p
+      return { ...body, passages_input: d.passages }
+    },
+    enabled: !isNew && !!testId,
   })
 
   if (!isNew && query.isLoading) {
@@ -352,6 +424,14 @@ export default function AdminTestEditPage({
       if (draft.module === 'writing') continue
       for (const q of p.questions) {
         if (!q.text.trim()) return toast.error('Fill in the question text')
+        if (q.question_type === 'matching_headings') {
+          // Group form: at least one paragraph→heading match required.
+          const matches = (q.answer_key as Partial<MHAnswer> | undefined)?.matches ?? {}
+          if (!matches || Object.keys(matches).length === 0) {
+            return toast.error('Set the correct heading for each paragraph')
+          }
+          continue
+        }
         if (!q.correct_answer.trim())
           return toast.error('Mark the correct answer for each question')
       }
@@ -367,7 +447,7 @@ export default function AdminTestEditPage({
   }
 
   const moduleAccents: Record<TestDraft['module'], { ring: string; tint: string; text: string; chip: string }> = {
-    listening: { ring: 'border-red-100', tint: 'bg-red-50', text: 'text-red-700', chip: 'bg-red-100 text-red-700' },
+    listening: { ring: 'border-red-100', tint: 'bg-brand-50', text: 'text-brand-700', chip: 'bg-brand-100 text-brand-700' },
     reading:   { ring: 'border-emerald-100', tint: 'bg-emerald-50', text: 'text-emerald-700', chip: 'bg-emerald-100 text-emerald-700' },
     writing:   { ring: 'border-orange-100', tint: 'bg-orange-50', text: 'text-orange-700', chip: 'bg-orange-100 text-orange-700' },
     speaking:  { ring: 'border-purple-100', tint: 'bg-purple-50', text: 'text-purple-700', chip: 'bg-purple-100 text-purple-700' },
@@ -379,7 +459,7 @@ export default function AdminTestEditPage({
       <div className="mx-auto max-w-5xl p-6 lg:p-10">
         {/* Breadcrumb */}
         <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
-          <Link to={listPath} className="hover:text-red-600">Testlar</Link>
+          <Link to={listPath} className="hover:text-brand-600">Testlar</Link>
           <span>/</span>
           <span className="text-slate-900">{isNew ? 'New' : 'Edit'}</span>
         </div>
@@ -398,6 +478,24 @@ export default function AdminTestEditPage({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {!isNew && (
+              <span
+                className={`text-xs font-medium ${
+                  autosave.status === 'error'
+                    ? 'text-red-600'
+                    : autosave.status === 'saving'
+                      ? 'text-amber-600'
+                      : 'text-emerald-600'
+                }`}
+                title={autosave.error ?? ''}
+              >
+                {autosave.status === 'saving' && 'Auto-saving…'}
+                {autosave.status === 'saved' && autosave.savedAt &&
+                  `Auto-saved ${formatRelative(autosave.savedAt)}`}
+                {autosave.status === 'error' && 'Auto-save failed'}
+                {autosave.status === 'idle' && 'Auto-save on'}
+              </span>
+            )}
             <Link to={listPath}>
               <Button variant="outline" className="rounded-xl">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Orqaga
@@ -406,7 +504,7 @@ export default function AdminTestEditPage({
             <Button
               onClick={onSave}
               disabled={saveMutation.isPending}
-              className="rounded-xl bg-red-600 hover:bg-red-700"
+              className="rounded-xl bg-brand-600 hover:bg-brand-700"
             >
               {saveMutation.isPending ? 'Saving…' : 'Save'}
             </Button>
@@ -509,7 +607,7 @@ export default function AdminTestEditPage({
                     variant="ghost"
                     size="sm"
                     onClick={() => removePassage(pi)}
-                    className="text-rose-600 hover:text-rose-700"
+                    className="text-cta-600 hover:text-cta-700"
                   >
                     <Trash2 className="mr-1 h-4 w-4" /> Delete passage
                   </Button>
@@ -595,6 +693,16 @@ export default function AdminTestEditPage({
                     onClearImage={() =>
                       updateQuestion(pi, qi, { image_path: null, image: null })
                     }
+                    onPayload={(patch) =>
+                      updateQuestion(pi, qi, {
+                        payload: { ...(q.payload ?? {}), ...patch },
+                      })
+                    }
+                    onAnswerKey={(patch) =>
+                      updateQuestion(pi, qi, {
+                        answer_key: { ...(q.answer_key ?? {}), ...patch },
+                      })
+                    }
                     onRemove={() => removeQuestion(pi, qi)}
                   />
                 ))}
@@ -610,7 +718,7 @@ export default function AdminTestEditPage({
         <Button
           variant="outline"
           onClick={addPassage}
-          className="w-full rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-6 font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
+          className="w-full rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 py-6 font-medium text-brand-700 hover:border-red-400 hover:bg-brand-50"
         >
           <Plus className="mr-2 h-4 w-4" />
           {draft.module === 'listening' && "Add new part"}
@@ -641,6 +749,8 @@ type QBProps = {
   onImage: (path: string, url: string) => void
   onClearImage: () => void
   onRemove: () => void
+  onPayload: (patch: Partial<QDraft['payload']>) => void
+  onAnswerKey: (patch: Partial<QDraft['answer_key']>) => void
 }
 
 function QuestionBuilder({
@@ -657,6 +767,8 @@ function QuestionBuilder({
   onAcceptable,
   onImage,
   onClearImage,
+  onPayload,
+  onAnswerKey,
   onRemove,
 }: QBProps) {
   return (
@@ -681,7 +793,7 @@ function QuestionBuilder({
             variant="ghost"
             size="sm"
             onClick={onRemove}
-            className="text-rose-600 hover:text-rose-700"
+            className="text-cta-600 hover:text-cta-700"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -770,46 +882,12 @@ function QuestionBuilder({
         )}
 
         {q.question_type === 'matching_headings' && (
-          <div className="space-y-2">
-            <Label className="text-xs">List of Headings</Label>
-            {q.options.map((opt, oi) => (
-              <div key={oi} className="flex items-center gap-2">
-                <span className="w-8 text-sm text-slate-500">
-                  {String.fromCharCode(0x2160 + oi)}
-                </span>
-                <Input
-                  value={opt}
-                  onChange={(e) => onOption(oi, e.target.value)}
-                  placeholder={`Heading ${oi + 1}`}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveMatchingOption(oi)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button variant="outline" size="sm" onClick={onAddMatchingOption}>
-              <Plus className="mr-1 h-4 w-4" /> Heading
-            </Button>
-            <div className="mt-2 space-y-1">
-              <Label className="text-xs">Correct heading</Label>
-              <select
-                value={q.correct_answer}
-                onChange={(e) => onCorrect(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-white px-2 text-sm"
-              >
-                <option value="">— select —</option>
-                {q.options.filter(Boolean).map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <MatchingHeadingsBuilder
+            payload={(q.payload as Partial<MHPayload> | undefined) ?? {}}
+            answerKey={(q.answer_key as Partial<MHAnswer> | undefined) ?? {}}
+            onPayload={onPayload}
+            onAnswerKey={onAnswerKey}
+          />
         )}
 
         {q.question_type === 'matching' && (
@@ -936,7 +1014,7 @@ function QuestionImageField({
         </Button>
         {currentPath && (
           <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-            <Trash2 className="h-4 w-4 text-rose-600" />
+            <Trash2 className="h-4 w-4 text-cta-600" />
           </Button>
         )}
       </div>
@@ -1021,12 +1099,143 @@ function AudioUploadField({
               {currentPath}
             </span>
             <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-              <Trash2 className="h-4 w-4 text-rose-600" />
+              <Trash2 className="h-4 w-4 text-cta-600" />
             </Button>
           </>
         )}
       </div>
       {currentUrl && <audio controls src={currentUrl} className="w-full" />}
+    </div>
+  )
+}
+
+// ============= MatchingHeadingsBuilder (ETAP 22 group form) =============
+
+type MHBuilderProps = {
+  payload: Partial<MHPayload>
+  answerKey: Partial<MHAnswer>
+  onPayload: (patch: Partial<MHPayload>) => void
+  onAnswerKey: (patch: Partial<MHAnswer>) => void
+}
+
+function MatchingHeadingsBuilder({ payload, answerKey, onPayload, onAnswerKey }: MHBuilderProps) {
+  const headings: MHHeading[] = Array.isArray(payload.headings) ? payload.headings : []
+  const paragraphs: string[] = Array.isArray(payload.paragraphs) ? payload.paragraphs : []
+  const matches: Record<string, string> = (answerKey.matches && typeof answerKey.matches === 'object')
+    ? answerKey.matches
+    : {}
+
+  const setHeading = (idx: number, text: string) => {
+    const next = headings.map((h, i) => (i === idx ? { ...h, text } : h))
+    onPayload({ headings: next })
+  }
+
+  const addHeading = () => {
+    const id = ROMAN_HEADINGS[headings.length] ?? `h${headings.length + 1}`
+    onPayload({ headings: [...headings, { id, text: '' }] })
+  }
+
+  const removeHeading = (idx: number) => {
+    const removed = headings[idx]?.id
+    const next = headings.filter((_, i) => i !== idx)
+    onPayload({ headings: next })
+    if (removed) {
+      const cleared: Record<string, string> = {}
+      for (const [p, h] of Object.entries(matches)) {
+        if (h !== removed) cleared[p] = h
+      }
+      onAnswerKey({ matches: cleared })
+    }
+  }
+
+  const setParagraphs = (raw: string) => {
+    // CSV: "B, C, D, E" → ['B','C','D','E']
+    const next = raw
+      .split(/[\s,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    onPayload({ paragraphs: next })
+  }
+
+  const setMatch = (paragraph: string, headingId: string) => {
+    const next = { ...matches }
+    if (!headingId) delete next[paragraph]
+    else next[paragraph] = headingId
+    onAnswerKey({ matches: next })
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          List of Headings
+        </Label>
+        <p className="text-xs text-slate-500">
+          Define candidate headings. IELTS typically uses 8 headings for 5 paragraphs (3 distractors).
+        </p>
+        {headings.map((h, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="w-10 text-right text-sm font-medium text-emerald-700">{h.id}.</span>
+            <Input
+              value={h.text}
+              onChange={(e) => setHeading(idx, e.target.value)}
+              placeholder={`Heading ${h.id}`}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeHeading(idx)}
+              disabled={headings.length <= 2}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={addHeading}>
+          <Plus className="mr-1 h-4 w-4" /> Add heading
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          Paragraphs to match
+        </Label>
+        <Input
+          value={paragraphs.join(', ')}
+          onChange={(e) => setParagraphs(e.target.value)}
+          placeholder="B, C, D, E"
+        />
+        <p className="text-xs text-slate-500">
+          Comma-separated paragraph IDs (e.g. <code>B, C, D, E</code>). Skip A if it's the example.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+          Correct answers
+        </Label>
+        {paragraphs.length === 0 && (
+          <p className="text-xs italic text-slate-500">Add paragraphs above first.</p>
+        )}
+        {paragraphs.map((p) => (
+          <div key={p} className="flex items-center gap-2">
+            <span className="w-12 text-sm font-medium text-slate-700">Para {p}</span>
+            <span className="text-slate-400">→</span>
+            <select
+              value={matches[p] ?? ''}
+              onChange={(e) => setMatch(p, e.target.value)}
+              className="h-9 flex-1 rounded-md border border-input bg-white px-2 text-sm"
+            >
+              <option value="">— select heading —</option>
+              {headings.filter((h) => h.text.trim()).map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.id}. {h.text}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
