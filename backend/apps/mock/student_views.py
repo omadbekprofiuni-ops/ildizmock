@@ -222,9 +222,11 @@ def section_data_view(request, browser_session_id):
 
     ctx = {'request': request}
     if session.status == 'listening':
-        # DEFINITIVE FIX — admin xato qilib audio'siz test biriktirsa, biz
-        # frontend'ga aniq sabab yuboramiz (false "All audio finished"
-        # ko'rsatilmasligi uchun).
+        # FINAL FIX — Single audio mode. Test'da kamida 1 ta part audio'si
+        # bo'lsa yetarli (admin bir MP3 fayl yuklaydi — Cambridge IELTS
+        # uslubida hammasini ichida saqlaydi). Hech qaysi partda audio
+        # bo'lmasa — 400 bilan rad etamiz, false "All audio finished"
+        # ko'rsatilmasligi uchun.
         listening_parts_qs = test.listening_parts.all().order_by('part_number')
         if not listening_parts_qs.exists():
             return Response(
@@ -237,21 +239,27 @@ def section_data_view(request, browser_session_id):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        missing_audio = [
-            p.part_number for p in listening_parts_qs if not p.audio_file
-        ]
-        if missing_audio:
+        parts_with_audio = [p for p in listening_parts_qs if p.audio_file]
+        if not parts_with_audio:
             return Response(
                 {
                     'detail': (
-                        'This Listening test is missing audio for Part(s) '
-                        f'{missing_audio}. Ask your center admin to upload them.'
+                        'This Listening test has no audio file. Ask your '
+                        'center admin to upload the listening audio.'
                     ),
                     'error_code': 'MISSING_AUDIO',
-                    'missing_parts': missing_audio,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # Aggregate: bitta audio_url butun test uchun. UI-only adapter
+        # — eski model'da audio har LiseningPart'da, lekin admin bitta
+        # fayl yuklab Part 1'ga biriktirgan. Birinchi mavjud fayl'ni
+        # "test audio'si" deb beramiz.
+        from .test_serializers import _absolute_media_url
+        test_audio_url = _absolute_media_url(
+            parts_with_audio[0].audio_file, request,
+        )
+        payload['test']['audio_url'] = test_audio_url
         payload['listening_parts'] = StudentListeningPartSerializer(
             listening_parts_qs, many=True, context=ctx,
         ).data
