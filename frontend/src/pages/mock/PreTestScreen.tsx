@@ -33,48 +33,80 @@ export function PreTestScreen({
     speaking: { label: 'Speaking Test', icon: '🎤' as const },
   }[skill]
 
+  const playFileTone = async (src: string): Promise<boolean> => {
+    // Spec talabi: /sounds/test-tone.mp3 fayl orqali sinash. HEAD bilan
+    // 200 ekanini tekshiramiz — Audio.play() 404 paytida ham promise
+    // rezolv qilishi mumkin (decode xatosi).
+    try {
+      const head = await fetch(src, { method: 'HEAD' })
+      if (!head.ok) return false
+    } catch {
+      return false
+    }
+    return new Promise<boolean>((resolve) => {
+      const audio = new Audio(src)
+      audio.volume = 0.5
+      let resolved = false
+      const finish = (ok: boolean) => {
+        if (resolved) return
+        resolved = true
+        resolve(ok)
+      }
+      audio.addEventListener('ended', () => finish(true), { once: true })
+      audio.addEventListener('error', () => finish(false), { once: true })
+      audio.play().then(() => {
+        // Play sodir bo'ldi; biz 'ended' yoki 'error' kutamiz.
+      }).catch(() => finish(false))
+      // Safety net — 2 soniyadan keyin ham 'ended' kelmasa, OK deb
+      // hisoblaymiz (qisqa tone playback kechikishi).
+      setTimeout(() => finish(true), 2000)
+    })
+  }
+
+  const playWebAudioBeep = async (): Promise<void> => {
+    // Fallback: fayl yuklab bo'lmasa Web Audio API bilan generatsiya.
+    const Ctx = (window.AudioContext
+      || (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext)
+    const ctx = new Ctx()
+    if (ctx.state === 'suspended') {
+      await ctx.resume()
+    }
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.frequency.value = 440
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    const now = ctx.currentTime
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.15, now + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95)
+    osc.start(now)
+    osc.stop(now + 1.0)
+    await new Promise<void>((res) => {
+      osc.onended = () => res()
+    })
+    try { await ctx.close() } catch { /* ignore */ }
+  }
+
   const testSpeakers = async () => {
     setTesting(true)
     try {
-      // Web Audio API bilan 1 soniyalik 440Hz beep — fayl kerak emas,
-      // CORS muammosi yo'q, sahifa offline bo'lsa ham ishlaydi.
-      const Ctx = (window.AudioContext
-        || (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext)
-      const ctx = new Ctx()
-      // Brauzer "user gesture" talab qiladi — bu funksiya tugma click
-      // ichida chaqirilgani uchun resume() majbur emas, lekin ehtiyot
-      // shart qilamiz.
-      if (ctx.state === 'suspended') {
-        await ctx.resume()
-      }
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.frequency.value = 440
-      gain.gain.value = 0.15
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      const now = ctx.currentTime
-      // Tez fade-in/out bilan klik tovushini olib tashlaymiz.
-      gain.gain.setValueAtTime(0.0001, now)
-      gain.gain.exponentialRampToValueAtTime(0.15, now + 0.05)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95)
-      osc.start(now)
-      osc.stop(now + 1.0)
-      await new Promise<void>((res) => {
-        osc.onended = () => res()
-      })
-      try {
-        await ctx.close()
-      } catch { /* ignore */ }
+      // Play a short test tone (or any short audio file you have)
+      // Spec'da .mp3 talab qilingan; WAV ham fallback (repository'da
+      // generate qilingan haqiqiy fayl). Ikkalasi ham 404 bo'lsa,
+      // Web Audio API beep.
+      let ok = await playFileTone('/sounds/test-tone.mp3')
+      if (!ok) ok = await playFileTone('/sounds/test-tone.wav')
+      if (!ok) await playWebAudioBeep()
       setAudioOk(true)
-      setTesting(false)
     } catch (err) {
       console.error('Test tone failed:', err)
       alert(
         'Could not play test tone. Check your speakers and click "Test '
         + 'Speakers" again.',
       )
+    } finally {
       setTesting(false)
     }
   }
