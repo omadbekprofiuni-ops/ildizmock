@@ -56,6 +56,16 @@ class Organization(models.Model):
 
     notes = models.TextField(blank=True, help_text='Internal notes (only superadmin sees)')
 
+    # ETAP 29 — Strict Test Mode org-level sozlamalari
+    test_strict_mode_enabled = models.BooleanField(
+        default=True,
+        help_text='True bo\'lsa, talabalar testda fullscreen + shortcut blocking ko\'radi',
+    )
+    test_violation_limit = models.PositiveSmallIntegerField(
+        default=3,
+        help_text='N ta counted violation bo\'lsa attempt avtomatik submit. 0 = auto-submit o\'chiq',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

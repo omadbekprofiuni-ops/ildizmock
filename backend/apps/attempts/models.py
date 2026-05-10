@@ -59,6 +59,20 @@ class Attempt(models.Model):
     )
     graded_at = models.DateTimeField(null=True, blank=True)
 
+    # ETAP 29 — Strict Test Mode (anti-cheating)
+    flagged_as_cheating = models.BooleanField(
+        default=False,
+        help_text='Strict mode violation thresholdi kesib o\'tilganda True',
+    )
+    auto_submitted = models.BooleanField(
+        default=False,
+        help_text="Tizim avtomatik submit qilganmi (violations / time / manual)",
+    )
+    auto_submit_reason = models.CharField(
+        max_length=64, blank=True, default='',
+        help_text="too_many_violations | time_expired | manual",
+    )
+
     class Meta:
         ordering = ['-created_at']
 
@@ -113,3 +127,56 @@ class Answer(models.Model):
 
     def __str__(self):
         return f'{self.attempt_id} / Q{self.question.order}'
+
+
+class TestSecurityViolation(models.Model):
+    """ETAP 29 — Strict mode davomida kuzatilgan har bir buzilish.
+
+    Frontend useStrictTestMode hook'i tomonidan POST qilinadi. Server
+    debounce qoidasini qo'llaydi (kichik blur'lar `counted=False` bilan
+    yoziladi — teacher report'da ko'rinadi, lekin auto-submit'ga
+    hissa qo'shmaydi).
+    """
+
+    TYPE_CHOICES = [
+        ('tab_switched', 'Tab switched'),
+        ('window_blurred', 'Window lost focus'),
+        ('fullscreen_exited', 'Fullscreen exited'),
+        ('devtools_attempt', 'DevTools shortcut attempted'),
+        ('copy_attempt', 'Copy attempted'),
+        ('paste_attempt', 'Paste attempted'),
+        ('print_attempt', 'Print attempted'),
+        ('save_attempt', 'Save attempted'),
+        ('right_click', 'Right-click attempted'),
+        ('view_source', 'View source attempted'),
+        ('select_all', 'Select-all attempted'),
+        ('other', 'Other'),
+    ]
+
+    attempt = models.ForeignKey(
+        Attempt, on_delete=models.CASCADE, related_name='violations',
+    )
+    type = models.CharField(max_length=32, choices=TYPE_CHOICES)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+    duration_ms = models.IntegerField(
+        null=True, blank=True,
+        help_text='tab_switched / window_blurred uchun: talaba qancha vaqt yo\'q bo\'lganligi',
+    )
+    metadata = models.JSONField(
+        default=dict, blank=True,
+        help_text='Qo\'shimcha context: user_agent, viewport, va h.k.',
+    )
+    counted = models.BooleanField(
+        default=True,
+        help_text='False = forgiven (debounced kichik blur). Auto-submit\'ga ta\'sir qilmaydi.',
+    )
+
+    class Meta:
+        ordering = ['attempt', 'occurred_at']
+        indexes = [
+            models.Index(fields=['attempt', 'type']),
+            models.Index(fields=['occurred_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.attempt_id} — {self.type} @ {self.occurred_at:%H:%M:%S}'
