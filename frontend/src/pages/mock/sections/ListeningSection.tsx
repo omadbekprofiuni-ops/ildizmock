@@ -65,6 +65,10 @@ export function ListeningSection({
   const [duration, setDuration] = useState(0)
   const [audioError, setAudioError] = useState<string | null>(null)
   const [configError, setConfigError] = useState<SectionDataError | null>(null)
+  // FINAL FIX — refresh paytida 'playing' bo'lib qolgan, lekin browser
+  // audio'ni autoplay qila olmaydigan holat. Talaba submit qila olishi
+  // uchun escape hatch kerak.
+  const [audioInterrupted, setAudioInterrupted] = useState(false)
 
   const submittedRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -93,9 +97,19 @@ export function ListeningSection({
           ? r.data.audio_played_parts : []
         const finished: number[] = Array.isArray(r.data.audio_finished_parts)
           ? r.data.audio_finished_parts : []
-        // Refresh-safety: birorta marker bo'lsa, audio session tugagan.
-        const wasStarted = played.length > 0 || finished.length > 0
-        setAudioState(wasStarted ? 'finished' : 'ready')
+        // Restore audio state from backend — three-tier spec logic:
+        //   finished marker  → 'finished'
+        //   started only     → 'playing' (resume best-effort; flag
+        //                      interrupted=true so submit is allowed)
+        //   neither          → 'ready'
+        if (finished.length > 0) {
+          setAudioState('finished')
+        } else if (played.length > 0) {
+          setAudioState('playing')
+          setAudioInterrupted(true)
+        } else {
+          setAudioState('ready')
+        }
 
         // Sync answers from backend on load — refresh paytida talaba
         // yozgan javoblar tiklanadi (per-input autosave orqali saqlangan).
@@ -420,11 +434,16 @@ export function ListeningSection({
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                 <Headphones className="h-4 w-4 text-brand-500" />
                 {audioState === 'ready' && 'Ready to start'}
-                {audioState === 'playing' && (
+                {audioState === 'playing' && !audioInterrupted && (
                   <>
                     <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-brand-600" />
                     {`Playing… Part ${currentPlayingPart ?? 1}  ·  ${fmt(currentTime)} / ${fmt(duration)}`}
                   </>
+                )}
+                {audioState === 'playing' && audioInterrupted && (
+                  <span className="text-amber-800">
+                    Audio interrupted — review &amp; submit answers
+                  </span>
                 )}
                 {audioState === 'finished' && (
                   <span className="text-emerald-700">All audio finished</span>
@@ -519,11 +538,33 @@ export function ListeningSection({
             )}
 
             {/* ─── Playing banner ─── */}
-            {audioState === 'playing' && (
+            {audioState === 'playing' && !audioInterrupted && (
               <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-3 text-center">
                 <p className="text-sm font-semibold text-amber-800">
                   ⚠️ Audio cannot be paused, rewound, or replayed.
                 </p>
+              </div>
+            )}
+            {audioState === 'playing' && audioInterrupted && (
+              <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center">
+                <p className="text-sm font-semibold text-amber-900">
+                  ⚠️ Audio was interrupted (page reload)
+                </p>
+                <p className="mt-1 text-xs text-amber-800">
+                  The browser doesn&apos;t allow audio to resume automatically
+                  after a refresh. Your saved answers are restored — finish
+                  entering them and submit when ready.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAudioState('finished')
+                    setAudioInterrupted(false)
+                  }}
+                  className="mt-3 rounded-full bg-emerald-600 px-5 py-1.5 text-sm font-semibold text-white shadow hover:bg-emerald-700"
+                >
+                  Mark audio complete &amp; review answers
+                </button>
               </div>
             )}
 
@@ -588,8 +629,8 @@ export function ListeningSection({
               })}
             </div>
 
-            {/* ─── Submit (only when audio finished) ─── */}
-            {audioState === 'finished' && (
+            {/* ─── Submit (when audio finished, OR interrupted) ─── */}
+            {(audioState === 'finished' || audioInterrupted) && (
               <button
                 type="button"
                 onClick={submit}
@@ -599,7 +640,7 @@ export function ListeningSection({
                 {submitting ? 'Submitting…' : 'Submit final answers'}
               </button>
             )}
-            {audioState !== 'finished' && (
+            {audioState !== 'finished' && !audioInterrupted && (
               <p className="text-center text-xs text-slate-500">
                 Submit becomes available after the audio finishes.
               </p>
