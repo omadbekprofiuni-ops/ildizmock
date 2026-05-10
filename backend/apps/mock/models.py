@@ -78,20 +78,9 @@ class MockSession(models.Model):
         help_text='Speaking test (optional — adds the speaking stage if present)',
     )
 
-    listening_pdf_test = models.ForeignKey(
-        'tests.PDFTest',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-        limit_choices_to={'module': 'listening'},
-    )
-    reading_pdf_test = models.ForeignKey(
-        'tests.PDFTest',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-        limit_choices_to={'module': 'reading'},
-    )
+    # HOTFIX — PDF test fieldlari ETAP 30 HTML approachiga o'tilgani sabab
+    # olib tashlandi. Migration 0011 DROP COLUMN IF EXISTS bilan idempotent.
+    # Eski PDF testlar uchun centerlar ETAP 30 orqali qayta yaratadi.
 
     listening_duration = models.PositiveIntegerField(default=30)
     reading_duration = models.PositiveIntegerField(default=60)
@@ -150,9 +139,9 @@ class MockSession(models.Model):
     @property
     def current_test(self):
         if self.status == 'listening':
-            return self.listening_test or self.listening_pdf_test
+            return self.listening_test
         if self.status == 'reading':
-            return self.reading_test or self.reading_pdf_test
+            return self.reading_test
         if self.status == 'writing':
             return self.writing_test
         if self.status == 'speaking':
@@ -161,22 +150,42 @@ class MockSession(models.Model):
 
     @property
     def current_test_kind(self):
-        """'regular' (Test) | 'pdf' (PDFTest) | None — current section uchun."""
-        if self.status == 'listening':
-            if self.listening_test_id:
-                return 'regular'
-            if self.listening_pdf_test_id:
-                return 'pdf'
-        elif self.status == 'reading':
-            if self.reading_test_id:
-                return 'regular'
-            if self.reading_pdf_test_id:
-                return 'pdf'
-        elif self.status == 'writing' and self.writing_test_id:
+        """'regular' (Test) | None — current section uchun.
+
+        PDF testlar ETAP 30'da olib tashlandi — endi faqat HTML-based
+        Test mavjud.
+        """
+        if self.status == 'listening' and self.listening_test_id:
             return 'regular'
-        elif self.status == 'speaking' and self.speaking_test_id:
+        if self.status == 'reading' and self.reading_test_id:
+            return 'regular'
+        if self.status == 'writing' and self.writing_test_id:
+            return 'regular'
+        if self.status == 'speaking' and self.speaking_test_id:
             return 'regular'
         return None
+
+    def get_active_skills(self) -> list[str]:
+        """Test biriktirilgan skill'larning ro'yxati ('listening', 'reading',
+        'writing', 'speaking')."""
+        skills: list[str] = []
+        if self.listening_test_id:
+            skills.append('listening')
+        if self.reading_test_id:
+            skills.append('reading')
+        if self.writing_test_id:
+            skills.append('writing')
+        if self.speaking_test_id:
+            skills.append('speaking')
+        return skills
+
+    def clean(self):
+        """Kamida 1 ta skill biriktirilgan bo'lishi kerak."""
+        from django.core.exceptions import ValidationError
+        if not self.get_active_skills():
+            raise ValidationError(
+                'At least one skill must have a test assigned.',
+            )
 
     @property
     def current_duration_minutes(self) -> int:
