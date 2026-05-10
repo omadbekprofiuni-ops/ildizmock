@@ -19,6 +19,7 @@ import AITestCreatePage from './pages/center/AITestCreatePage'
 import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import ExcelImportPage from './pages/center/ExcelImportPage'
+import LibraryBrowserPage from './pages/center/LibraryBrowserPage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
 import PDFTestCreate from './pages/center/PDFTestCreate'
 import StudentDetailPage from './pages/center/StudentDetailPage'
@@ -320,6 +321,8 @@ function AppRoutes() {
           <Route path="/admin/tests/new-mode" element={<AdminRoute><NewTestModeSelector /></AdminRoute>} />
           <Route path="/admin/tests/new/smart-paste" element={<AdminRoute><SmartPasteEditor /></AdminRoute>} />
           <Route path="/admin/tests/new/smart-excel" element={<AdminRoute><SmartPasteExcelImportPage /></AdminRoute>} />
+          {/* ETAP 27 — Test Library */}
+          <Route path="/admin/library" element={<AdminRoute><LibraryBrowserPage /></AdminRoute>} />
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
@@ -342,6 +345,8 @@ function AppRoutes() {
               <Route path="tests/pdf-create" element={<PDFTestCreate />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
+              {/* ETAP 27 — Test Library (slug-based) */}
+              <Route path="library" element={<LibraryBrowserPage />} />
               <Route
                 path="tests/:testId/edit"
                 element={<EasyTestCreatePage />}

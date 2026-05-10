@@ -27,6 +27,12 @@ from .pdf_views import (
 )
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
+from .views_answer_sheet import AnswerSheetPreviewView
+from .views_library import (
+    LibraryCloneToOrgView,
+    LibraryTestDetailView,
+    LibraryTestListView,
+)
 from .views_smart_paste import (
     SmartPasteCreateView,
     SmartPasteExcelImportView,
@@ -73,6 +79,19 @@ urlpatterns = [
     path('admin/smart-paste/excel-template.xlsx',
          SmartPasteExcelTemplateView.as_view(),
          name='smart-paste-template'),
+
+    # ETAP 27 — Smart Answer Sheet (pasted answer key only, qtype auto-detect)
+    path('admin/answer-sheet/preview/', AnswerSheetPreviewView.as_view(),
+         name='answer-sheet-preview'),
+
+    # ETAP 27 — Library (superadmin global testlar, markaz clone qiladi)
+    path('library/tests/', LibraryTestListView.as_view(),
+         name='library-tests-list'),
+    path('library/tests/<uuid:pk>/', LibraryTestDetailView.as_view(),
+         name='library-tests-detail'),
+    path('library/tests/<uuid:pk>/clone-to-org/',
+         LibraryCloneToOrgView.as_view(),
+         name='library-tests-clone'),
 
     # PDF Tests (PDF + audio + answer key)
     path('pdf-tests/create/', create_pdf_test, name='create-pdf-test'),
