@@ -565,10 +565,10 @@ function TestSelect({
           </option>
         ))}
         {drafts.length > 0 && (
-          <optgroup label="── Draft (publish qiling) ──">
+          <optgroup label="── Draft testlaringiz (avval Nashr qiling) ──">
             {drafts.map((t) => (
               <option key={t.id} value={t.id} disabled>
-                [DRAFT] {t.name} — publish qiling
+                [DRAFT] {t.name}
               </option>
             ))}
           </optgroup>
@@ -576,15 +576,16 @@ function TestSelect({
       </select>
       {published.length === 0 && drafts.length === 0 && (
         <p className="mt-1 text-xs text-amber-600">
-          No tests for this module yet. Create one from the Tests page or clone
-          from the global catalog.
+          Hozircha bu modul uchun test yo'q. <strong>Tests</strong> sahifasiga
+          o'tib o'zingiz test yarating va publish qiling.
         </p>
       )}
       {published.length === 0 && drafts.length > 0 && (
         <p className="mt-1 text-xs text-amber-700">
-          You have {drafts.length} draft test{drafts.length === 1 ? '' : 's'} for
-          this module. Open the Tests page and click the green{' '}
-          <strong>"Nashr"</strong> button to publish, then they will appear here.
+          Sizda bu modul uchun {drafts.length} ta draft test bor.{' '}
+          <strong>Tests</strong> sahifasiga o'tib yashil{' '}
+          <strong>"Nashr"</strong> tugmasini bosing — test publish bo'lgach
+          shu yerda ko'rinadi.
         </p>
       )}
     </Field>
