@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle2, Clock, Home, Loader2, Maximize2, Minimize2, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Clock, Flag, Home, ListChecks, Loader2, Maximize2, Minimize2, XCircle } from 'lucide-react'
 import {
   useEffect,
   useMemo,
@@ -21,6 +21,9 @@ import { ListeningPreloadGate } from '@/components/ListeningPreloadGate'
 import { LockedAudio } from '@/components/LockedAudio'
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
+import { Highlightable } from '@/components/test-runner/Highlightable'
+import { ReviewScreen, type ReviewQuestion } from '@/components/test-runner/ReviewScreen'
+import { SplitPane } from '@/components/test-runner/SplitPane'
 import { TestStartDialog } from '@/components/TestStartDialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +35,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/toaster'
+import { useHighlights } from '@/hooks/useHighlights'
+import { useReviewFlags } from '@/hooks/useReviewFlags'
 import { api } from '@/lib/api'
 import { guestAttempts } from '@/lib/guest-attempts'
 import { ieltsRules } from '@/lib/ielts-rules'
@@ -340,11 +345,14 @@ function LiveAttemptView({
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({})
   const [currentQId, setCurrentQId] = useState<number | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [isFullscreen, setIsFullscreen] = useState(() => ieltsRules.isFullscreen())
   const userExitedFsRef = useRef(false)
   const dirtyRef = useRef(false)
   const initialisedRef = useRef(false)
+  const flags = useReviewFlags(attempt.id)
+  const highlights = useHighlights(attempt.id)
 
   useEffect(() => {
     if (!initialisedRef.current) {
@@ -498,6 +506,24 @@ function LiveAttemptView({
     [sections],
   )
 
+  const reviewQuestions = useMemo<ReviewQuestion[]>(() => {
+    const out: ReviewQuestion[] = []
+    let cursor = 0
+    for (const p of sections) {
+      for (const q of p.questions) {
+        cursor += 1
+        out.push({
+          id: q.id,
+          number: cursor,
+          partNumber: p.part_number,
+          answered: answers[q.id] != null && answers[q.id] !== '',
+          flagged: flags.has(q.id),
+        })
+      }
+    }
+    return out
+  }, [sections, answers, flags])
+
   const handleAnswer = (qid: number, value: AnswerValue) => {
     dirtyRef.current = true
     setAnswers((prev) => ({ ...prev, [qid]: value }))
@@ -573,6 +599,16 @@ function LiveAttemptView({
             </span>
           </div>
           <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setReviewOpen(true)}
+            className="h-8 gap-1 px-2 text-white hover:bg-slate-800 hover:text-white"
+            title="Review all questions"
+          >
+            <ListChecks className="h-4 w-4" />
+            Review
+          </Button>
+          <Button
             variant="secondary"
             size="sm"
             onClick={() => setConfirmOpen(true)}
@@ -583,145 +619,212 @@ function LiveAttemptView({
         </div>
       </header>
 
-      <main className="test-body flex min-h-0 flex-1 overflow-hidden">
-        <section
-          className={`${
-            attempt.test.module === 'reading' ? 'w-3/5' : 'w-1/2'
-          } overflow-y-auto border-r bg-white p-6`}
-        >
-          {attempt.test.module === 'listening' && listeningAudio &&
-            listeningAudio.tracks.length > 0 && (
-              <ListeningAudioPlayer
-                tracks={listeningAudio.tracks}
-                audioRef={listeningAudio.audioRef}
-                remainingPreloaded
-              />
-            )}
+      {reviewOpen ? (
+        <ReviewScreen
+          questions={reviewQuestions}
+          onJumpTo={(qid) => {
+            setReviewOpen(false)
+            // Defer scroll until panes re-mount.
+            setTimeout(() => scrollToQuestion(qid), 50)
+          }}
+          onContinue={() => setReviewOpen(false)}
+          onSubmit={() => {
+            setReviewOpen(false)
+            setConfirmOpen(true)
+          }}
+          submitting={submitMutation.isPending}
+        />
+      ) : (
+        <SplitPane
+          storageKey={`cdielts:split:${attempt.test.module}`}
+          defaultRatio={attempt.test.module === 'reading' ? 0.6 : 0.5}
+          left={
+            <div className="px-6 py-6">
+              {attempt.test.module === 'listening' && listeningAudio &&
+                listeningAudio.tracks.length > 0 && (
+                  <ListeningAudioPlayer
+                    tracks={listeningAudio.tracks}
+                    audioRef={listeningAudio.audioRef}
+                    remainingPreloaded
+                  />
+                )}
 
-          {sections.map((p) => (
-            <article key={p.id} className="mb-10">
-              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Part {p.part_number}
-              </h2>
-              <h3 className="mb-4 text-xl font-bold text-slate-900">{p.title}</h3>
-              {p.audio_file && attempt.test.module !== 'listening' && (
-                <LockedAudio src={p.audio_file} />
-              )}
-              <div className="prose prose-slate max-w-none whitespace-pre-line text-[15px] leading-relaxed text-slate-800">
-                {p.content}
-              </div>
-            </article>
-          ))}
-        </section>
+              {sections.map((p) => (
+                <article key={p.id} className="mb-10">
+                  <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Part {p.part_number}
+                  </h2>
+                  <h3 className="mb-4 text-xl font-bold text-slate-900">{p.title}</h3>
+                  {p.audio_file && attempt.test.module !== 'listening' && (
+                    <LockedAudio src={p.audio_file} />
+                  )}
+                  <Highlightable
+                    text={p.content}
+                    ranges={highlights.get(p.id)}
+                    onChange={(r) => highlights.set(p.id, r)}
+                    className="prose prose-slate max-w-none whitespace-pre-line text-[15px] leading-relaxed text-slate-800"
+                  />
+                </article>
+              ))}
+            </div>
+          }
+          right={
+            <div className="px-6 py-6">
+              {sections.map((p) => {
+                let numberCursor = sections
+                  .filter((pp) => pp.order < p.order)
+                  .reduce((sum, pp) => sum + pp.questions.length, 0)
 
-        <section
-          className={`${
-            attempt.test.module === 'reading' ? 'w-2/5' : 'w-1/2'
-          } overflow-y-auto bg-white p-6`}
-        >
-          {sections.map((p) => {
-            let numberCursor = sections
-              .filter((pp) => pp.order < p.order)
-              .reduce((sum, pp) => sum + pp.questions.length, 0)
+                const groups: { instruction: string; questions: QuestionData[] }[] = []
+                for (const q of p.questions) {
+                  const last = groups[groups.length - 1]
+                  if (last && last.questions[0].group_id === q.group_id) {
+                    last.questions.push(q)
+                  } else {
+                    groups.push({ instruction: q.instruction, questions: [q] })
+                  }
+                }
 
-            const groups: { instruction: string; questions: QuestionData[] }[] = []
-            for (const q of p.questions) {
-              const last = groups[groups.length - 1]
-              if (last && last.questions[0].group_id === q.group_id) {
-                last.questions.push(q)
-              } else {
-                groups.push({ instruction: q.instruction, questions: [q] })
-              }
-            }
-
-            return (
-              <div key={p.id} className="mb-10">
-                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Part {p.part_number} — questions
-                </h3>
-                {groups.map((group, gi) => {
-                  const firstN = numberCursor + 1
-                  const lastN = numberCursor + group.questions.length
-                  const rangeLabel =
-                    group.questions.length > 1
-                      ? `Questions ${firstN}–${lastN}`
-                      : `Question ${firstN}`
-                  const node = (
-                    <div key={gi} className="question-group mb-8">
-                      <div className="mb-3 rounded-md bg-amber-50 px-4 py-2 text-sm text-slate-700">
-                        <div className="font-semibold">{rangeLabel}</div>
-                        {group.instruction && (
-                          <div className="mt-0.5 text-slate-600">
-                            {group.instruction}
+                return (
+                  <div key={p.id} className="mb-10">
+                    <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Part {p.part_number} — questions
+                    </h3>
+                    {groups.map((group, gi) => {
+                      const firstN = numberCursor + 1
+                      const lastN = numberCursor + group.questions.length
+                      const rangeLabel =
+                        group.questions.length > 1
+                          ? `Questions ${firstN}–${lastN}`
+                          : `Question ${firstN}`
+                      const node = (
+                        <div key={gi} className="question-group mb-8">
+                          <div className="mb-3 rounded-md bg-amber-50 px-4 py-2 text-sm text-slate-700">
+                            <div className="font-semibold">{rangeLabel}</div>
+                            {group.instruction && (
+                              <div className="mt-0.5 text-slate-600">
+                                {group.instruction}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="space-y-5">
-                        {group.questions.map((q, i) => {
-                          const number = numberCursor + i + 1
-                          return (
-                            <div
-                              id={`q-${q.id}`}
-                              key={q.id}
-                              data-qid={q.id}
-                              className={`rounded-md p-2 transition-colors ${
-                                currentQId === q.id ? 'bg-amber-50' : ''
-                              }`}
-                              onFocus={() => setCurrentQId(q.id)}
-                            >
-                              <QuestionRenderer
-                                question={q}
-                                value={answers[q.id] ?? null}
-                                onChange={(v) => handleAnswer(q.id, v)}
-                                number={number}
-                              />
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                  numberCursor += group.questions.length
-                  return node
-                })}
-              </div>
-            )
-          })}
-        </section>
-      </main>
+                          <div className="space-y-5">
+                            {group.questions.map((q, i) => {
+                              const number = numberCursor + i + 1
+                              const flagged = flags.has(q.id)
+                              return (
+                                <div
+                                  id={`q-${q.id}`}
+                                  key={q.id}
+                                  data-qid={q.id}
+                                  className={`relative rounded-md p-2 transition-colors ${
+                                    currentQId === q.id ? 'bg-amber-50' : ''
+                                  } ${flagged ? 'ring-1 ring-amber-300' : ''}`}
+                                  onFocus={() => setCurrentQId(q.id)}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => flags.toggle(q.id)}
+                                    title={
+                                      flagged
+                                        ? 'Remove review flag'
+                                        : 'Flag this question for review'
+                                    }
+                                    className={`absolute right-2 top-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs transition-colors ${
+                                      flagged
+                                        ? 'border-amber-500 bg-amber-500 text-white hover:bg-amber-600'
+                                        : 'border-slate-200 bg-white text-slate-400 hover:border-amber-400 hover:text-amber-500'
+                                    }`}
+                                    aria-pressed={flagged}
+                                    aria-label={
+                                      flagged ? 'Unflag question' : 'Flag question for review'
+                                    }
+                                  >
+                                    <Flag className="h-3.5 w-3.5" />
+                                  </button>
+                                  <QuestionRenderer
+                                    question={q}
+                                    value={answers[q.id] ?? null}
+                                    onChange={(v) => handleAnswer(q.id, v)}
+                                    number={number}
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                      numberCursor += group.questions.length
+                      return node
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          }
+        />
+      )}
 
-      <footer className="shrink-0 border-t bg-white px-6 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="text-sm text-slate-600">
-            <span className="font-semibold text-slate-900">{answeredCount}</span>{' '}
-            / {allQuestions.length} javob
+      {!reviewOpen && (
+        <footer className="shrink-0 border-t bg-white px-6 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              <span className="font-semibold text-slate-900">{answeredCount}</span>{' '}
+              / {allQuestions.length} answered
+              {flags.flags.size > 0 && (
+                <span className="ml-3 inline-flex items-center gap-1 text-amber-600">
+                  <Flag className="h-3.5 w-3.5" /> {flags.flags.size}
+                </span>
+              )}
+            </div>
+            <div className="flex max-w-full flex-1 flex-wrap gap-x-3 gap-y-1.5 overflow-x-auto">
+              {sections.map((p, sectionIdx) => {
+                const startCursor = sections
+                  .filter((pp) => pp.order < p.order)
+                  .reduce((sum, pp) => sum + pp.questions.length, 0)
+                return (
+                  <div key={p.id} className="flex items-center gap-1.5">
+                    {sectionIdx > 0 && (
+                      <span className="mx-1 h-6 w-px shrink-0 bg-slate-200" />
+                    )}
+                    <span className="select-none text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      P{p.part_number}
+                    </span>
+                    {p.questions.map((q, j) => {
+                      const number = startCursor + j + 1
+                      const answered = answers[q.id] != null && answers[q.id] !== ''
+                      const isCurrent = currentQId === q.id
+                      const flagged = flags.has(q.id)
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => scrollToQuestion(q.id)}
+                          className={`q-dot relative flex h-8 w-8 items-center justify-center rounded-md border text-xs font-medium transition-colors ${
+                            isCurrent
+                              ? 'border-amber-400 bg-amber-400 text-slate-900'
+                              : answered
+                                ? 'border-slate-900 bg-slate-900 text-white'
+                                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                          }`}
+                          aria-label={`Go to question ${number}`}
+                        >
+                          {number}
+                          {flagged && (
+                            <span
+                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-amber-500"
+                              aria-hidden
+                            />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
           </div>
-          <div className="flex max-w-full flex-1 flex-wrap gap-1.5 overflow-x-auto">
-            {allQuestions.map((q, i) => {
-              const answered =
-                answers[q.id] != null && answers[q.id] !== ''
-              const isCurrent = currentQId === q.id
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => scrollToQuestion(q.id)}
-                  className={`q-dot flex h-8 w-8 items-center justify-center rounded-md border text-xs font-medium transition-colors ${
-                    isCurrent
-                      ? 'border-amber-400 bg-amber-400 text-slate-900'
-                      : answered
-                        ? 'border-slate-900 bg-slate-900 text-white'
-                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                  aria-label={`Go to question: ${i + 1}`}
-                >
-                  {i + 1}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
