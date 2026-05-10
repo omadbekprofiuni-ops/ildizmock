@@ -191,13 +191,17 @@ export function ListeningSection({
     return () => window.removeEventListener('beforeunload', handler)
   }, [audioState])
 
-  // ── THE SINGLE START HANDLER (spec form) ──────────────────────────
-  // 1. Validate audio. 2. Try play(). 3. On success: mark playing +
-  //    POST audio-started (refresh-safety). 4. On failure: rollback +
-  //    show error so user can click again.
-  // CRITICAL: POSTs happen AFTER play() succeeds — never mark "started"
-  // for a failed play attempt, otherwise refresh would falsely restore
-  // to 'playing' state.
+  // ── THE SINGLE START HANDLER ──────────────────────────────────────
+  // CRITICAL: audio.play() must be called SYNCHRONOUSLY inside the
+  // click handler so the browser keeps the user gesture. Awaiting
+  // BEFORE the play() call can lose the gesture on Safari/WebKit and
+  // cause NotAllowedError. The spec pattern: capture the promise
+  // first, do optimistic UI + POST, THEN await the promise.
+  //
+  // Tradeoff: if .play() ultimately rejects (autoplay block, decode
+  // error), the "started" POST has already landed. Recovery: refresh
+  // restores the user to audioInterrupted state — they can mark audio
+  // complete and submit anyway. That state machine is intentional.
   const handleStart = async () => {
     if (starting) return                    // double-click guard
     const el = audioRef.current
@@ -214,16 +218,17 @@ export function ListeningSection({
     setStarting(true)
     setAudioError(null)
     try {
-      await el.play()
+      // Direct play() in click handler — user gesture preserved
+      const playPromise = el.play()
       setAudioState('playing')
-      // Mark all parts as "started" — refresh-safety. Backend has 4
-      // ListeningPart rows; single-audio mode means all 4 are started
-      // simultaneously.
+      // Mark "started" for all parts (single-audio mode → all 4 at once,
+      // refresh-safety).
       for (const p of parts) {
         api
           .post(`/mock/audio-played/${bsid}/`, { part_order: p.part_number })
           .catch(() => { /* best-effort */ })
       }
+      if (playPromise !== undefined) await playPromise
     } catch (err: unknown) {
       const e = err as { name?: string; message?: string }
       const detail
