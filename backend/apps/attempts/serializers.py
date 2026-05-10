@@ -33,14 +33,28 @@ class AttemptListSerializer(serializers.ModelSerializer):
 class AttemptDetailSerializer(serializers.ModelSerializer):
     test = TestDetailSerializer(read_only=True)
     answers_saved = serializers.SerializerMethodField()
+    strict_mode = serializers.SerializerMethodField()
 
     class Meta:
         model = Attempt
         fields = ['id', 'status', 'started_at', 'submitted_at', 'time_spent_seconds',
-                  'test', 'answers_saved', 'essay_text', 'word_count']
+                  'test', 'answers_saved', 'essay_text', 'word_count',
+                  'flagged_as_cheating', 'auto_submitted', 'auto_submit_reason',
+                  'strict_mode']
 
     def get_answers_saved(self, obj):
         return {str(a.question_id): a.user_answer for a in obj.answers.all()}
+
+    def get_strict_mode(self, obj):
+        """ETAP 29 — frontend strict mode hook'i shu maydondan settings oladi."""
+        org = getattr(obj.test, 'organization', None)
+        if org is None:
+            # Library / superadmin tests — default
+            return {'enabled': True, 'violation_limit': 3}
+        return {
+            'enabled': bool(getattr(org, 'test_strict_mode_enabled', True)),
+            'violation_limit': int(getattr(org, 'test_violation_limit', 3)),
+        }
 
 
 class _AnswerResultSerializer(serializers.ModelSerializer):
@@ -75,6 +89,7 @@ class AttemptResultSerializer(serializers.ModelSerializer):
         fields = ['id', 'test', 'test_name', 'module', 'status', 'started_at',
                   'submitted_at', 'raw_score', 'total_questions', 'band_score',
                   'section_band_scores',
+                  'flagged_as_cheating', 'auto_submitted', 'auto_submit_reason',
                   'essay_text', 'word_count', 'teacher_feedback',
                   'graded_by_name', 'graded_at', 'answers']
 

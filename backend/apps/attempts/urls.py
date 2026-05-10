@@ -11,6 +11,11 @@ from .student_views import (
     StudentTestListView,
     StudentUploadRecordingView,
 )
+from .violation_views import (
+    AttemptViolationsView,
+    OrgStrictModeSettingsView,
+    RecordViolationView,
+)
 from .student_writing_views import MyDashboardView, MyWritingsView, SubmitWritingView
 from .teacher_views import (
     TeacherQueueView,
@@ -48,4 +53,15 @@ urlpatterns = [
          StudentSubmitView.as_view()),
     path('student/attempts/<uuid:attempt_id>/upload-recording/',
          StudentUploadRecordingView.as_view()),
+
+    # ETAP 29 — Strict Test Mode (anti-cheating)
+    path('student/attempts/<uuid:attempt_id>/violations/',
+         RecordViolationView.as_view(),
+         name='strict-record-violation'),
+    path('admin/attempts/<uuid:attempt_id>/violations/',
+         AttemptViolationsView.as_view(),
+         name='strict-attempt-violations'),
+    path('admin/strict-mode-settings/',
+         OrgStrictModeSettingsView.as_view(),
+         name='strict-mode-settings'),
 ] + router.urls
