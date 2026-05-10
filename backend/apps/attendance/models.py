@@ -97,6 +97,11 @@ class AttendanceSession(models.Model):
         default=False,
         help_text='Records cannot be modified after the session ends',
     )
+    # ETAP 28 — 72-soatlik avtomatik lock. Manual yopish uchun ham ishlatiladi.
+    locked_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Set manually or 72h after session — marks become read-only',
+    )
     notes = models.TextField(blank=True, default='')
 
     created_by = models.ForeignKey(
@@ -129,6 +134,21 @@ class AttendanceSession(models.Model):
 
     def get_count(self, status: str) -> int:
         return self.records.filter(status=status).count()
+
+    def is_locked(self) -> bool:
+        """ETAP 28 — Records faqat 72 soat ichida tahrirlanadi."""
+        from django.utils import timezone
+
+        if self.locked_at:
+            return True
+        if self.is_finalized:
+            return True
+        # Auto-lock: 72 soat o'tgach yozuvlar read-only
+        if self.created_at and (
+            timezone.now() - self.created_at
+        ).total_seconds() > 72 * 3600:
+            return True
+        return False
 
 
 class AttendanceRecord(models.Model):
@@ -170,6 +190,17 @@ class AttendanceRecord(models.Model):
         related_name='marked_attendance_records',
     )
 
+    # ETAP 28 — qo'shimcha audit / Telegram trackingi
+    edited_count = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Bu yozuv necha marta o'zgartirilgan",
+    )
+    parent_notified = models.BooleanField(
+        default=False,
+        help_text='Telegram bot orqali ota-onaga xabar yuborilganmi',
+    )
+    parent_notified_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = 'attendance_records'
         ordering = ['student__first_name', 'student__last_name']
@@ -183,3 +214,103 @@ class AttendanceRecord(models.Model):
             or self.student.username
         )
         return f'{name} — {self.session.date:%d.%m.%Y} — {self.get_status_display()}'
+
+    @property
+    def credit_percent(self) -> float:
+        """ETAP 28 — Davomat foiziga shu yozuvning hissasi.
+
+        Late = 80% (kechikdi, lekin keldi). Excused/Sick = 100% (sababli
+        yo'q, jazolanmaydi). Absent = 0%.
+        """
+        return {
+            'present': 100.0,
+            'late': 80.0,
+            'excused': 100.0,
+            'sick': 100.0,
+            'absent': 0.0,
+        }.get(self.status, 0.0)
+
+
+class AttendanceEscalation(models.Model):
+    """ETAP 28 — Talaba 3/5/10 ta sababsiz qoldirsa avtomatik ogohlantirish.
+
+    Tier'lar:
+        warning   — 3 ta absent (markaz adminga xabar)
+        reprimand — 5 ta absent (jiddiy ogohlantirish)
+        removal   — 10 ta absent (guruhdan chiqarish tavsiyasi)
+    """
+
+    TIER_CHOICES = [
+        ('warning', 'Warning (3 absences)'),
+        ('reprimand', 'Reprimand (5 absences)'),
+        ('removal', 'Removal recommended (10 absences)'),
+    ]
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='attendance_escalations',
+        limit_choices_to={'role': 'student'},
+    )
+    group = models.ForeignKey(
+        'organizations.StudentGroup',
+        on_delete=models.CASCADE,
+        related_name='attendance_escalations',
+    )
+    tier = models.CharField(max_length=16, choices=TIER_CHOICES)
+    absence_count = models.PositiveSmallIntegerField(
+        help_text='Triggered count (3, 5 yoki 10)',
+    )
+    triggered_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='attendance_escalations_resolved',
+    )
+    resolution_note = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'attendance_escalations'
+        ordering = ['-triggered_at']
+        indexes = [
+            models.Index(fields=['student', 'tier', 'resolved_at']),
+        ]
+        verbose_name = 'Attendance escalation'
+        verbose_name_plural = 'Attendance escalations'
+
+    def __str__(self):
+        return f'{self.student_id} — {self.tier} ({self.absence_count} absences)'
+
+
+class TelegramBinding(models.Model):
+    """ETAP 28 — Ota-onaning Telegram chat_id'sini talabaga bog'laydi.
+
+    Bir talabaga bir nechta ota-ona (chat_id) bog'lanishi mumkin.
+    Bot keyingi etapda integratsiya qilinadi, lekin schema tayyor bo'lsin.
+    """
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='telegram_bindings',
+        limit_choices_to={'role': 'student'},
+    )
+    chat_id = models.CharField(
+        max_length=32,
+        help_text='Telegram chat ID (bot orqali olinadi)',
+    )
+    parent_name = models.CharField(max_length=100, blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    bound_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'attendance_telegram_bindings'
+        unique_together = [('student', 'chat_id')]
+        indexes = [models.Index(fields=['chat_id'])]
+        verbose_name = 'Telegram binding'
+        verbose_name_plural = 'Telegram bindings'
+
+    def __str__(self):
+        return f'{self.student_id} ↔ {self.chat_id}'
