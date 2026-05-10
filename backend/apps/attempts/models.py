@@ -40,6 +40,12 @@ class Attempt(models.Model):
     raw_score = models.IntegerField(null=True, blank=True)
     total_questions = models.IntegerField(null=True, blank=True)
     band_score = models.DecimalField(max_digits=2, decimal_places=1, null=True, blank=True)
+    # ETAP 25 — per-section raw / band breakdown.
+    # Shape: {"reading": {"raw": 32, "max": 40, "band": 7.0}, ...}
+    section_band_scores = models.JSONField(default=dict, blank=True)
+    # ETAP 25 — Speaking recordings keyed by question id (or `qid-subindex` for
+    # part-1/3 multi-prompt sets). Values are media URLs.
+    speaking_recordings = models.JSONField(default=dict, blank=True)
     # For writing module — essay text + word count (AI band filled later)
     essay_text = models.TextField(blank=True, default='')
     word_count = models.IntegerField(null=True, blank=True)
