@@ -54,7 +54,9 @@ class PassagePublicSerializer(serializers.ModelSerializer):
         model = Passage
         fields = ['id', 'part_number', 'title', 'subtitle', 'content',
                   'instructions', 'audio_file', 'audio_duration_seconds',
-                  'min_words', 'order', 'image_url', 'questions']
+                  'min_words', 'order', 'image_url', 'questions',
+                  # ETAP 30 — HTML test platform
+                  'content_source', 'content_html']
 
     def get_audio_file(self, obj):
         return _absolute_url(obj.audio_file, self.context)

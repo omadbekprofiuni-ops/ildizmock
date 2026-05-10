@@ -28,6 +28,7 @@ from .pdf_views import (
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
 from .views_answer_sheet import AnswerSheetPreviewView
+from .views_html_content import HtmlContentPreviewView
 from .views_library import (
     LibraryCloneToOrgView,
     LibraryTestDetailView,
@@ -83,6 +84,10 @@ urlpatterns = [
     # ETAP 27 — Smart Answer Sheet (pasted answer key only, qtype auto-detect)
     path('admin/answer-sheet/preview/', AnswerSheetPreviewView.as_view(),
          name='answer-sheet-preview'),
+
+    # ETAP 30 — HTML Test Platform (DSL → HTML preview + validation)
+    path('admin/html-content/preview/', HtmlContentPreviewView.as_view(),
+         name='html-content-preview'),
 
     # ETAP 27 — Library (superadmin global testlar, markaz clone qiladi)
     path('library/tests/', LibraryTestListView.as_view(),

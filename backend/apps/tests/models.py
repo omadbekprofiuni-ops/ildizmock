@@ -125,6 +125,19 @@ class Passage(models.Model):
     min_words = models.IntegerField(null=True, blank=True)
     order = models.IntegerField(default=0)
 
+    # ETAP 30 — HTML Test Platform (examy.me-style content)
+    # content_source = adminning markdown-uslubidagi DSL manba matni;
+    # content_html = parser yaratgan rendered HTML (talabaga ko'rsatiladi).
+    # Eski 'content' maydoni saqlanadi (legacy testlar uchun).
+    content_source = models.TextField(
+        blank=True, default='',
+        help_text='HTML DSL manba matni (admin tahrir qiladi). {1}, {2} markerlar.',
+    )
+    content_html = models.TextField(
+        blank=True, default='',
+        help_text='Parser tomonidan generatsiya qilingan HTML. To\'g\'ridan-to\'g\'ri tahrir qilmang.',
+    )
+
     class Meta:
         ordering = ['order', 'part_number']
 
