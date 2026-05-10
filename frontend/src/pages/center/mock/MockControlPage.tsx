@@ -69,6 +69,8 @@ interface SessionDetail {
   listening_test: { id: string; name: string } | null
   reading_test: { id: string; name: string } | null
   writing_test: { id: string; name: string } | null
+  listening_pdf_test: { id: string; name: string } | null
+  reading_pdf_test: { id: string; name: string } | null
   allow_late_join: boolean
   allow_guests: boolean
   link_expires_at: string | null
@@ -257,7 +259,7 @@ export default function MockControlPage() {
       <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
         >
           <ArrowLeft size={14} /> Sessions
         </Link>
@@ -280,7 +282,7 @@ export default function MockControlPage() {
       </div>
 
       {/* Join link */}
-      <SurfaceCard className="mb-6 border-red-100 bg-red-50/40">
+      <SurfaceCard className="mb-6 border-red-100 bg-brand-50/40">
         <p className="mb-2 text-sm font-semibold text-slate-700">
           Join link for students:
         </p>
@@ -298,7 +300,7 @@ export default function MockControlPage() {
         </div>
         <p className="mt-2 text-xs text-slate-600">
           Access code:{' '}
-          <code className="rounded bg-white px-2 py-0.5 font-mono text-red-700">
+          <code className="rounded bg-white px-2 py-0.5 font-mono text-brand-700">
             {session.access_code}
           </code>
         </p>
@@ -310,10 +312,15 @@ export default function MockControlPage() {
 
         {session.status === 'waiting' && (() => {
           // Sessiyada qaysi bo'limlar biriktirilgan — start o'shaning birinchisidan boshlaydi.
+          // Listening/Reading uchun PDF test ham biriktirilgan bo'lishi mumkin.
           const sectionOrder = ['listening', 'reading', 'writing'] as const
-          const firstSection = sectionOrder.find(
-            (s) => session[`${s}_test` as const],
-          )
+          const hasTest = (s: (typeof sectionOrder)[number]): boolean => {
+            if (session[`${s}_test` as const]) return true
+            if (s === 'listening' && session.listening_pdf_test) return true
+            if (s === 'reading' && session.reading_pdf_test) return true
+            return false
+          }
+          const firstSection = sectionOrder.find(hasTest)
           const noParticipants = session.participants.length === 0
           const noTests = !firstSection
           const blockReason = noTests
@@ -325,6 +332,17 @@ export default function MockControlPage() {
           const firstLabel = firstSection
             ? firstSection.charAt(0).toUpperCase() + firstSection.slice(1)
             : '—'
+          // Biriktirilgan testlar ro'yxati — admin tasdiqlashi uchun
+          const attachedRows: string[] = []
+          for (const s of sectionOrder) {
+            const reg = session[`${s}_test` as const]
+            if (reg) attachedRows.push(`${s.charAt(0).toUpperCase()}${s.slice(1)}: ${reg.name}`)
+            const pdf =
+              s === 'listening' ? session.listening_pdf_test
+              : s === 'reading' ? session.reading_pdf_test
+              : null
+            if (pdf) attachedRows.push(`${s.charAt(0).toUpperCase()}${s.slice(1)} (PDF): ${pdf.name}`)
+          }
           return (
             <>
               <button
@@ -339,6 +357,13 @@ export default function MockControlPage() {
               <p className="mt-2 text-sm text-slate-600">
                 {session.participants.length} students joined
               </p>
+              {attachedRows.length > 0 && (
+                <ul className="mt-2 space-y-0.5 text-xs text-slate-600">
+                  {attachedRows.map((r) => (
+                    <li key={r}>• {r}</li>
+                  ))}
+                </ul>
+              )}
               {blockReason && (
                 <p className="mt-1 text-sm font-medium text-amber-700">
                   ⚠ {blockReason}
@@ -417,7 +442,7 @@ export default function MockControlPage() {
 
         {session.status === 'cancelled' && (
           <div className="text-center">
-            <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-rose-600">
+            <p className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-cta-600">
               <XOctagon size={20} /> Session cancelled
             </p>
             <button
@@ -442,7 +467,7 @@ export default function MockControlPage() {
               type="button"
               onClick={cancel}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-cta-100 bg-white px-4 py-2 text-sm text-cta-600 hover:bg-cta-50"
             >
               <XOctagon size={14} /> Cancel session
             </button>
@@ -543,7 +568,7 @@ export default function MockControlPage() {
                           )
                           load()
                         }}
-                        className="rounded p-1 text-rose-500 hover:bg-rose-100"
+                        className="rounded p-1 text-cta-500 hover:bg-cta-100"
                         title="Remove"
                       >
                         <Trash2 size={14} />
@@ -663,7 +688,7 @@ function AddParticipantsDialog({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, username or phone…"
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-red-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </div>
 
@@ -687,7 +712,7 @@ function AddParticipantsDialog({
                       type="checkbox"
                       checked={selected.has(s.id)}
                       onChange={() => toggle(s.id)}
-                      className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-slate-900">
@@ -706,7 +731,7 @@ function AddParticipantsDialog({
         </div>
 
         {error && (
-          <div className="border-t border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-700">
+          <div className="border-t border-rose-100 bg-cta-50 px-6 py-3 text-sm text-cta-700">
             {error}
           </div>
         )}

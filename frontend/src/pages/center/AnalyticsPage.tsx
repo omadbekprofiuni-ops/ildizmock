@@ -111,7 +111,7 @@ export default function CenterAnalyticsPage() {
 
       {query.isLoading && <p className="text-slate-500">Loading…</p>}
       {query.isError && (
-        <p className="text-rose-600">Couldn't load data.</p>
+        <p className="text-cta-600">Couldn't load data.</p>
       )}
 
       {data && (

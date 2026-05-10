@@ -36,7 +36,7 @@ const MODULE_LABEL: Record<string, string> = {
 const STATUS_TONE: Record<string, string> = {
   draft: 'bg-slate-100 text-slate-700',
   published: 'bg-emerald-100 text-emerald-700',
-  archived: 'bg-rose-100 text-rose-700',
+  archived: 'bg-cta-100 text-cta-700',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -99,7 +99,7 @@ export default function OrgTestsPage() {
           </div>
           <Link
             to="/super/tests/wizard"
-            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-brand-700"
           >
             <Plus className="h-4 w-4" />
             New test
@@ -124,7 +124,7 @@ export default function OrgTestsPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Test name or category..."
-                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
               <select
@@ -217,7 +217,7 @@ export default function OrgTestsPage() {
                         <td className="px-4 py-3 text-right">
                           <Link
                             to={`/super/org/${orgId}/tests/${t.id}/results`}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700"
                           >
                             Results →
                           </Link>

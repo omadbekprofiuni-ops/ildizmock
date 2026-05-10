@@ -159,7 +159,7 @@ export default function AdminTestsPage({
                               }
                             }}
                           >
-                            <Trash2 className="h-4 w-4 text-rose-600" />
+                            <Trash2 className="h-4 w-4 text-cta-600" />
                           </Button>
                         </div>
                       </td>

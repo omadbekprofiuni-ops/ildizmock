@@ -47,7 +47,7 @@ function TrendBadge({ trend }: { trend: Group['trend'] }) {
   }
   if (trend === 'declining') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+      <span className="inline-flex items-center gap-1 rounded-md bg-cta-50 px-2 py-0.5 text-xs font-medium text-cta-700">
         <ArrowDown size={12} /> Pasaymoqda
       </span>
     )
@@ -120,7 +120,7 @@ export default function GroupsListPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Group or teacher name…"
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <span className="text-xs text-slate-500">
@@ -148,11 +148,11 @@ export default function GroupsListPage() {
             <Link
               key={g.id}
               to={`/${slug}/admin/groups/${g.id}`}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-red-300 hover:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-300 hover:shadow-md"
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
-                  <h3 className="truncate text-base font-semibold text-slate-900 group-hover:text-red-700">
+                  <h3 className="truncate text-base font-semibold text-slate-900 group-hover:text-brand-700">
                     {g.name}
                   </h3>
                   <p className="mt-0.5 text-xs text-slate-500">
@@ -183,11 +183,11 @@ export default function GroupsListPage() {
                     O‘rtacha
                   </div>
                 </div>
-                <div className="rounded-lg bg-red-50 px-3 py-2 text-center">
-                  <div className="text-lg font-semibold text-red-700">
+                <div className="rounded-lg bg-brand-50 px-3 py-2 text-center">
+                  <div className="text-lg font-semibold text-brand-700">
                     {g.latest_avg != null ? g.latest_avg.toFixed(1) : '—'}
                   </div>
-                  <div className="text-[10px] uppercase tracking-wide text-red-600">
+                  <div className="text-[10px] uppercase tracking-wide text-brand-600">
                     So‘nggi
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export default function GroupsListPage() {
 
               <div className="mt-4 flex items-center justify-between">
                 <TrendBadge trend={g.trend} />
-                <span className="inline-flex items-center gap-1 text-xs text-slate-500 group-hover:text-red-600">
+                <span className="inline-flex items-center gap-1 text-xs text-slate-500 group-hover:text-brand-600">
                   Batafsil <ArrowRight size={12} />
                 </span>
               </div>

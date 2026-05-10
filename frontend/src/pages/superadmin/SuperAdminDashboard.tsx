@@ -70,7 +70,7 @@ export default function SuperAdminDashboard() {
         />
 
         {q.isLoading && <p className="text-slate-500">Loading…</p>}
-        {q.isError && <p className="text-rose-600">Failed to load statistics.</p>}
+        {q.isError && <p className="text-cta-600">Failed to load statistics.</p>}
 
         {q.data && (
           <div className="space-y-6">
@@ -219,7 +219,7 @@ function StatusRow({
   const dotClass = {
     emerald: 'bg-emerald-500',
     amber: 'bg-amber-500',
-    rose: 'bg-rose-500',
+    rose: 'bg-cta-500',
     slate: 'bg-slate-400',
   }[tone]
   return (

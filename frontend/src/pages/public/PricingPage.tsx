@@ -29,64 +29,84 @@ export default function PricingPage() {
 
   return (
     <PublicLayout>
-      {/* Header */}
-      <section className="px-6 py-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 md:text-5xl">
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden px-8 pb-12 pt-24 text-center">
+        <div className="hero-bg" />
+        <div className="relative mx-auto max-w-3xl">
+          <div className="eyebrow">
+            <span className="eyebrow__dot" />
+            Simple, transparent pricing
+          </div>
+          <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
             {t('pricing.title')}
           </h1>
-          <p className="mt-4 text-lg text-gray-600">{t('pricing.subtitle')}</p>
+          <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-slate-600">
+            {t('pricing.subtitle')}
+          </p>
         </div>
       </section>
 
-      {/* Single Pricing Card */}
-      <section className="px-6 pb-20">
+      {/* ── PRICING CARD ── */}
+      <section className="px-8 pb-20">
         <div className="mx-auto max-w-2xl">
-          <div className="overflow-hidden rounded-2xl border-2 border-brand-500 bg-white shadow-xl">
-            {/* Card header */}
-            <div className="bg-brand-500 px-8 py-8 text-center text-white">
-              <h2 className="text-3xl font-bold">{t('pricing.card.name')}</h2>
-              <p className="mt-2 text-brand-50">{t('pricing.card.description')}</p>
-            </div>
+          <div
+            className="relative overflow-hidden rounded-[28px] text-white"
+            style={{ background: 'var(--gradient-hero)', boxShadow: 'var(--shadow-xl)' }}
+          >
+            <span className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-[-50%] rounded-full bg-cta-500 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.04em] text-white">
+              Most Popular
+            </span>
+
+            {/* Background pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.08]"
+              style={{
+                backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
+                backgroundSize: '32px 32px',
+              }}
+            />
 
             {/* Card body */}
-            <div className="bg-gradient-to-br from-white to-gray-50 px-8 py-10">
-              {/* Primary price */}
-              <div className="mb-8 text-center">
-                <div className="mb-3">
-                  <span className="text-5xl font-extrabold text-gray-900">
+            <div className="relative px-10 py-12">
+              <div className="text-center">
+                <div className="text-[13px] font-extrabold uppercase tracking-[0.06em] text-white/80">
+                  {t('pricing.card.name')}
+                </div>
+                <p className="mt-2 text-base text-white/85">{t('pricing.card.description')}</p>
+                <div className="mt-7 flex items-baseline justify-center gap-2">
+                  <span className="text-5xl font-extrabold tracking-tight text-white md:text-[56px]">
                     {t('pricing.card.price')}
                   </span>
-                  <span className="ml-2 text-2xl text-gray-600">
-                    {t('pricing.card.currency')}
-                  </span>
+                  <span className="text-xl text-white/80">{t('pricing.card.currency')}</span>
                 </div>
-                <p className="text-gray-600">{t('pricing.card.priceNote')}</p>
+                <p className="mt-1.5 text-sm text-white/75">{t('pricing.card.priceNote')}</p>
               </div>
 
-              {/* Tier-after note */}
-              <div className="mb-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-700">
+              {/* Tier-after callout */}
+              <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-white/95">
                     {t('pricing.card.tierAfterLabel')}
                   </span>
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="text-2xl font-extrabold text-white">
                     {t('pricing.card.tierAfterPrice')}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-[13px] text-white/80">
                   {t('pricing.card.tierAfterNote')}
                 </p>
               </div>
 
               {/* Features */}
-              <ul className="mb-8 space-y-4">
+              <ul className="mt-8 space-y-3.5">
                 {features.map((feature) => (
-                  <li key={feature.title} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-6 w-6 flex-shrink-0 text-emerald-500" />
+                  <li key={feature.title} className="flex items-start gap-3 text-white/95">
+                    <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-white/20">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    </span>
                     <div>
-                      <p className="font-semibold text-gray-900">{feature.title}</p>
-                      <p className="mt-0.5 text-sm text-gray-600">
+                      <p className="text-[15px] font-bold">{feature.title}</p>
+                      <p className="mt-0.5 text-[13.5px] text-white/80">
                         {feature.description}
                       </p>
                     </div>
@@ -97,7 +117,7 @@ export default function PricingPage() {
               {/* CTA */}
               <Link
                 to="/login"
-                className="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-brand-600 hover:shadow-xl"
+                className="mt-9 inline-flex w-full items-center justify-center rounded-2xl bg-cta-500 px-6 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]"
               >
                 {t('pricing.card.cta')}
               </Link>
@@ -106,10 +126,10 @@ export default function PricingPage() {
 
           {/* Contact link */}
           <div className="mt-10 text-center">
-            <p className="text-gray-600">{t('pricing.questions')}</p>
+            <p className="text-slate-600">{t('pricing.questions')}</p>
             <Link
               to="/login"
-              className="mt-2 inline-block font-semibold text-brand-600 hover:text-brand-700"
+              className="mt-2 inline-block font-bold text-brand-600 hover:text-brand-700"
             >
               {t('pricing.contact')} →
             </Link>
@@ -117,26 +137,27 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="bg-gray-50 px-6 py-20">
+      {/* ── FAQ ── */}
+      <section className="bg-slate-50 px-8 py-20">
         <div className="mx-auto max-w-3xl">
-          <h2 className="mb-10 text-center text-3xl font-bold text-gray-900">
+          <h2 className="mb-10 text-center text-3xl font-extrabold tracking-tight text-slate-900">
             {t('pricing.faq.title')}
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqItems.map((item) => (
               <details
                 key={item.q}
-                className="group rounded-xl border border-gray-200 bg-white p-6 shadow-soft open:border-brand-300"
+                className="group rounded-[18px] border border-slate-100 bg-white p-6 transition-all open:border-brand-200"
+                style={{ boxShadow: 'var(--shadow-sm)' }}
               >
-                <summary className="flex cursor-pointer items-center justify-between font-semibold text-gray-900">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-bold text-slate-900">
                   {item.q}
-                  <span className="ml-4 text-brand-500 transition-transform group-open:rotate-180">
-                    ⌄
+                  <span className="text-2xl font-extrabold text-brand-600 transition-transform group-open:rotate-45">
+                    +
                   </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{item.a}</p>
+                <p className="mt-3 text-[14px] leading-relaxed text-slate-600">{item.a}</p>
               </details>
             ))}
           </div>

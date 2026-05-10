@@ -10,6 +10,7 @@ import {
   adminTable,
   btnPrimary,
 } from '@/components/admin-shell'
+import { useConfirm } from '@/components/ConfirmDialog'
 import { api } from '@/lib/api'
 
 interface TestRow {
@@ -30,6 +31,18 @@ interface TestRow {
   created_at: string
   published_at: string | null
   already_cloned?: boolean
+  is_pdf?: boolean
+  pdf_id?: string
+}
+
+interface PDFTestRow {
+  id: string
+  name: string
+  module: string
+  difficulty: string
+  total_questions: number
+  duration_minutes: number
+  created_at: string
 }
 
 const MODULE_LABEL: Record<string, string> = {
@@ -52,6 +65,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 
 export default function TestsPage() {
   const { slug } = useParams<{ slug: string }>()
+  const confirm = useConfirm()
   const [tab, setTab] = useState<'mine' | 'catalog' | 'archived'>('mine')
   const [mine, setMine] = useState<TestRow[]>([])
   const [archived, setArchived] = useState<TestRow[]>([])
@@ -67,9 +81,39 @@ export default function TestsPage() {
   const loadMine = () => {
     if (!slug) return
     setLoading(true)
-    api
-      .get<TestRow[]>(`/center/${slug}/tests/`)
-      .then((r) => setMine(r.data))
+    Promise.all([
+      api.get<TestRow[]>(`/center/${slug}/tests/`),
+      api
+        .get<{ tests: PDFTestRow[] }>(`/pdf-tests/`)
+        .then((r) => r.data.tests ?? [])
+        .catch(() => [] as PDFTestRow[]),
+    ])
+      .then(([reg, pdfs]) => {
+        const pdfRows: TestRow[] = pdfs.map((p) => ({
+          id: `pdf:${p.id}`,
+          pdf_id: p.id,
+          name: p.name,
+          module: p.module,
+          difficulty: p.difficulty,
+          test_type: 'academic',
+          status: 'published',
+          description: '',
+          category: '',
+          duration_minutes: p.duration_minutes,
+          is_global: false,
+          organization: null,
+          cloned_from: null,
+          questions_count: p.total_questions,
+          is_cloned: false,
+          created_at: p.created_at,
+          published_at: p.created_at,
+          is_pdf: true,
+        }))
+        const merged = [...reg.data, ...pdfRows].sort((a, b) =>
+          (b.created_at ?? '').localeCompare(a.created_at ?? ''),
+        )
+        setMine(merged)
+      })
       .finally(() => setLoading(false))
   }
 
@@ -186,6 +230,27 @@ export default function TestsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, slug, filter])
 
+  const deletePdfTest = async (pdfId: string, name: string) => {
+    const ok = await confirm({
+      title: 'Delete PDF test?',
+      description: `"${name}" — barcha urinishlar ham CASCADE bilan o'chiriladi. Bu amalni qaytarib bo'lmaydi.`,
+      confirmText: "O'chirish",
+      tone: 'danger',
+    })
+    if (!ok) return
+    setBusy(`pdf:${pdfId}`)
+    try {
+      await api.delete(`/pdf-tests/${pdfId}/delete/`)
+      setMessage('PDF test deleted.')
+      loadMine()
+    } catch (e: unknown) {
+      setMessage(extractError(e))
+    } finally {
+      setBusy(null)
+      setTimeout(() => setMessage(''), 4000)
+    }
+  }
+
   const cloneTest = async (testId: string) => {
     if (!slug) return
     setBusy(testId)
@@ -230,9 +295,17 @@ export default function TestsPage() {
         title="Testlar"
         subtitle="Tests in the center's database and the global catalog prepared by SuperAdmin"
         actions={
-          <Link to={`/${slug}/admin/tests/new`} className={btnPrimary}>
-            <Plus size={16} /> New test
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to={`/${slug}/admin/tests/pdf-create`}
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+            >
+              <FileText size={16} /> PDF Test (Quick)
+            </Link>
+            <Link to={`/${slug}/admin/tests/new`} className={btnPrimary}>
+              <Plus size={16} /> New test
+            </Link>
+          </div>
         }
       />
 
@@ -276,7 +349,7 @@ export default function TestsPage() {
       )}
 
       {message && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
           {message}
         </div>
       )}
@@ -284,7 +357,7 @@ export default function TestsPage() {
       <TableCard
         title={
           <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
-            <FileText size={18} className="text-red-600" />
+            <FileText size={18} className="text-brand-600" />
             {tab === 'mine' ? 'Mening testlarim' : 'Global katalog'}
           </div>
         }
@@ -319,7 +392,12 @@ export default function TestsPage() {
               rows.map((t) => (
                 <tr key={t.id} className={adminTable.trHover}>
                   <td className={adminTable.td}>
-                    <div className="font-semibold text-slate-900">{t.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900">{t.name}</span>
+                      {t.is_pdf && (
+                        <Chip tone="violet">PDF</Chip>
+                      )}
+                    </div>
                     {t.category && (
                       <div className="text-xs text-slate-500">{t.category}</div>
                     )}
@@ -374,10 +452,38 @@ export default function TestsPage() {
                           type="button"
                           disabled={busy === t.id}
                           onClick={() => hardDeleteTest(t.id, t.name)}
-                          className="inline-flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-xl border border-cta-100 px-3 py-1.5 text-xs font-medium text-cta-600 hover:bg-cta-50 disabled:opacity-50"
                           title="Permanently delete"
                         >
                           <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
+                    ) : t.is_pdf ? (
+                      <div className="inline-flex items-center gap-1">
+                        <Link
+                          to={`/pdf-test/${t.pdf_id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-xl border border-violet-200 bg-violet-50 px-2 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100"
+                          title="Open"
+                        >
+                          <Eye size={14} />
+                        </Link>
+                        <Link
+                          to={`/${slug}/admin/tests/pdf-create?edit=${t.pdf_id}`}
+                          className="inline-flex items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-2 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                          title="Edit"
+                        >
+                          <Edit2 size={14} />
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={busy === `pdf:${t.pdf_id}`}
+                          onClick={() => t.pdf_id && deletePdfTest(t.pdf_id, t.name)}
+                          className="inline-flex items-center gap-1 rounded-xl border border-cta-100 px-2 py-1.5 text-xs font-medium text-cta-600 hover:bg-cta-50 disabled:opacity-50"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     ) : (
@@ -463,7 +569,7 @@ function TabButton({
       onClick={onClick}
       className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
         active
-          ? 'bg-white text-red-700 shadow-sm'
+          ? 'bg-white text-brand-700 shadow-sm'
           : 'text-slate-600 hover:text-slate-900'
       }`}
     >
@@ -485,7 +591,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

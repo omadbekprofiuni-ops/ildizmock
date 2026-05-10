@@ -12,12 +12,11 @@ import { useEffect } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 
 import { UserMenu } from '@/components/UserMenu'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 type Module = 'listening' | 'reading' | 'writing'
+type Tone = 'brand' | 'accent' | 'cta'
 
 type PracticeTest = {
   id: string
@@ -30,44 +29,18 @@ type PracticeTest = {
   practice_time_limit: number | null
 }
 
-const META: Record<Module, {
-  label: string
-  Icon: typeof Headphones
-  gradient: string
-  text: string
-  btn: string
-}> = {
-  listening: {
-    label: 'Listening',
-    Icon: Headphones,
-    gradient: 'from-blue-600 to-blue-700',
-    text: 'text-blue-700',
-    btn: 'bg-blue-600 hover:bg-blue-700',
-  },
-  reading: {
-    label: 'Reading',
-    Icon: BookOpen,
-    gradient: 'from-purple-600 to-purple-700',
-    text: 'text-purple-700',
-    btn: 'bg-purple-600 hover:bg-purple-700',
-  },
-  writing: {
-    label: 'Writing',
-    Icon: PenLine,
-    gradient: 'from-orange-600 to-orange-700',
-    text: 'text-orange-700',
-    btn: 'bg-orange-600 hover:bg-orange-700',
-  },
+const META: Record<Module, { label: string; Icon: typeof Headphones; tone: Tone }> = {
+  reading: { label: 'Reading', Icon: BookOpen, tone: 'brand' },
+  listening: { label: 'Listening', Icon: Headphones, tone: 'cta' },
+  writing: { label: 'Writing', Icon: PenLine, tone: 'accent' },
 }
 
 export default function PracticeModulePage() {
   const { module } = useParams<{ module: string }>()
   const navigate = useNavigate()
 
-  if (!module || !['listening', 'reading', 'writing'].includes(module)) {
-    return <Navigate to="/practice" replace />
-  }
-  const m = module as Module
+  const isValid = module && (['listening', 'reading', 'writing'] as string[]).includes(module)
+  const m = (isValid ? module : 'reading') as Module
   const meta = META[m]
 
   useEffect(() => {
@@ -78,6 +51,7 @@ export default function PracticeModulePage() {
     queryKey: ['practice-tests', m],
     queryFn: async () =>
       (await api.get<PracticeTest[]>(`/tests/?practice=1&module=${m}`)).data,
+    enabled: !!isValid,
   })
 
   const startAttempt = useMutation({
@@ -87,102 +61,126 @@ export default function PracticeModulePage() {
     },
     onSuccess: ({ attemptId }) => navigate(`/take/${attemptId}`),
     onError: (err) => {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response
-        ?.data?.detail
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail
       toast.error(detail || 'Failed to start the practice test')
     },
   })
+
+  if (!isValid) return <Navigate to="/practice" replace />
 
   const tests = query.data ?? []
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-8">
           <div className="flex items-center gap-3">
-            <Link to="/practice">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Practice
-              </Button>
+            <Link
+              to="/practice"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <ArrowLeft className="h-4 w-4" /> Practice
             </Link>
-            <h1 className="text-lg font-semibold">{meta.label} Practice</h1>
+            <h1 className="text-lg font-extrabold tracking-tight text-slate-900">
+              {meta.label} Practice
+            </h1>
           </div>
           <UserMenu />
         </div>
       </header>
 
-      <main className="container space-y-6 py-8">
-        <div className={`rounded-2xl bg-gradient-to-r ${meta.gradient} p-6 text-white shadow`}>
-          <div className="flex items-center gap-4">
-            <meta.Icon className="h-10 w-10" />
+      <main className="mx-auto max-w-7xl space-y-6 px-8 py-10">
+        {/* Module hero */}
+        <section
+          className="relative overflow-hidden rounded-[24px] p-9 text-white"
+          style={{ background: 'var(--gradient-hero)', boxShadow: 'var(--shadow-lg)' }}
+        >
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          <div className="relative flex items-center gap-5">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur"
+            >
+              <meta.Icon className="h-8 w-8" />
+            </div>
             <div>
-              <h2 className="text-2xl font-bold">{meta.label} Practice</h2>
-              <p className="text-sm text-white/80">
-                Faqat {meta.label.toLowerCase()} bo‘limini mashq qiling — instant feedback bilan.
+              <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">
+                {meta.label} Practice
+              </h2>
+              <p className="mt-1.5 text-sm text-white/85">
+                Practise the {meta.label.toLowerCase()} module on its own — with instant
+                feedback after each attempt.
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        {query.isLoading && <p className="text-muted-foreground">Loading…</p>}
-        {query.isError && (
-          <p className="text-destructive">Couldn't load tests.</p>
-        )}
+        {query.isLoading && <p className="text-slate-500">Loading…</p>}
+        {query.isError && <p className="text-cta-600">Couldn't load tests.</p>}
 
         {!query.isLoading && tests.length === 0 && (
-          <Card>
-            <CardContent className="p-10 text-center text-muted-foreground">
-              Hozircha {meta.label.toLowerCase()} practice testlari yo‘q.
-            </CardContent>
-          </Card>
+          <div className="rounded-[20px] border-2 border-dashed border-slate-200 px-6 py-16 text-center text-slate-500">
+            No {meta.label.toLowerCase()} practice tests yet.
+          </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {tests.map((t) => (
-            <Card key={t.id} className="transition hover:shadow-lg">
-              <CardContent className="flex h-full flex-col p-5">
-                <div className="mb-3 flex items-start justify-between">
-                  <span
-                    className={`inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold ${meta.text}`}
-                  >
-                    {t.difficulty || meta.label}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">
-                    {meta.label}
-                  </span>
-                </div>
-                <h4 className="mb-2 text-base font-semibold">{t.name}</h4>
-                <p className="mb-4 line-clamp-2 flex-1 text-sm text-muted-foreground">
-                  {t.description || '—'}
-                </p>
-
-                <div className="mb-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <FileText className="h-3.5 w-3.5" />
-                    {t.question_count} savol
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {t.practice_time_limit ?? t.duration_minutes} min
-                  </span>
-                </div>
-
-                <Button
-                  className={`w-full text-white ${meta.btn}`}
-                  onClick={() => startAttempt.mutate(t)}
-                  disabled={startAttempt.isPending}
+            <article
+              key={t.id}
+              className="flex h-full flex-col rounded-[20px] border border-slate-100 bg-white p-7 transition-all hover:-translate-y-0.5 hover:border-brand-100"
+              style={{ boxShadow: 'var(--shadow-sm)' }}
+            >
+              <div className="mb-3 flex items-start justify-between">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                    meta.tone === 'brand'
+                      ? 'bg-brand-50 text-brand-700'
+                      : meta.tone === 'accent'
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'bg-cta-50 text-cta-700'
+                  }`}
                 >
-                  {startAttempt.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Boshlanmoqda…
-                    </>
-                  ) : (
-                    <>Boshlash</>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                  {t.difficulty || meta.label}
+                </span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                  {meta.label}
+                </span>
+              </div>
+              <h4 className="mb-2 text-base font-extrabold text-slate-900">{t.name}</h4>
+              <p className="mb-5 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
+                {t.description || '—'}
+              </p>
+              <div className="mb-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5" /> {t.question_count} questions
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />{' '}
+                  {t.practice_time_limit ?? t.duration_minutes} min
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => startAttempt.mutate(t)}
+                disabled={startAttempt.isPending}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                {startAttempt.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Starting…
+                  </>
+                ) : (
+                  <>Start</>
+                )}
+              </button>
+            </article>
           ))}
         </div>
       </main>

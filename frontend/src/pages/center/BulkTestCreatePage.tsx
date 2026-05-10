@@ -415,7 +415,7 @@ export default function BulkTestCreatePage() {
     <PageShell maxWidth="max-w-5xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Tests
       </Link>
@@ -453,7 +453,7 @@ export default function BulkTestCreatePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Cambridge IELTS 19 — Reading Test 1"
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
           <Field label="Module">
@@ -466,7 +466,7 @@ export default function BulkTestCreatePage() {
                 if (m === 'listening' && duration === 60) setDuration(30)
                 if (m === 'reading' && duration === 30) setDuration(60)
               }}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="reading">Reading</option>
               <option value="listening">Listening (audio + transcript)</option>
@@ -478,7 +478,7 @@ export default function BulkTestCreatePage() {
               onChange={(e) =>
                 setDifficulty(e.target.value as typeof difficulty)
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -493,7 +493,7 @@ export default function BulkTestCreatePage() {
               max={180}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value) || 60)}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
         </div>
@@ -540,7 +540,7 @@ export default function BulkTestCreatePage() {
             <SurfaceCard key={idx}>
               <div className="mb-4 flex items-start justify-between">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                  <BookOpen size={18} className="text-red-600" />
+                  <BookOpen size={18} className="text-brand-600" />
                   {module === 'listening' ? `Part ${idx + 1}` : `Passage ${idx + 1}`}
                   {parseRes.ok && (
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
@@ -552,7 +552,7 @@ export default function BulkTestCreatePage() {
                   <button
                     type="button"
                     onClick={() => removePassage(idx)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                    className="inline-flex items-center gap-1 rounded-lg border border-cta-100 px-2 py-1 text-xs text-cta-600 hover:bg-cta-50"
                   >
                     <Trash2 size={12} /> Remove
                   </button>
@@ -566,7 +566,7 @@ export default function BulkTestCreatePage() {
                     label={`Audio file (Part ${idx + 1}) — required for Listening`}
                   >
                     <div className="flex flex-wrap items-center gap-3">
-                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-red-300 hover:bg-red-50">
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-brand-300 hover:bg-brand-50">
                         {p.audio_uploading ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
@@ -623,7 +623,7 @@ export default function BulkTestCreatePage() {
                         ? 'e.g. Hotel Booking Inquiry'
                         : 'e.g. The Origins of Coffee'
                     }
-                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </Field>
                 <Field
@@ -644,7 +644,7 @@ export default function BulkTestCreatePage() {
                         ? 'Paste the audio transcript…'
                         : 'Paste the passage text…'
                     }
-                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </Field>
                 <Field
@@ -659,13 +659,13 @@ export default function BulkTestCreatePage() {
                     }
                     rows={12}
                     spellCheck={false}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-mono text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-mono text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </Field>
               </div>
 
               {!parseRes.ok && p.bulk.trim() && (
-                <div className="mb-2 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+                <div className="mb-2 flex items-start gap-2 rounded-xl border border-cta-100 bg-cta-50 p-3 text-sm text-cta-700">
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />
                   <span>{parseRes.error}</span>
                 </div>

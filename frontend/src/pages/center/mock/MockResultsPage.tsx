@@ -121,7 +121,7 @@ export default function MockResultsPage() {
       <div className="mb-6">
         <Link
           to={`/${slug}/admin/mock/${sessionId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
         >
           <ArrowLeft size={14} /> Control
         </Link>
@@ -207,7 +207,7 @@ export default function MockResultsPage() {
                     </td>
                     <td className={adminTable.td + ' text-center'}>
                       {p.overall_band_score ? (
-                        <span className="rounded-lg bg-red-50 px-3 py-1 font-mono text-base font-bold text-red-700">
+                        <span className="rounded-lg bg-brand-50 px-3 py-1 font-mono text-base font-bold text-brand-700">
                           {p.overall_band_score}
                         </span>
                       ) : (
@@ -224,14 +224,14 @@ export default function MockResultsPage() {
                         />
                       ) : cert && cert.is_revoked ? (
                         <div className="space-y-1">
-                          <div className="text-xs text-rose-600">
+                          <div className="text-xs text-cta-600">
                             ⊘ revoked
                           </div>
                           <button
                             type="button"
                             disabled={isBusy || !p.overall_band_score}
                             onClick={() => issueCert(p)}
-                            className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                            className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                           >
                             Qayta berish
                           </button>
@@ -241,7 +241,7 @@ export default function MockResultsPage() {
                           type="button"
                           disabled={isBusy || !p.overall_band_score}
                           onClick={() => issueCert(p)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
                           title={
                             p.overall_band_score
                               ? 'Certificate berish'
@@ -294,7 +294,7 @@ function CertActions({
           type="button"
           onClick={onRevoke}
           disabled={disabled}
-          className="inline-flex items-center gap-1 rounded border border-rose-200 px-2 py-0.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded border border-cta-100 px-2 py-0.5 text-xs text-cta-600 hover:bg-cta-50 disabled:opacity-50"
           title="Revoke certificate"
         >
           <Trash2 size={11} />
@@ -322,7 +322,7 @@ function ScoreInput({
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => v !== (value ?? '') && onSave(v)}
-      className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-center font-mono text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+      className="w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-center font-mono text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
     />
   )
 }

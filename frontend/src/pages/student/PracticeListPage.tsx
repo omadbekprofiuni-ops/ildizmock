@@ -10,8 +10,8 @@ import {
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
+import brandLogo from '@/assets/brand-logo.png'
 import { UserMenu } from '@/components/UserMenu'
-import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 
 type Module = 'listening' | 'reading' | 'writing'
@@ -32,47 +32,44 @@ type PracticeStats = Record<Module, {
   }[]
 }
 
+type Tone = 'brand' | 'accent' | 'cta'
+
 const MODULE_META: Record<Module, {
   label: string
   Icon: typeof Headphones
-  gradient: string
-  bg: string
-  text: string
-  band: string
+  tone: Tone
 }> = {
-  listening: {
-    label: 'Listening',
-    Icon: Headphones,
-    gradient: 'from-blue-500 to-blue-600',
-    bg: 'bg-blue-50',
-    text: 'text-blue-600',
-    band: 'text-blue-700',
-  },
-  reading: {
-    label: 'Reading',
-    Icon: BookOpen,
-    gradient: 'from-purple-500 to-purple-600',
-    bg: 'bg-purple-50',
-    text: 'text-purple-600',
-    band: 'text-purple-700',
-  },
-  writing: {
-    label: 'Writing',
-    Icon: PenLine,
-    gradient: 'from-orange-500 to-orange-600',
-    bg: 'bg-orange-50',
-    text: 'text-orange-600',
-    band: 'text-orange-700',
-  },
+  listening: { label: 'Listening', Icon: Headphones, tone: 'cta' },
+  reading: { label: 'Reading', Icon: BookOpen, tone: 'brand' },
+  writing: { label: 'Writing', Icon: PenLine, tone: 'accent' },
+}
+
+function BrandMark({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{ width: size, height: size, borderRadius: size * 0.3, overflow: 'hidden' }}
+    >
+      <img
+        src={brandLogo}
+        alt="Mock Exam"
+        width={size}
+        height={size}
+        className="h-full w-full object-contain"
+        draggable={false}
+      />
+    </div>
+  )
 }
 
 export default function PracticeListPage() {
-  useEffect(() => { document.title = 'ILDIZmock — Practice' }, [])
+  useEffect(() => {
+    document.title = 'ILDIZmock — Practice'
+  }, [])
 
   const stats = useQuery({
     queryKey: ['practice-stats'],
-    queryFn: async () =>
-      (await api.get<PracticeStats>('/practice/stats/')).data,
+    queryFn: async () => (await api.get<PracticeStats>('/practice/stats/')).data,
   })
 
   const data = stats.data
@@ -80,39 +77,63 @@ export default function PracticeListPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Dashboard
-              </Button>
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-8">
+          <div className="flex items-center gap-4">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <ArrowLeft className="h-4 w-4" /> Dashboard
             </Link>
-            <h1 className="text-lg font-semibold">Practice</h1>
+            <div className="hidden items-center gap-3 md:flex">
+              <BrandMark size={32} />
+              <h1 className="text-lg font-extrabold tracking-tight">
+                <span className="text-brand-900">Practice</span>
+              </h1>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/practice/history">
-              <Button variant="ghost" size="sm">
-                <History className="mr-2 h-4 w-4" /> History
-              </Button>
+            <Link
+              to="/practice/history"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <History className="h-4 w-4" /> History
             </Link>
             <UserMenu />
           </div>
         </div>
       </header>
 
-      <main className="container space-y-8 py-10">
+      <main className="mx-auto max-w-7xl space-y-8 px-8 py-10">
         {/* Hero */}
-        <section className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 p-8 text-white shadow-lg">
-          <h2 className="text-3xl font-bold">Practice Mode</h2>
-          <p className="mt-2 text-red-100">
-            O‘zingizga qulay vaqtda mashq qiling — javob bergandan keyin
-            see the result and correct answers immediately.
-          </p>
+        <section
+          className="relative overflow-hidden rounded-[24px] p-10 text-white"
+          style={{ background: 'var(--gradient-hero)', boxShadow: 'var(--shadow-lg)' }}
+        >
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide backdrop-blur">
+              Practice mode
+            </div>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">
+              Practice on your own time
+            </h2>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-white/85">
+              O'zingizga qulay vaqtda mashq qiling — javob bergandan keyin natijani va
+              to'g'ri javoblarni darhol ko'rasiz.
+            </p>
+          </div>
         </section>
 
         {/* Module cards */}
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <section className="grid gap-5 md:grid-cols-3">
           {modules.map((m) => {
             const meta = MODULE_META[m]
             const s = data?.[m]
@@ -120,36 +141,41 @@ export default function PracticeListPage() {
               <Link
                 key={m}
                 to={`/practice/${m}`}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+                className="group rounded-[20px] border border-slate-100 bg-white p-7 transition-all hover:-translate-y-0.5 hover:border-brand-100"
+                style={{ boxShadow: 'var(--shadow-sm)' }}
               >
-                <div className={`bg-gradient-to-br ${meta.gradient} p-6 text-white`}>
-                  <meta.Icon className="h-10 w-10" />
-                  <h3 className="mt-3 text-2xl font-bold">{meta.label}</h3>
+                <div className={`icon-tile icon-tile--${meta.tone}`}>
+                  <meta.Icon className="h-7 w-7" />
                 </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-lg bg-slate-50 px-2 py-2">
-                      <div className="text-xs text-slate-500">Testlar</div>
-                      <div className="text-lg font-semibold text-slate-900">
-                        {s?.tests_count ?? '—'}
-                      </div>
+                <h3 className="mb-3 text-xl font-extrabold text-slate-900">{meta.label}</h3>
+                <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-slate-50 p-2.5">
+                    <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      Tests
                     </div>
-                    <div className="rounded-lg bg-slate-50 px-2 py-2">
-                      <div className="text-xs text-slate-500">Urinish</div>
-                      <div className="text-lg font-semibold text-slate-900">
-                        {s?.attempts_count ?? 0}
-                      </div>
-                    </div>
-                    <div className={`rounded-lg ${meta.bg} px-2 py-2`}>
-                      <div className="text-xs text-slate-500">Best</div>
-                      <div className={`text-lg font-semibold ${meta.band}`}>
-                        {s?.best_band != null ? s.best_band.toFixed(1) : '—'}
-                      </div>
+                    <div className="mt-1 text-lg font-extrabold text-slate-900">
+                      {s?.tests_count ?? '—'}
                     </div>
                   </div>
-                  <div className={`mt-4 flex items-center justify-end text-sm ${meta.text} group-hover:gap-2`}>
-                    Boshlash <ArrowRight size={14} className="ml-1" />
+                  <div className="rounded-xl bg-slate-50 p-2.5">
+                    <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      Attempts
+                    </div>
+                    <div className="mt-1 text-lg font-extrabold text-slate-900">
+                      {s?.attempts_count ?? 0}
+                    </div>
                   </div>
+                  <div className={`icon-tile icon-tile--${meta.tone} flex !mb-0 flex-col !rounded-xl !p-2.5`} style={{ width: 'auto', height: 'auto', marginBottom: 0 }}>
+                    <div className="text-[10px] font-bold uppercase tracking-wide opacity-80">
+                      Best
+                    </div>
+                    <div className="mt-1 text-lg font-extrabold">
+                      {s?.best_band != null ? s.best_band.toFixed(1) : '—'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end text-sm font-bold text-brand-600 transition-all group-hover:gap-1.5">
+                  Start <ArrowRight className="ml-1 h-4 w-4" />
                 </div>
               </Link>
             )
@@ -158,24 +184,36 @@ export default function PracticeListPage() {
 
         {/* Recent attempts */}
         <section>
-          <h3 className="mb-3 text-lg font-semibold text-slate-900">Oxirgi mashqlar</h3>
+          <h3 className="mb-4 text-lg font-extrabold text-slate-900">Recent practice</h3>
           {data?.recent && data.recent.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div
+              className="overflow-hidden rounded-[20px] border border-slate-100 bg-white"
+              style={{ boxShadow: 'var(--shadow-sm)' }}
+            >
               <ul className="divide-y divide-slate-100">
                 {data.recent.map((r) => {
                   const meta = MODULE_META[r.module]
                   return (
-                    <li key={r.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${meta.bg} ${meta.text}`}>
-                          <meta.Icon size={18} />
+                    <li
+                      key={r.id}
+                      className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+                    >
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div
+                          className={`icon-tile icon-tile--${meta.tone} flex-shrink-0`}
+                          style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 0 }}
+                        >
+                          <meta.Icon className="h-5 w-5" />
                         </div>
-                        <div>
-                          <div className="font-medium text-slate-900">{r.test_name}</div>
-                          <div className="text-xs text-slate-500">
-                            {meta.label} ·{' '}
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-bold text-slate-900">
+                            {r.test_name}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {meta.label}
                             {r.submitted_at
-                              ? new Date(r.submitted_at).toLocaleString('uz-UZ', {
+                              ? ' · ' +
+                                new Date(r.submitted_at).toLocaleString('uz-UZ', {
                                   day: '2-digit',
                                   month: 'short',
                                   hour: '2-digit',
@@ -187,7 +225,7 @@ export default function PracticeListPage() {
                       </div>
                       <Link
                         to={`/result/${r.id}`}
-                        className={`text-base font-semibold ${meta.band} hover:underline`}
+                        className="rounded-xl border-2 border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
                       >
                         {r.band_score != null ? r.band_score.toFixed(1) : '—'}
                       </Link>
@@ -197,8 +235,10 @@ export default function PracticeListPage() {
               </ul>
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
-              No exercises yet. Start with one of the modules above.
+            <div
+              className="rounded-[20px] border-2 border-dashed border-slate-200 px-6 py-12 text-center text-sm text-slate-500"
+            >
+              No practice yet. Start with one of the modules above.
             </div>
           )}
         </section>

@@ -99,7 +99,7 @@ export default function StudentDetailPage() {
     <PageShell>
       <Link
         to={`/${slug}/admin/students`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Students
       </Link>
@@ -185,7 +185,7 @@ export default function StudentDetailPage() {
                     <td className="px-3 py-2">
                       <Link
                         to={`/result/${a.id}`}
-                        className="font-medium text-slate-900 hover:text-red-700"
+                        className="font-medium text-slate-900 hover:text-brand-700"
                       >
                         {a.test_name}
                       </Link>

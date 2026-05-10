@@ -93,7 +93,7 @@ export default function ListeningPdfImportPage() {
     <PageShell maxWidth="max-w-5xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Testlar
       </Link>
@@ -124,7 +124,7 @@ export default function ListeningPdfImportPage() {
             className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-12 text-center transition-colors ${
               pdfFile
                 ? 'border-emerald-300 bg-emerald-50/40'
-                : 'border-slate-300 hover:border-red-400 hover:bg-red-50/30'
+                : 'border-slate-300 hover:border-red-400 hover:bg-brand-50/30'
             }`}
           >
             <FileUp className="h-10 w-10 text-slate-400" />
@@ -155,7 +155,7 @@ export default function ListeningPdfImportPage() {
           </div>
 
           {error && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="mt-4 rounded-lg border border-cta-100 bg-cta-50 p-3 text-sm text-cta-700">
               {error}
             </div>
           )}
@@ -249,7 +249,7 @@ export default function ListeningPdfImportPage() {
                             updateQuestion(pi, qi, 'text', e.target.value)
                           }
                           rows={2}
-                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                         />
                         {q.type === 'multiple_choice' && q.options.length > 0 && (
                           <div className="mt-2 space-y-1.5">
@@ -371,7 +371,7 @@ function Step({
           done
             ? 'bg-emerald-600 text-white'
             : active
-              ? 'bg-red-600 text-white'
+              ? 'bg-brand-600 text-white'
               : 'bg-slate-200 text-slate-500'
         }`}
       >

@@ -99,7 +99,7 @@ export default function CenterSettingsPage() {
 
       {settings.isLoading && <p className="text-slate-500">Loading…</p>}
       {settings.isError && (
-        <p className="text-rose-600">Couldn't load settings.</p>
+        <p className="text-cta-600">Couldn't load settings.</p>
       )}
 
       {settings.data && (
@@ -244,7 +244,7 @@ export default function CenterSettingsPage() {
                 </p>
               )}
               {removeLogo && (
-                <p className="text-xs text-rose-600">
+                <p className="text-xs text-cta-600">
                   Saqlaganingizdan keyin logo o‘chiriladi.
                 </p>
               )}

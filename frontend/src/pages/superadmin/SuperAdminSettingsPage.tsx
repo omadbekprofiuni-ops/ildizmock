@@ -161,7 +161,7 @@ export default function SuperAdminSettingsPage() {
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Couldn't load plans.</p>
+          <p className="text-cta-600">Couldn't load plans.</p>
         )}
 
         {query.data && (
@@ -215,7 +215,7 @@ export default function SuperAdminSettingsPage() {
                                 }
                               }}
                             >
-                              <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+                              <Trash2 className="h-3.5 w-3.5 text-cta-600" />
                             </Button>
                           </div>
                         </td>

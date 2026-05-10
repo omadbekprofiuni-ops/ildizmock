@@ -2,8 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
 
 type AttemptHistoryItem = {
@@ -22,8 +20,11 @@ type AttemptHistoryItem = {
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return d.toLocaleString('uz-UZ', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -34,94 +35,120 @@ const MODULE_TITLES = {
   speaking: 'Speaking',
 } as const
 
+const MODULE_TONES: Record<keyof typeof MODULE_TITLES, 'brand' | 'accent' | 'cta' | 'slate'> = {
+  reading: 'brand',
+  listening: 'cta',
+  writing: 'accent',
+  speaking: 'slate',
+}
+
 export default function HistoryPage() {
   const query = useQuery({
     queryKey: ['attempts'],
-    queryFn: async () =>
-      (await api.get<AttemptHistoryItem[]>('/attempts/')).data,
+    queryFn: async () => (await api.get<AttemptHistoryItem[]>('/attempts/')).data,
   })
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center gap-3">
-          <Link to="/home">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Home
-            </Button>
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-4 px-8">
+          <Link
+            to="/home"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+          >
+            <ArrowLeft className="h-4 w-4" /> Home
           </Link>
-          <h1 className="text-lg font-semibold">Submission History</h1>
+          <h1 className="text-lg font-extrabold tracking-tight text-slate-900">
+            Submission History
+          </h1>
         </div>
       </header>
 
-      <main className="container py-8">
-        {query.isLoading && (
-          <p className="text-muted-foreground">Loading…</p>
-        )}
-        {query.isError && (
-          <p className="text-destructive">Failed to load history.</p>
-        )}
+      <main className="mx-auto max-w-7xl px-8 py-10">
+        {query.isLoading && <p className="text-slate-500">Loading…</p>}
+        {query.isError && <p className="text-cta-600">Failed to load history.</p>}
+
         {query.data && query.data.length === 0 && (
-          <Card>
-            <CardContent className="p-10 text-center text-muted-foreground">
-              You haven't submitted any tests yet.
-            </CardContent>
-          </Card>
+          <div
+            className="rounded-[20px] border-2 border-dashed border-slate-200 px-6 py-16 text-center text-slate-500"
+          >
+            You haven't submitted any tests yet.
+          </div>
         )}
+
         {query.data && query.data.length > 0 && (
-          <Card className="overflow-hidden">
+          <div
+            className="overflow-hidden rounded-[20px] border border-slate-100 bg-white"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
             <table className="w-full text-sm">
-              <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+              <thead className="border-b border-slate-100 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Test</th>
-                  <th className="px-4 py-3">Module</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Result</th>
-                  <th className="px-4 py-3">Band</th>
-                  <th className="px-4 py-3"></th>
+                  <th className="px-6 py-3.5">Test</th>
+                  <th className="px-6 py-3.5">Module</th>
+                  <th className="px-6 py-3.5">Date</th>
+                  <th className="px-6 py-3.5">Result</th>
+                  <th className="px-6 py-3.5">Band</th>
+                  <th className="px-6 py-3.5"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-slate-100">
                 {query.data.map((a) => {
                   const graded = a.status === 'graded'
                   const date = a.submitted_at || a.started_at
+                  const tone = MODULE_TONES[a.module]
                   return (
-                    <tr key={a.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-900">
-                        {a.test_name}
+                    <tr key={a.id} className="transition-colors hover:bg-slate-50">
+                      <td className="px-6 py-4 font-bold text-slate-900">{a.test_name}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                            tone === 'brand'
+                              ? 'bg-brand-50 text-brand-700'
+                              : tone === 'accent'
+                                ? 'bg-teal-50 text-teal-700'
+                                : tone === 'cta'
+                                  ? 'bg-cta-50 text-cta-700'
+                                  : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {MODULE_TITLES[a.module]}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {MODULE_TITLES[a.module]}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {formatDate(date)}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-6 py-4 text-slate-600">{formatDate(date)}</td>
+                      <td className="px-6 py-4 text-slate-700">
                         {graded
                           ? `${a.raw_score}/${a.total_questions}`
                           : a.status === 'in_progress'
-                            ? 'In progress'
+                            ? <span className="text-cta-600 font-semibold">In progress</span>
                             : a.status}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-6 py-4">
                         {graded ? (
-                          <span className="rounded bg-slate-900 px-2 py-0.5 font-mono text-xs tabular-nums text-white">
+                          <span
+                            className="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-extrabold tabular-nums text-white"
+                            style={{ background: 'var(--gradient-brand)' }}
+                          >
                             {a.band_score}
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-6 py-4 text-right">
                         {graded ? (
-                          <Link to={`/result/${a.id}`}>
-                            <Button variant="outline" size="sm">
-                              View
-                            </Button>
+                          <Link
+                            to={`/result/${a.id}`}
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+                          >
+                            View
                           </Link>
                         ) : a.status === 'in_progress' ? (
-                          <Link to={`/take/${a.id}`}>
-                            <Button size="sm">Continue</Button>
+                          <Link
+                            to={`/take/${a.id}`}
+                            className="inline-flex items-center justify-center rounded-lg bg-cta-500 px-3.5 py-1.5 text-xs font-bold text-white transition-all hover:bg-cta-600"
+                          >
+                            Continue
                           </Link>
                         ) : null}
                       </td>
@@ -130,7 +157,7 @@ export default function HistoryPage() {
                 })}
               </tbody>
             </table>
-          </Card>
+          </div>
         )}
       </main>
     </div>

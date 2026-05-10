@@ -71,7 +71,7 @@ function TrendBadge({ trend }: { trend: GroupDetail['trend'] }) {
     )
   if (trend === 'declining')
     return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
+      <span className="inline-flex items-center gap-1 rounded-md bg-cta-50 px-2 py-1 text-xs font-medium text-cta-700">
         <ArrowDown size={12} /> Pasaymoqda
       </span>
     )
@@ -218,7 +218,7 @@ export default function GroupDetailPage() {
     <PageShell>
       <Link
         to={`/${slug}/admin/groups`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Groups
       </Link>
@@ -235,7 +235,7 @@ export default function GroupDetailPage() {
             <button
               type="button"
               onClick={removeGroup}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-cta-100 bg-white px-4 py-2 text-sm text-cta-600 hover:bg-cta-50"
             >
               <Trash2 size={14} /> Delete
             </button>
@@ -330,7 +330,7 @@ export default function GroupDetailPage() {
                   <tr key={m.id} className="hover:bg-slate-50">
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-700">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
                           {(m.first_name || m.username)[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -345,14 +345,14 @@ export default function GroupDetailPage() {
                     <td className="px-3 py-2.5 text-center font-semibold text-emerald-700">
                       {m.avg_band != null ? m.avg_band.toFixed(1) : '—'}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-semibold text-red-700">
+                    <td className="px-3 py-2.5 text-center font-semibold text-brand-700">
                       {m.latest_band != null ? m.latest_band.toFixed(1) : '—'}
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <button
                         type="button"
                         onClick={() => removeStudent(m.id)}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-cta-600 hover:bg-cta-50"
                       >
                         <X size={12} /> Chiqarish
                       </button>
@@ -392,7 +392,7 @@ function StatTile({
   const tones: Record<typeof tone, string> = {
     slate: 'text-slate-900',
     emerald: 'text-emerald-700',
-    red: 'text-red-700',
+    red: 'text-brand-700',
   }
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -502,7 +502,7 @@ function AddStudentsDialog({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ism yoki username…"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <p className="mt-1 text-xs text-slate-500">
             Only students not assigned to any group are shown.
@@ -527,7 +527,7 @@ function AddStudentsDialog({
                   type="checkbox"
                   checked={selected.has(s.id)}
                   onChange={() => toggle(s.id)}
-                  className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-slate-900">

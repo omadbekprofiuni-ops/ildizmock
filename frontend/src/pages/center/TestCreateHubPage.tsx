@@ -45,7 +45,7 @@ export default function TestCreateHubPage() {
     <PageShell maxWidth="max-w-4xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Tests
       </Link>
@@ -106,7 +106,7 @@ export default function TestCreateHubPage() {
             </div>
             <div className="p-5">
               <p className="text-sm text-slate-600">{m.desc}</p>
-              <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-slate-700 group-hover:text-red-700">
+              <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-slate-700 group-hover:text-brand-700">
                 Start <ArrowRight size={14} />
               </div>
             </div>

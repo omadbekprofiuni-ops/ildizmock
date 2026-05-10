@@ -20,6 +20,7 @@ import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import ExcelImportPage from './pages/center/ExcelImportPage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
+import PDFTestCreate from './pages/center/PDFTestCreate'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import GroupCreatePage from './pages/center/GroupCreatePage'
@@ -77,6 +78,8 @@ import PracticeListPage from './pages/student/PracticeListPage'
 import PracticeModulePage from './pages/student/PracticeModulePage'
 import ProfilePage from './pages/student/ProfilePage'
 import StudentDashboard from './pages/student/StudentDashboard'
+import PDFTestTaking from './pages/student/PDFTestTaking'
+import PDFTestsList from './pages/student/PDFTestsList'
 import TakeTestPage from './pages/TakeTestPage'
 import TeacherGradePage from './pages/teacher/TeacherGradePage'
 import TeacherQueuePage from './pages/teacher/TeacherQueuePage'
@@ -125,6 +128,8 @@ function AppRoutes() {
           <Route path="/practice" element={<ProtectedRoute><PracticeListPage /></ProtectedRoute>} />
           <Route path="/practice/history" element={<ProtectedRoute><PracticeHistoryPage /></ProtectedRoute>} />
           <Route path="/practice/:module" element={<ProtectedRoute><PracticeModulePage /></ProtectedRoute>} />
+          <Route path="/pdf-tests" element={<ProtectedRoute><PDFTestsList /></ProtectedRoute>} />
+          <Route path="/pdf-test/:testId" element={<ProtectedRoute><PDFTestTaking /></ProtectedRoute>} />
 
           {/* Teacher */}
           <Route path="/teacher" element={<TeacherRoute><TeacherQueuePage /></TeacherRoute>} />
@@ -310,6 +315,7 @@ function AppRoutes() {
               <Route path="tests/new/ai" element={<AITestCreatePage />} />
               <Route path="tests/new/bulk" element={<BulkTestCreatePage />} />
               <Route path="tests/new/excel" element={<ExcelImportPage />} />
+              <Route path="tests/pdf-create" element={<PDFTestCreate />} />
               <Route path="tests/new/:module" element={<EasyTestCreatePage />} />
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
               <Route

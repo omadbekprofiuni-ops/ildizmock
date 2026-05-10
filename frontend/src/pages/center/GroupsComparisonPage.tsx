@@ -32,7 +32,7 @@ function TrendIcon({ trend }: { trend: Row['trend'] }) {
   if (trend === 'improving')
     return <ArrowUp size={14} className="text-emerald-600" />
   if (trend === 'declining')
-    return <ArrowDown size={14} className="text-rose-600" />
+    return <ArrowDown size={14} className="text-cta-600" />
   if (trend === 'stable') return <Minus size={14} className="text-slate-400" />
   return <span className="text-xs text-slate-400">—</span>
 }
@@ -55,7 +55,7 @@ export default function GroupsComparisonPage() {
     <PageShell>
       <Link
         to={`/${slug}/admin/groups`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Groups
       </Link>
@@ -109,7 +109,7 @@ export default function GroupsComparisonPage() {
                     <td className="px-3 py-2.5">
                       <Link
                         to={`/${slug}/admin/groups/${r.id}`}
-                        className="font-medium text-slate-900 hover:text-red-700"
+                        className="font-medium text-slate-900 hover:text-brand-700"
                       >
                         {r.name}
                       </Link>
@@ -123,7 +123,7 @@ export default function GroupsComparisonPage() {
                     <td className="px-3 py-2.5 text-center font-semibold text-emerald-700">
                       {r.avg_score != null ? r.avg_score.toFixed(1) : '—'}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-semibold text-red-700">
+                    <td className="px-3 py-2.5 text-center font-semibold text-brand-700">
                       {r.latest_avg != null ? r.latest_avg.toFixed(1) : '—'}
                     </td>
                     <td className="px-3 py-2.5 text-center text-slate-700">

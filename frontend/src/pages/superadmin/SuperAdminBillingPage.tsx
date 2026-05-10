@@ -107,7 +107,7 @@ function fmtMoney(value: number): string {
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800',
   paid: 'bg-emerald-100 text-emerald-800',
-  overdue: 'bg-rose-100 text-rose-800',
+  overdue: 'bg-cta-100 text-cta-700',
   cancelled: 'bg-slate-100 text-slate-700',
 }
 
@@ -206,7 +206,7 @@ export default function SuperAdminBillingPage() {
 
         {overview.isLoading && <p className="text-slate-500">Loading…</p>}
         {overview.isError && (
-          <p className="text-rose-600">Couldn't load data.</p>
+          <p className="text-cta-600">Couldn't load data.</p>
         )}
 
         {totals && (
@@ -282,7 +282,7 @@ export default function SuperAdminBillingPage() {
                       </td>
                       <td className="px-4 py-3 text-center font-mono">
                         {o.pending_amount > 0 ? (
-                          <span className="text-rose-600">{fmtMoney(o.pending_amount)}</span>
+                          <span className="text-cta-600">{fmtMoney(o.pending_amount)}</span>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -586,7 +586,7 @@ function MarkPaidModal({
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <div>
@@ -763,7 +763,7 @@ function PricingInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`w-full bg-transparent px-3 py-2 font-mono text-sm focus:outline-none ${
-            valid ? 'text-slate-900' : 'text-rose-600'
+            valid ? 'text-slate-900' : 'text-cta-600'
           }`}
         />
         <span className="px-2 text-xs text-slate-500">so‘m</span>

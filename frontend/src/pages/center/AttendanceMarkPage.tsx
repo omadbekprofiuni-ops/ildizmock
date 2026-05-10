@@ -63,7 +63,7 @@ const STATUS_META: globalThis.Record<Status, {
   Icon: typeof CheckCircle2
 }> = {
   present:  { label: 'Keldi',     chip: 'emerald', activeBg: 'bg-emerald-600 hover:bg-emerald-700 text-white', Icon: CheckCircle2 },
-  absent:   { label: 'Kelmadi',   chip: 'rose',    activeBg: 'bg-rose-600 hover:bg-rose-700 text-white',       Icon: X },
+  absent:   { label: 'Kelmadi',   chip: 'rose',    activeBg: 'bg-cta-600 hover:bg-rose-700 text-white',       Icon: X },
   late:     { label: 'Kechikdi',  chip: 'amber',   activeBg: 'bg-amber-600 hover:bg-amber-700 text-white',     Icon: Clock },
   excused:  { label: 'Sababli',   chip: 'blue',    activeBg: 'bg-blue-600 hover:bg-blue-700 text-white',       Icon: ShieldCheck },
   sick:     { label: 'Kasal',     chip: 'violet',  activeBg: 'bg-violet-600 hover:bg-violet-700 text-white',   Icon: Heart },

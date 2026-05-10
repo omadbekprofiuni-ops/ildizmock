@@ -134,7 +134,7 @@ export default function GroupSchedulePage() {
           <div className="divide-y divide-slate-100">
             {schedules.map((s) => (
               <div key={s.id} className="flex items-center gap-4 p-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                   <CalendarDays size={20} />
                 </div>
                 <div className="flex-1">
@@ -152,7 +152,7 @@ export default function GroupSchedulePage() {
                   onClick={() => {
                     if (confirm("O'chirilsinmi?")) deleteMut.mutate(s.id)
                   }}
-                  className="rounded-md p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-md p-2 text-slate-400 hover:bg-cta-50 hover:text-cta-600"
                 >
                   <Trash2 size={14} />
                 </button>

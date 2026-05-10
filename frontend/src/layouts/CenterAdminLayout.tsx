@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 
+import brandLogo from '@/assets/brand-logo.png'
 import { api } from '@/lib/api'
 import { roleLabel, useAuth } from '@/stores/auth'
 
@@ -27,31 +28,60 @@ type NavItem = {
   label: string
   icon: typeof LayoutDashboard
   end?: boolean
-  roles?: string[]  // Agar bo'sh — hammaga, aks holda faqat ro'yxatdagiga
+  roles?: string[]
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '', label: 'Dashboard', icon: LayoutDashboard, end: true,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'students', label: "Students", icon: Users,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'teachers', label: 'Teachers', icon: GraduationCap,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  {
+    to: '',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    end: true,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
+  {
+    to: 'students',
+    label: 'Students',
+    icon: Users,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
+  {
+    to: 'teachers',
+    label: 'Teachers',
+    icon: GraduationCap,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
   { to: 'groups', label: 'Groups', icon: UsersRound },
   { to: 'attendance', label: 'Attendance', icon: CalendarCheck },
-  { to: 'tests', label: 'Tests', icon: BookOpen,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'mock', label: 'Mock sessions', icon: BookOpen,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'analytics', label: 'Analytics', icon: BarChart3,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
-  { to: 'settings', label: 'Settings', icon: Settings,
-    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'] },
+  {
+    to: 'tests',
+    label: 'Tests',
+    icon: BookOpen,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
+  {
+    to: 'mock',
+    label: 'Mock sessions',
+    icon: BookOpen,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
+  {
+    to: 'analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
+  {
+    to: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    roles: ['org_admin', 'admin', 'superadmin', 'super_admin'],
+  },
 ]
 
 const TITLES: Record<string, { title: string; crumb?: string }> = {
   '': { title: 'Dashboard' },
-  students: { title: "Students", crumb: 'Users' },
+  students: { title: 'Students', crumb: 'Users' },
   teachers: { title: 'Teachers', crumb: 'Users' },
   groups: { title: 'Groups', crumb: 'Monitoring' },
   attendance: { title: 'Attendance', crumb: 'Monitoring' },
@@ -59,6 +89,24 @@ const TITLES: Record<string, { title: string; crumb?: string }> = {
   mock: { title: 'Mock sessions', crumb: 'Exams' },
   analytics: { title: 'Analytics', crumb: 'Reports' },
   settings: { title: 'Settings', crumb: 'Center' },
+}
+
+function BrandMark({ size = 32 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{ width: size, height: size, borderRadius: size * 0.3, overflow: 'hidden' }}
+    >
+      <img
+        src={brandLogo}
+        alt="Mock Exam"
+        width={size}
+        height={size}
+        className="h-full w-full object-contain"
+        draggable={false}
+      />
+    </div>
+  )
 }
 
 export default function CenterAdminLayout() {
@@ -82,33 +130,34 @@ export default function CenterAdminLayout() {
     navigate(`/${slug}/login`, { replace: true })
   }
 
-  // Determine current section for breadcrumb/title
   const path = location.pathname
   const seg = path.replace(`/${slug}/admin`, '').replace(/^\//, '').split('/')[0] ?? ''
   const meta = TITLES[seg] ?? { title: seg || 'Dashboard' }
 
   return (
     <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900">
-      {/* SIDEBAR */}
-      <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
+      {/* SIDEBAR — dark slate */}
+      <aside
+        className="hidden w-64 flex-col text-white md:flex"
+        style={{ background: 'var(--slate-900)' }}
+      >
         <Link
           to={`/${slug}/admin`}
-          className="flex h-16 items-center gap-3 border-b border-slate-100 px-6"
+          className="flex h-[72px] items-center gap-3 border-b border-white/5 px-5"
         >
-          <img
-            src="/ildizmock-logo.png"
-            alt="ILDIZmock"
-            className="h-9 w-9 shrink-0 object-contain"
-          />
+          <BrandMark size={36} />
           <div className="leading-tight">
-            <div className="font-bold tracking-tight text-red-600">ILDIZmock</div>
-            <div className="text-xs text-slate-500 truncate max-w-[120px]">
+            <div className="text-sm font-extrabold tracking-tight">
+              <span className="text-white">ILDIZ</span>
+              <span className="text-teal-400">mock</span>
+            </div>
+            <div className="max-w-[140px] truncate text-[10px] font-bold uppercase tracking-[0.08em] text-white/60">
               {org?.name ?? slug}
             </div>
           </div>
         </Link>
 
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-0.5 px-3 py-5">
           {NAV_ITEMS.filter(
             (it) => !it.roles || (user?.role && it.roles.includes(user.role)),
           ).map(({ to, label, icon: Icon, end }) => (
@@ -117,29 +166,32 @@ export default function CenterAdminLayout() {
               to={to ? `/${slug}/admin/${to}` : `/${slug}/admin`}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                `flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors ${
                   isActive
-                    ? 'bg-red-50 text-red-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/70 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
-              <Icon size={18} />
+              <Icon size={18} className="opacity-90" />
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-white/5 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 font-bold text-red-700">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-extrabold text-white"
+              style={{ background: 'var(--gradient-brand)' }}
+            >
               {(user?.first_name || user?.username || '?').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
+              <p className="truncate text-sm font-bold text-white">
                 {user?.first_name} {user?.last_name}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-[11px] text-white/60">
                 {roleLabel(user?.role)} · @{user?.username}
               </p>
             </div>
@@ -147,7 +199,7 @@ export default function CenterAdminLayout() {
               type="button"
               onClick={handleLogout}
               title="Logout"
-              className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+              className="rounded-lg p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
             >
               <LogOut size={16} />
             </button>
@@ -157,15 +209,15 @@ export default function CenterAdminLayout() {
 
       {/* MAIN */}
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
+        <header className="flex h-[72px] items-center justify-between border-b border-slate-100 bg-white px-8">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500">{meta.crumb || 'Center'}</span>
+            <span className="font-semibold text-slate-500">{meta.crumb || 'Center'}</span>
             <span className="text-slate-300">/</span>
-            <span className="font-medium text-slate-900">{meta.title}</span>
+            <span className="font-extrabold text-slate-900">{meta.title}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span className="hidden sm:inline">Center:</span>
-            <span className="font-medium text-slate-900">{org?.name ?? slug}</span>
+            <span className="font-bold text-slate-900">{org?.name ?? slug}</span>
           </div>
         </header>
 

@@ -63,7 +63,7 @@ export default function TeacherStudentsPage() {
                       <td className="px-6 py-3 font-medium">
                         <Link
                           to={`/teacher/students/${s.id}`}
-                          className="hover:text-red-700"
+                          className="hover:text-brand-700"
                         >
                           {s.name}
                         </Link>

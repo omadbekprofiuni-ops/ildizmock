@@ -4,8 +4,6 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 import { UserMenu } from '@/components/UserMenu'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
 
 interface CertificateRow {
@@ -33,12 +31,16 @@ interface CertificatesResponse {
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return d.toLocaleDateString('uz-UZ', {
-    year: 'numeric', month: 'long', day: '2-digit',
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
   })
 }
 
 export default function StudentCertificatesPage() {
-  useEffect(() => { document.title = 'ILDIZmock — My Certificates' }, [])
+  useEffect(() => {
+    document.title = 'ILDIZmock — My Certificates'
+  }, [])
 
   const query = useQuery({
     queryKey: ['my-certificates'],
@@ -50,45 +52,48 @@ export default function StudentCertificatesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-8">
           <div className="flex items-center gap-3">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Dashboard
-              </Button>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <ArrowLeft className="h-4 w-4" /> Dashboard
             </Link>
-            <h1 className="text-lg font-semibold">Sertifikatlarim</h1>
+            <h1 className="text-lg font-extrabold tracking-tight text-slate-900">
+              My Certificates
+            </h1>
           </div>
           <UserMenu />
         </div>
       </header>
 
-      <main className="container space-y-6 py-10">
-        {query.isLoading && (
-          <p className="text-muted-foreground">Loading…</p>
-        )}
+      <main className="mx-auto max-w-7xl space-y-6 px-8 py-10">
+        {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-destructive">
-            Couldn't load certificates.
-          </p>
+          <p className="text-cta-600">Couldn't load certificates.</p>
         )}
 
         {!query.isLoading && certs.length === 0 && (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                <Award size={28} />
-              </div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                No certificates yet
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Mock test topshiring va ustozingiz baholaganidan keyin
-                sertifikatingiz shu yerda paydo bo'ladi.
-              </p>
-            </CardContent>
-          </Card>
+          <div
+            className="rounded-[20px] border border-slate-100 bg-white py-16 text-center"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
+            <div
+              className="icon-tile icon-tile--brand mx-auto"
+              style={{ width: 64, height: 64, borderRadius: 20 }}
+            >
+              <Award size={28} />
+            </div>
+            <h2 className="mt-4 text-lg font-extrabold text-slate-900">
+              No certificates yet
+            </h2>
+            <p className="mx-auto mt-1.5 max-w-md px-6 text-sm text-slate-500">
+              Take a mock test and once your teacher grades it, your certificate will
+              appear here.
+            </p>
+          </div>
         )}
 
         {certs.length > 0 && (
@@ -106,44 +111,62 @@ export default function StudentCertificatesPage() {
 function CertificateCard({ cert }: { cert: CertificateRow }) {
   const verifyUrl = `${window.location.origin}/verify/${cert.verification_code}`
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-gradient-to-br from-red-50 to-amber-50 p-6 text-center">
-        <Award className="mx-auto mb-2 h-10 w-10 text-red-600" />
-        <div className="text-3xl font-bold text-slate-900">
-          {cert.overall_band_score}
-        </div>
-        <div className="text-xs uppercase tracking-wider text-slate-600">
-          Overall Band Score
+    <article
+      className="overflow-hidden rounded-[20px] border border-slate-100 bg-white"
+      style={{ boxShadow: 'var(--shadow-sm)' }}
+    >
+      <div
+        className="relative overflow-hidden p-6 text-center text-white"
+        style={{ background: 'var(--gradient-hero)' }}
+      >
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="relative">
+          <Award className="mx-auto mb-2 h-10 w-10" />
+          <div className="text-3xl font-extrabold tracking-tight">
+            {cert.overall_band_score}
+          </div>
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] opacity-90">
+            Overall Band Score
+          </div>
         </div>
       </div>
 
-      <CardContent className="space-y-4 p-5">
+      <div className="space-y-4 p-6">
         <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500">
-            Certificate raqami
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            Certificate number
           </p>
-          <p className="font-mono text-sm font-semibold text-slate-900">
+          <p
+            className="mt-0.5 text-sm font-extrabold text-slate-900"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
             {cert.certificate_number}
           </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 rounded-lg bg-slate-50 p-3">
-          <ScoreCell label="L" value={cert.listening_score} />
-          <ScoreCell label="R" value={cert.reading_score} />
-          <ScoreCell label="W" value={cert.writing_score} />
-          <ScoreCell label="S" value={cert.speaking_score} />
+        <div className="grid grid-cols-4 gap-2 rounded-2xl bg-slate-50 p-3">
+          <ScoreCell label="L" value={cert.listening_score} tone="cta" />
+          <ScoreCell label="R" value={cert.reading_score} tone="brand" />
+          <ScoreCell label="W" value={cert.writing_score} tone="accent" />
+          <ScoreCell label="S" value={cert.speaking_score} tone="slate" />
         </div>
 
-        <div className="space-y-0.5 text-xs text-slate-600">
+        <div className="space-y-1 text-xs text-slate-600">
           <p>
             <span className="text-slate-400">Session:</span> {cert.session_name}
           </p>
           <p>
-            <span className="text-slate-400">Test sanasi:</span>{' '}
+            <span className="text-slate-400">Test date:</span>{' '}
             {formatDate(cert.test_date)}
           </p>
           <p>
-            <span className="text-slate-400">Berilgan:</span>{' '}
+            <span className="text-slate-400">Issued:</span>{' '}
             {formatDate(cert.issue_date)}
           </p>
           {cert.issued_by && (
@@ -159,7 +182,7 @@ function CertificateCard({ cert }: { cert: CertificateRow }) {
               href={cert.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-700"
             >
               <Download size={14} /> PDF
             </a>
@@ -168,23 +191,40 @@ function CertificateCard({ cert }: { cert: CertificateRow }) {
             href={verifyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
           >
-            <ExternalLink size={14} /> Tekshirish
+            <ExternalLink size={14} /> Verify
           </a>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </article>
   )
 }
 
-function ScoreCell({ label, value }: { label: string; value: string }) {
+function ScoreCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone: 'brand' | 'accent' | 'cta' | 'slate'
+}) {
+  const colorMap: Record<string, string> = {
+    brand: 'var(--brand-700)',
+    accent: 'var(--accent-700)',
+    cta: 'var(--cta-700)',
+    slate: 'var(--slate-700)',
+  }
   return (
     <div className="text-center">
-      <div className="text-[10px] uppercase tracking-wider text-slate-500">
+      <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
         {label}
       </div>
-      <div className="font-mono text-sm font-semibold text-red-700">
+      <div
+        className="mt-0.5 text-sm font-extrabold"
+        style={{ color: colorMap[tone], fontFamily: 'var(--font-mono)' }}
+      >
         {value}
       </div>
     </div>

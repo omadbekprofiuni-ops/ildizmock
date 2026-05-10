@@ -254,7 +254,7 @@ export default function MockSessionsPage() {
                           <button
                             type="button"
                             onClick={() => handleDelete(s)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                            className="inline-flex items-center gap-1 rounded-lg border border-cta-100 px-2 py-1 text-xs text-cta-600 hover:bg-cta-50"
                             title={
                               tab === 'archive'
                                 ? 'Delete session forever'
@@ -268,7 +268,7 @@ export default function MockSessionsPage() {
                         {tab === 'active' && (
                           <Link
                             to={`/${slug}/admin/mock/${s.id}`}
-                            className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"
                           >
                             Manage <ArrowRight size={14} />
                           </Link>
@@ -316,6 +316,7 @@ interface TestPick {
   name: string
   module: string
   difficulty: string
+  kind?: 'regular' | 'pdf'
 }
 
 function CreateSessionDialog({
@@ -426,7 +427,7 @@ function CreateSessionDialog({
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g. 2026-04-27 Evening group"
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </Field>
 
@@ -436,7 +437,7 @@ function CreateSessionDialog({
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </Field>
 
@@ -472,7 +473,7 @@ function CreateSessionDialog({
                       listening_duration: Number(e.target.value),
                     })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
               <Field label="Reading (min)">
@@ -484,7 +485,7 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, reading_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
               <Field label="Writing (min)">
@@ -496,13 +497,13 @@ function CreateSessionDialog({
                   onChange={(e) =>
                     setForm({ ...form, writing_duration: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
             </div>
 
             {error && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <div className="rounded-xl border border-cta-100 bg-cta-50 p-3 text-sm text-cta-700">
                 {error}
               </div>
             )}
@@ -549,12 +550,12 @@ function TestSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
         <option value="">— Select —</option>
         {tests.map((t) => (
           <option key={t.id} value={t.id}>
-            {t.name}
+            {t.kind === 'pdf' ? `[PDF] ${t.name}` : t.name}
           </option>
         ))}
       </select>

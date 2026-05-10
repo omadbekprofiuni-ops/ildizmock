@@ -83,7 +83,7 @@ export default function TestPreviewPage() {
   }, [slug, testId])
 
   if (error)
-    return <div className="p-8 text-red-600">{error}</div>
+    return <div className="p-8 text-brand-600">{error}</div>
   if (!test)
     return <div className="p-8 text-slate-500">Loading…</div>
 

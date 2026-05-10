@@ -89,7 +89,7 @@ export default function OrgWritingsPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Student or test name..."
-                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
               <select

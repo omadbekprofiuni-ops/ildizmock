@@ -82,7 +82,7 @@ export default function SuperAdminStatsPage() {
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Couldn't load statistics.</p>
+          <p className="text-cta-600">Couldn't load statistics.</p>
         )}
 
         {data && (
@@ -226,7 +226,7 @@ export default function SuperAdminStatsPage() {
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs ${
                               o.days_remaining <= 3
-                                ? 'bg-rose-100 text-rose-800'
+                                ? 'bg-cta-100 text-cta-700'
                                 : 'bg-amber-100 text-amber-800'
                             }`}
                           >

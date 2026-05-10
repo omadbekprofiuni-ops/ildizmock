@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 
 import { ListeningSection } from './sections/ListeningSection'
+import { MockPdfSection } from './sections/MockPdfSection'
 import { ReadingSection } from './sections/ReadingSection'
 import { SpeakingSection } from './sections/SpeakingSection'
 import { WritingSection } from './sections/WritingSection'
@@ -26,6 +27,7 @@ interface MockState {
   }
   participant: { id: number; full_name: string }
   current_section: 'listening' | 'reading' | 'writing' | 'speaking' | null
+  current_section_kind: 'regular' | 'pdf' | null
   seconds_remaining: number
   submitted_for_current: boolean
   scores: {
@@ -102,6 +104,17 @@ export default function MockSessionPage() {
   }
 
   if (state.session.status === 'listening') {
+    if (state.current_section_kind === 'pdf') {
+      return (
+        <MockPdfSection
+          bsid={bsid!}
+          section="listening"
+          name={state.participant.full_name}
+          secondsRemaining={state.seconds_remaining}
+          onSubmit={fetchState}
+        />
+      )
+    }
     return (
       <ListeningSection
         bsid={bsid!}
@@ -113,6 +126,17 @@ export default function MockSessionPage() {
   }
 
   if (state.session.status === 'reading') {
+    if (state.current_section_kind === 'pdf') {
+      return (
+        <MockPdfSection
+          bsid={bsid!}
+          section="reading"
+          name={state.participant.full_name}
+          secondsRemaining={state.seconds_remaining}
+          onSubmit={fetchState}
+        />
+      )
+    }
     return (
       <ReadingSection
         bsid={bsid!}

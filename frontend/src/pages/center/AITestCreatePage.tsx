@@ -205,7 +205,7 @@ export default function AITestCreatePage() {
     <PageShell maxWidth="max-w-5xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Tests
       </Link>
@@ -243,7 +243,7 @@ export default function AITestCreatePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Cambridge 19 — Reading Test 1"
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
           <Field label="Difficulty">
@@ -252,7 +252,7 @@ export default function AITestCreatePage() {
               onChange={(e) =>
                 setDifficulty(e.target.value as typeof difficulty)
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="beginner">Beginner (4.5 – 5.5)</option>
               <option value="intermediate">Intermediate (5.5 – 6.5)</option>
@@ -267,7 +267,7 @@ export default function AITestCreatePage() {
               max={180}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value) || 60)}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
           <Field label="Questions per passage (AI generates this many)">
@@ -279,7 +279,7 @@ export default function AITestCreatePage() {
               onChange={(e) =>
                 setQuestionsPerPassage(Number(e.target.value) || 13)
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </Field>
         </div>
@@ -291,14 +291,14 @@ export default function AITestCreatePage() {
           <SurfaceCard key={idx}>
             <div className="mb-4 flex items-start justify-between">
               <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                <BookOpen size={18} className="text-red-600" />
+                <BookOpen size={18} className="text-brand-600" />
                 Passage {idx + 1}
               </h2>
               {passages.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removePassage(idx)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                  className="inline-flex items-center gap-1 rounded-lg border border-cta-100 px-2 py-1 text-xs text-cta-600 hover:bg-cta-50"
                 >
                   <Trash2 size={12} /> Remove
                 </button>
@@ -313,7 +313,7 @@ export default function AITestCreatePage() {
                     updatePassage(idx, { title: e.target.value })
                   }
                   placeholder="e.g. The Origins of Coffee"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
               <Field
@@ -326,7 +326,7 @@ export default function AITestCreatePage() {
                   }
                   rows={10}
                   placeholder="Paste the full passage text here…"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-mono text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 font-mono text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
             </div>
@@ -373,7 +373,7 @@ export default function AITestCreatePage() {
                       <button
                         type="button"
                         onClick={() => removeQuestion(idx, qIdx)}
-                        className="text-rose-500 hover:text-rose-700"
+                        className="text-cta-500 hover:text-cta-700"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -384,7 +384,7 @@ export default function AITestCreatePage() {
                         updateQuestion(idx, qIdx, { text: e.target.value })
                       }
                       rows={2}
-                      className="mb-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                      className="mb-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
 
                     {q.question_type === 'mcq' && q.options && (
@@ -398,7 +398,7 @@ export default function AITestCreatePage() {
                               newOpts[oIdx] = e.target.value
                               updateQuestion(idx, qIdx, { options: newOpts })
                             }}
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                           />
                         ))}
                       </div>
@@ -413,7 +413,7 @@ export default function AITestCreatePage() {
                               correct_answer: e.target.value,
                             })
                           }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                         >
                           <option value="TRUE">TRUE</option>
                           <option value="FALSE">FALSE</option>
@@ -427,7 +427,7 @@ export default function AITestCreatePage() {
                               correct_answer: e.target.value,
                             })
                           }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                         />
                       )}
                     </Field>

@@ -74,7 +74,7 @@ export default function SuperAdminAudioPage() {
 
         {query.isLoading && <p className="text-slate-500">Loading…</p>}
         {query.isError && (
-          <p className="text-rose-600">Couldn't load audio files.</p>
+          <p className="text-cta-600">Couldn't load audio files.</p>
         )}
 
         {query.data && (

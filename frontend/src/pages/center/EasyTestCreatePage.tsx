@@ -535,7 +535,7 @@ export default function EasyTestCreatePage() {
     <PageShell maxWidth="max-w-5xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Testlar
       </Link>
@@ -674,19 +674,19 @@ export default function EasyTestCreatePage() {
                   onClick={() => setModule(m.value)}
                   className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
                     selected
-                      ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
+                      ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                      selected ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
+                      selected ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
                     <m.icon size={20} />
                   </div>
                   <div>
-                    <div className={`text-sm font-semibold ${selected ? 'text-red-700' : 'text-slate-900'}`}>
+                    <div className={`text-sm font-semibold ${selected ? 'text-brand-700' : 'text-slate-900'}`}>
                       {m.label}
                     </div>
                     <div className="text-xs text-slate-500">{m.hint}</div>
@@ -706,7 +706,7 @@ export default function EasyTestCreatePage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Masalan: Academic Reading — Practice 1"
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </Field>
 
@@ -715,7 +715,7 @@ export default function EasyTestCreatePage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
-                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </Field>
 
@@ -724,7 +724,7 @@ export default function EasyTestCreatePage() {
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 >
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>
@@ -739,7 +739,7 @@ export default function EasyTestCreatePage() {
                   max={180}
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value) || 60)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </Field>
               <Field label="Status">
@@ -748,7 +748,7 @@ export default function EasyTestCreatePage() {
                     type="checkbox"
                     checked={isPublished}
                     onChange={(e) => setIsPublished(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                   />
                   <span className="text-slate-700">
                     Publish immediately{' '}
@@ -787,7 +787,7 @@ export default function EasyTestCreatePage() {
                         ? 'The chart below shows...'
                         : 'Some people believe that... Discuss both views.'
                     }
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </Field>
 
@@ -816,7 +816,7 @@ export default function EasyTestCreatePage() {
                           ),
                         )
                       }
-                      className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </Field>
                   <Field label="Taklif qilingan vaqt (daq.)">
@@ -833,7 +833,7 @@ export default function EasyTestCreatePage() {
                           ),
                         )
                       }
-                      className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </Field>
                 </div>
@@ -861,7 +861,7 @@ export default function EasyTestCreatePage() {
             <button
               type="button"
               onClick={addSection}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-5 font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 py-5 font-medium text-brand-700 hover:border-red-400 hover:bg-brand-50"
             >
               <Plus size={18} />
               {module === 'listening' ? "Add new part" : "Add new passage"}
@@ -919,7 +919,7 @@ function SectionEditor({
           <button
             type="button"
             onClick={onRemove}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-cta-50 hover:text-cta-600"
             title="Delete"
           >
             <Trash2 size={14} />
@@ -933,7 +933,7 @@ function SectionEditor({
             value={section.title}
             onChange={(e) => onChange({ title: e.target.value })}
             placeholder="The History of the Tortoise"
-            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </Field>
 
@@ -952,7 +952,7 @@ function SectionEditor({
             placeholder={
               module === 'listening' ? 'Matn (transcript)…' : 'Reading passage matni…'
             }
-            className="w-full rounded-xl border border-slate-300 p-3 text-sm leading-relaxed focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            className="w-full rounded-xl border border-slate-300 p-3 text-sm leading-relaxed focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </Field>
 
@@ -961,7 +961,7 @@ function SectionEditor({
             value={section.instructions}
             onChange={(e) => onChange({ instructions: e.target.value })}
             placeholder="Read the passage and answer questions 1–10"
-            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </Field>
 
@@ -983,7 +983,7 @@ function SectionEditor({
             <button
               type="button"
               onClick={onAddQuestion}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-red-200 bg-red-50/40 py-3 text-sm font-medium text-red-700 hover:border-red-400 hover:bg-red-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 py-3 text-sm font-medium text-brand-700 hover:border-red-400 hover:bg-brand-50"
             >
               <Plus size={16} /> Savol qo'shish
             </button>
@@ -1017,7 +1017,7 @@ function QuestionEditor({
         <select
           value={question.question_type}
           onChange={(e) => onChangeType(e.target.value as QType)}
-          className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 focus:border-red-500 focus:outline-none"
+          className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 focus:border-brand-500 focus:outline-none"
         >
           <option value="mcq">Multiple Choice</option>
           <option value="tfng">True / False / Not Given</option>
@@ -1029,7 +1029,7 @@ function QuestionEditor({
         <button
           type="button"
           onClick={onRemove}
-          className="ml-auto rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+          className="ml-auto rounded-lg p-1.5 text-slate-400 hover:bg-cta-50 hover:text-cta-600"
         >
           <Trash2 size={14} />
         </button>
@@ -1039,7 +1039,7 @@ function QuestionEditor({
         value={question.text}
         onChange={(e) => onChange({ text: e.target.value })}
         placeholder="Savol matni"
-        className="mb-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+        className="mb-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
 
       {question.question_type === 'mcq' && (
@@ -1051,7 +1051,7 @@ function QuestionEditor({
                 name={`q-${index}-correct`}
                 checked={question.correct_answer === opt && opt !== ''}
                 onChange={() => onChange({ correct_answer: opt })}
-                className="h-4 w-4 border-slate-300 text-red-600 focus:ring-red-600"
+                className="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-600"
               />
               <input
                 value={opt}
@@ -1064,7 +1064,7 @@ function QuestionEditor({
                   onChange(patch)
                 }}
                 placeholder={`Variant ${String.fromCharCode(65 + oi)}`}
-                className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
           ))}
@@ -1078,7 +1078,7 @@ function QuestionEditor({
               key={v}
               className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm ${
                 question.correct_answer === v
-                  ? 'border-red-500 bg-red-50 text-red-700'
+                  ? 'border-brand-500 bg-brand-50 text-brand-700'
                   : 'border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -1100,7 +1100,7 @@ function QuestionEditor({
           value={question.correct_answer}
           onChange={(e) => onChange({ correct_answer: e.target.value })}
           placeholder="Correct answer (in lowercase)"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
       )}
 
@@ -1116,7 +1116,7 @@ function QuestionEditor({
                 name={`q-${index}-mhead`}
                 checked={question.correct_answer === opt && opt !== ''}
                 onChange={() => onChange({ correct_answer: opt })}
-                className="h-4 w-4 border-slate-300 text-red-600"
+                className="h-4 w-4 border-slate-300 text-brand-600"
               />
               <span className="w-6 text-sm text-slate-500">
                 {String.fromCharCode(0x2160 + oi)}
@@ -1139,7 +1139,7 @@ function QuestionEditor({
                   onClick={() =>
                     onChange({ options: question.options.filter((_, k) => k !== oi) })
                   }
-                  className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded p-1 text-slate-400 hover:bg-cta-50 hover:text-cta-600"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -1149,7 +1149,7 @@ function QuestionEditor({
           <button
             type="button"
             onClick={() => onChange({ options: [...question.options, ''] })}
-            className="text-xs text-red-600 hover:underline"
+            className="text-xs text-brand-600 hover:underline"
           >
             + Heading qo'shish
           </button>
@@ -1168,7 +1168,7 @@ function QuestionEditor({
                 name={`q-${index}-match`}
                 checked={question.correct_answer === opt && opt !== ''}
                 onChange={() => onChange({ correct_answer: opt })}
-                className="h-4 w-4 border-slate-300 text-red-600"
+                className="h-4 w-4 border-slate-300 text-brand-600"
               />
               <input
                 value={opt}
@@ -1186,7 +1186,7 @@ function QuestionEditor({
                   onClick={() =>
                     onChange({ options: question.options.filter((_, k) => k !== oi) })
                   }
-                  className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded p-1 text-slate-400 hover:bg-cta-50 hover:text-cta-600"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -1196,7 +1196,7 @@ function QuestionEditor({
           <button
             type="button"
             onClick={() => onChange({ options: [...question.options, ''] })}
-            className="text-xs text-red-600 hover:underline"
+            className="text-xs text-brand-600 hover:underline"
           >
             + Variant qo'shish
           </button>
@@ -1348,7 +1348,7 @@ function SectionImageField({
           <button
             type="button"
             onClick={() => onChange({ image_path: null, image_url: null })}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-cta-50 hover:text-cta-600"
           >
             <X size={12} /> Delete
           </button>
@@ -1435,7 +1435,7 @@ function ChartImageField({
           <button
             type="button"
             onClick={() => onChange({ chart_image_path: null, chart_image_url: null })}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-cta-50 hover:text-cta-600"
           >
             <X size={12} /> Delete
           </button>

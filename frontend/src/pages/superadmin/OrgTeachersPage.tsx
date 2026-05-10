@@ -84,7 +84,7 @@ export default function OrgTeachersPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Ism, login yoki telefon..."
-                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-9 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
               <span className="text-sm text-slate-500">
@@ -134,7 +134,7 @@ export default function OrgTeachersPage() {
                             className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                               t.is_active
                                 ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-rose-100 text-rose-700'
+                                : 'bg-cta-100 text-cta-700'
                             }`}
                           >
                             {t.is_active ? 'faol' : 'deleted'}

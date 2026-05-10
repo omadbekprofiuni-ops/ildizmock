@@ -72,7 +72,7 @@ export default function TeacherStudentDetailPage() {
   return (
     <TeacherLayout>
       <div className="container space-y-6 py-8">
-        <Link to="/teacher/students" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600">
+        <Link to="/teacher/students" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600">
           <ArrowLeft size={14} /> Students
         </Link>
 

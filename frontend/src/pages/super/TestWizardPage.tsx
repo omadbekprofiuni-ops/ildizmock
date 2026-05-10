@@ -113,7 +113,7 @@ export default function TestWizardPage() {
             {step === 5 && testId && <Step5Review testId={testId} />}
 
             {error && (
-              <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+              <div className="rounded-lg border border-brand-300 bg-brand-50 p-3 text-sm text-brand-700">
                 {error}
               </div>
             )}
@@ -133,7 +133,7 @@ export default function TestWizardPage() {
                   type="button"
                   onClick={createOrUpdate}
                   disabled={saving || !data.name}
-                  className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save and continue →'}
                 </button>
@@ -151,7 +151,7 @@ export default function TestWizardPage() {
                   type="button"
                   onClick={next}
                   disabled={step === 1 ? false : !testId}
-                  className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
                 >
                   Keyingisi →
                 </button>

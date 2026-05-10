@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,67 +6,107 @@
 
 @layer base {
   :root {
-    /* Brand palette — modern admin (indigo accent + slate neutrals) */
-    --bg: #F8FAFC;            /* slate-50 page background */
-    --surface: #FFFFFF;       /* card surface */
-    --text: #0F172A;          /* slate-900 */
-    --muted: #64748B;         /* slate-500 */
-    --border: #E2E8F0;        /* slate-200 */
-    --accent: #4F46E5;        /* indigo-600 */
-    --accent-dark: #4338CA;   /* indigo-700 */
-    --accent-soft: #EEF2FF;   /* indigo-50 — selected nav, soft chips */
-    --success: #16A34A;
+    /* Brand — Deep Blue */
+    --brand-50:  #EFF6FF;
+    --brand-100: #DBEAFE;
+    --brand-200: #BFDBFE;
+    --brand-300: #93C5FD;
+    --brand-400: #60A5FA;
+    --brand-500: #3B82F6;
+    --brand-600: #2563EB;
+    --brand-700: #1D4ED8;
+    --brand-800: #1E40AF;
+    --brand-900: #1E3A8A;
+    --brand-950: #172554;
+
+    /* Accent — Teal */
+    --accent-50:  #F0FDFA;
+    --accent-100: #CCFBF1;
+    --accent-200: #99F6E4;
+    --accent-400: #2DD4BF;
+    --accent-500: #14B8A6;
+    --accent-600: #0D9488;
+    --accent-700: #0F766E;
+
+    /* CTA — Coral / Red */
+    --cta-50:  #FEF2F2;
+    --cta-100: #FEE2E2;
+    --cta-400: #F87171;
+    --cta-500: #EF4444;
+    --cta-600: #DC2626;
+    --cta-700: #B91C1C;
+
+    /* Slate */
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --slate-950: #020617;
+
+    --amber-500: #F59E0B;
+    --amber-50:  #FFFBEB;
+
+    /* Brand-flavoured shadows */
+    --shadow-sm: 0 1px 3px rgba(37, 99, 235, 0.08);
+    --shadow-md: 0 4px 12px rgba(37, 99, 235, 0.10);
+    --shadow-lg: 0 12px 28px rgba(37, 99, 235, 0.14);
+    --shadow-xl: 0 24px 48px rgba(37, 99, 235, 0.18);
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #14B8A6 100%);
+    --gradient-hero: linear-gradient(135deg, #1E40AF 0%, #2563EB 35%, #14B8A6 100%);
+    --gradient-brand-soft: linear-gradient(135deg, #DBEAFE 0%, #CCFBF1 100%);
+    --gradient-cta: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+
+    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* App tokens (legacy compat) */
+    --bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #E2E8F0;
+    --accent: #2563EB;        /* brand-600 */
+    --accent-dark: #1D4ED8;
+    --accent-soft: #EFF6FF;
+    --success: #14B8A6;
     --error: #EF4444;
 
     /* shadcn HSL tokens */
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 1 77% 55%;              /* ILDIZmock red (#E53935) */
+    --primary: 221 83% 53%;            /* brand-600 (#2563EB) */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;          /* slate-100 */
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted-token: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent-token: 0 100% 96%;        /* primary-50 (#FFEBEE) */
-    --accent-foreground: 1 77% 55%;
+    --accent-token: 214 100% 97%;      /* brand-50 (#EFF6FF) */
+    --accent-foreground: 221 83% 33%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border-token: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 1 77% 55%;
+    --ring: 221 83% 53%;
     --radius: 0.75rem;
   }
 
-  /* Map shadcn class lookups (e.g. `bg-muted`, `border-border`) */
+  /* Map shadcn class lookups */
   :root {
     --muted: var(--muted-token);
     --accent: var(--accent-token);
     --border: var(--border-token);
-  }
-
-  /* Brand-flavoured short variables for direct CSS use (override loop above)
-   *
-   * --accent: PUBLIC SITE brendi (qizil — ILDIZmock asl rangi). HomePage,
-   *           OrgLandingPage, talaba marketing tugmalari shu rangda bo'ladi.
-   *           Admin panellari to'g'ridan-to'g'ri indigo Tailwind klasslarini
-   *           ishlatadi va shadcn --primary tokeni indigo'ga sozlangan, shu
-   *           bois admin UI indigo'da qoladi.
-   */
-  :root {
-    --bg: #F8FAFC;
-    --surface: #FFFFFF;
-    --text: #0F172A;
-    --muted: #64748B;
-    --border: #E2E8F0;
-    --accent: #E53935;        /* ILDIZmock red — brand */
-    --accent-dark: #C62828;
-    --accent-soft: #FFEBEE;
-    --success: #16A34A;
-    --error: #EF4444;
   }
 }
 
@@ -75,9 +115,110 @@
     @apply border-border;
   }
   html, body {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: var(--font-sans);
+    background: #FFFFFF;
+    color: var(--slate-900);
     -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+  }
+}
+
+@layer components {
+  /* Eyebrow pill */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-100);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-800);
+    letter-spacing: 0.02em;
+  }
+  .eyebrow--accent {
+    background: var(--accent-50);
+    border-color: var(--accent-100);
+    color: var(--accent-700);
+  }
+  .eyebrow__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cta-500);
+  }
+  .eyebrow__dot--accent {
+    background: var(--accent-500);
+  }
+  .eyebrow__dot--pulse {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-600), var(--accent-500));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Hero radial bg */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero-bg::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 700px;
+    background: radial-gradient(circle, var(--brand-100) 0%, transparent 60%);
+    opacity: 0.7;
+  }
+  .hero-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--accent-100) 0%, transparent 60%);
+    opacity: 0.6;
+  }
+
+  /* Icon tile (used on feature cards) */
+  .icon-tile {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .icon-tile--brand  { background: var(--brand-50);  color: var(--brand-600); }
+  .icon-tile--accent { background: var(--accent-50); color: var(--accent-600); }
+  .icon-tile--cta    { background: var(--cta-50);    color: var(--cta-600); }
+  .icon-tile--amber  { background: var(--amber-50);  color: var(--amber-500); }
+  .icon-tile--slate  { background: var(--slate-100); color: var(--slate-400); }
+
+  /* Brand mark gradient tile (logo container) */
+  .brand-mark {
+    background: var(--gradient-brand);
+    color: white;
   }
 }

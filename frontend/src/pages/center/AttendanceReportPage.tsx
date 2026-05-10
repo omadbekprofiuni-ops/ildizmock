@@ -114,7 +114,7 @@ export default function AttendanceReportPage() {
                 <td className={adminTable.td}>
                   <Link
                     to={`/${slug}/admin/students/${s.id}`}
-                    className="font-medium text-slate-900 hover:text-red-700"
+                    className="font-medium text-slate-900 hover:text-brand-700"
                   >
                     {s.name}
                   </Link>

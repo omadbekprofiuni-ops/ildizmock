@@ -84,7 +84,7 @@ export default function CenterDashboard() {
 
       {query.isLoading && <p className="text-slate-500">Loading…</p>}
       {query.isError && (
-        <p className="text-rose-600">Informationlar yuklanmadi.</p>
+        <p className="text-cta-600">Informationlar yuklanmadi.</p>
       )}
 
       {data && (

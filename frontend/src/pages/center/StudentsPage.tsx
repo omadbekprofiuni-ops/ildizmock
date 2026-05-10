@@ -108,7 +108,7 @@ export default function StudentsPage() {
                 placeholder="Search by name or login..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
           }
@@ -145,9 +145,9 @@ export default function StudentsPage() {
                       <td className={adminTable.td}>
                         <Link
                           to={`/${slug}/admin/students/${s.id}`}
-                          className="flex items-center gap-3 hover:text-red-700"
+                          className="flex items-center gap-3 hover:text-brand-700"
                         >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-semibold text-red-700">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
                             {initials}
                           </div>
                           <div className="font-semibold text-slate-900">
@@ -185,7 +185,7 @@ export default function StudentsPage() {
                             <button
                               type="button"
                               onClick={() => deactivate(s.id)}
-                              className="rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                              className="rounded-xl px-3 py-2 text-sm font-medium text-cta-600 transition-colors hover:bg-cta-50"
                             >
                               Delete
                             </button>
@@ -310,9 +310,9 @@ function AddStudentModal({
           />
         </div>
 
-        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
+        {error && <div className="mt-3 text-sm text-cta-600">{error}</div>}
 
-        <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-700">
+        <div className="mt-4 rounded-xl bg-brand-50 p-3 text-xs text-brand-700">
           💡 Parol avtomatik yaratiladi va keyingi ekranda shown. Eslab
           and give it to the student.
         </div>
@@ -428,7 +428,7 @@ function EditStudentModal({
             <select
               value={form.teacher_id}
               onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="">— tanlanmagan —</option>
               {teachers.map((t) => (
@@ -439,7 +439,7 @@ function EditStudentModal({
             </select>
           </div>
         </div>
-        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
+        {error && <div className="mt-3 text-sm text-cta-600">{error}</div>}
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={onClose} className={btnOutline + ' flex-1 justify-center'}>
             Cancel
@@ -480,7 +480,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
       />
       {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>

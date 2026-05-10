@@ -48,7 +48,7 @@ const STATUS_TONE: Record<string, string> = {
   in_progress: 'bg-blue-100 text-blue-700',
   submitted: 'bg-amber-100 text-amber-700',
   graded: 'bg-emerald-100 text-emerald-700',
-  expired: 'bg-rose-100 text-rose-700',
+  expired: 'bg-cta-100 text-cta-700',
 }
 
 export default function OrgTestResultsPage() {
@@ -71,7 +71,7 @@ export default function OrgTestResultsPage() {
       <header className="border-b bg-white px-8 py-5">
         <Link
           to={orgId ? `/super/org/${orgId}/tests` : '/super/organizations'}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
         >
           <ArrowLeft size={14} /> Testlar
         </Link>
@@ -98,7 +98,7 @@ export default function OrgTestResultsPage() {
         )}
         {query.isError && (
           <Card>
-            <CardContent className="p-10 text-center text-rose-600">
+            <CardContent className="p-10 text-center text-cta-600">
               Couldn't fetch data.
             </CardContent>
           </Card>

@@ -1,11 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
 import { UserMenu } from '@/components/UserMenu'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { api } from '@/lib/api'
 
 type MockResultRow = {
@@ -51,12 +49,16 @@ function fmt(value: number | string | null, digits = 1): string {
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return d.toLocaleDateString('uz-UZ', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   })
 }
 
 export default function MockResultsPage() {
-  useEffect(() => { document.title = 'ILDIZmock — My Mock Tests' }, [])
+  useEffect(() => {
+    document.title = 'ILDIZmock — My Mock Tests'
+  }, [])
 
   const query = useQuery({
     queryKey: ['my-mock-results'],
@@ -69,108 +71,137 @@ export default function MockResultsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-8">
           <div className="flex items-center gap-3">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Dashboard
-              </Button>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <ArrowLeft className="h-4 w-4" /> Dashboard
             </Link>
-            <h1 className="text-lg font-semibold">My Mock Tests</h1>
+            <h1 className="text-lg font-extrabold tracking-tight text-slate-900">
+              My Mock Tests
+            </h1>
           </div>
           <UserMenu />
         </div>
       </header>
 
-      <main className="container space-y-8 py-10">
-        {query.isLoading && (
-          <p className="text-muted-foreground">Loading…</p>
-        )}
-        {query.isError && (
-          <p className="text-destructive">Failed to load mock results.</p>
-        )}
+      <main className="mx-auto max-w-7xl space-y-8 px-8 py-10">
+        {query.isLoading && <p className="text-slate-500">Loading…</p>}
+        {query.isError && <p className="text-cta-600">Failed to load mock results.</p>}
 
         {stats && (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-            <StatCard label="Latest Overall" value={fmt(stats.latest_overall)} accent />
-            <StatCard label="Avg L" value={fmt(stats.avg_listening)} />
-            <StatCard label="Avg R" value={fmt(stats.avg_reading)} />
-            <StatCard label="Avg W" value={fmt(stats.avg_writing)} />
-            <StatCard label="Avg S" value={fmt(stats.avg_speaking)} />
+            <StatCard label="Latest Overall" value={fmt(stats.latest_overall)} highlight />
+            <StatCard label="Avg L" value={fmt(stats.avg_listening)} tone="cta" />
+            <StatCard label="Avg R" value={fmt(stats.avg_reading)} tone="brand" />
+            <StatCard label="Avg W" value={fmt(stats.avg_writing)} tone="accent" />
+            <StatCard label="Avg S" value={fmt(stats.avg_speaking)} tone="slate" />
           </div>
         )}
 
         {rows.length > 0 && (
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="mb-3 text-base font-semibold">Progress</h2>
-              <ProgressChart rows={rows} />
-            </CardContent>
-          </Card>
+          <div
+            className="rounded-[20px] border border-slate-100 bg-white p-7"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
+            <h2 className="mb-4 text-base font-extrabold text-slate-900">Progress</h2>
+            <ProgressChart rows={rows} />
+          </div>
         )}
 
         <section>
-          <h2 className="mb-3 text-xl font-semibold">Mock Test History</h2>
+          <h2 className="mb-4 text-lg font-extrabold text-slate-900">Mock Test History</h2>
           {rows.length === 0 && !query.isLoading ? (
-            <Card>
-              <CardContent className="p-10 text-center text-muted-foreground">
-                Hozircha mock testlarda qatnashmagansiz.
-              </CardContent>
-            </Card>
+            <div className="rounded-[20px] border-2 border-dashed border-slate-200 px-6 py-16 text-center text-slate-500">
+              You haven't joined any mock tests yet.
+            </div>
           ) : (
-            <Card className="overflow-hidden">
+            <div
+              className="overflow-hidden rounded-[20px] border border-slate-100 bg-white"
+              style={{ boxShadow: 'var(--shadow-sm)' }}
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+                  <thead className="border-b border-slate-100 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                     <tr>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Session</th>
-                      <th className="px-4 py-3 text-center">L</th>
-                      <th className="px-4 py-3 text-center">R</th>
-                      <th className="px-4 py-3 text-center">W</th>
-                      <th className="px-4 py-3 text-center">S</th>
-                      <th className="px-4 py-3 text-center">Overall</th>
-                      <th className="px-4 py-3"></th>
+                      <th className="px-6 py-3.5">Date</th>
+                      <th className="px-6 py-3.5">Session</th>
+                      <th className="px-6 py-3.5 text-center">L</th>
+                      <th className="px-6 py-3.5 text-center">R</th>
+                      <th className="px-6 py-3.5 text-center">W</th>
+                      <th className="px-6 py-3.5 text-center">S</th>
+                      <th className="px-6 py-3.5 text-center">Overall</th>
+                      <th className="px-6 py-3.5"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-slate-100">
                     {rows.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 text-slate-600">
+                      <tr key={r.id} className="transition-colors hover:bg-slate-50">
+                        <td className="px-6 py-3.5 text-slate-600">
                           {formatDate(r.session_date)}
                         </td>
-                        <td className="px-4 py-3 font-medium text-slate-900">
+                        <td className="px-6 py-3.5 font-bold text-slate-900">
                           {r.session_name}
                         </td>
-                        <td className="px-4 py-3 text-center font-mono">{fmt(r.listening_score)}</td>
-                        <td className="px-4 py-3 text-center font-mono">{fmt(r.reading_score)}</td>
-                        <td className="px-4 py-3 text-center font-mono">
-                          {fmt(r.writing_score)}
+                        <td
+                          className="px-6 py-3.5 text-center font-bold tabular-nums"
+                          style={{ fontFamily: 'var(--font-mono)' }}
+                        >
+                          {fmt(r.listening_score)}
+                        </td>
+                        <td
+                          className="px-6 py-3.5 text-center font-bold tabular-nums"
+                          style={{ fontFamily: 'var(--font-mono)' }}
+                        >
+                          {fmt(r.reading_score)}
+                        </td>
+                        <td className="px-6 py-3.5 text-center">
+                          <span
+                            className="font-bold tabular-nums"
+                            style={{ fontFamily: 'var(--font-mono)' }}
+                          >
+                            {fmt(r.writing_score)}
+                          </span>
                           {r.writing_status === 'pending' && (
-                            <div className="text-[10px] text-amber-600">kutilmoqda</div>
+                            <div className="text-[10px] font-semibold text-amber-600">
+                              pending
+                            </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center font-mono">
-                          {fmt(r.speaking_score)}
+                        <td className="px-6 py-3.5 text-center">
+                          <span
+                            className="font-bold tabular-nums"
+                            style={{ fontFamily: 'var(--font-mono)' }}
+                          >
+                            {fmt(r.speaking_score)}
+                          </span>
                           {r.speaking_status === 'pending' && (
-                            <div className="text-[10px] text-amber-600">kutilmoqda</div>
+                            <div className="text-[10px] font-semibold text-amber-600">
+                              pending
+                            </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-6 py-3.5 text-center">
                           {r.overall_band_score ? (
-                            <span className="rounded bg-slate-900 px-2 py-0.5 font-mono text-xs tabular-nums text-white">
+                            <span
+                              className="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-extrabold tabular-nums text-white"
+                              style={{ background: 'var(--gradient-brand)' }}
+                            >
                               {fmt(r.overall_band_score)}
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
+                            <span className="text-xs text-slate-400">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link to={`/student/mock/${r.id}`}>
-                            <Button variant="outline" size="sm">
-                              Batafsil <ArrowRight className="ml-1 h-3 w-3" />
-                            </Button>
+                        <td className="px-6 py-3.5 text-right">
+                          <Link
+                            to={`/student/mock/${r.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg border-2 border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+                          >
+                            Details <ArrowRight className="h-3 w-3" />
                           </Link>
                         </td>
                       </tr>
@@ -178,14 +209,13 @@ export default function MockResultsPage() {
                   </tbody>
                 </table>
               </div>
-            </Card>
+            </div>
           )}
         </section>
 
         <section className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Mock testlar markazingiz tomonidan jadvalga qo‘yiladi va sinxron
-            tarzda o‘tkaziladi.
+          <p className="text-sm text-slate-500">
+            Mock tests are scheduled by your center and run synchronously.
           </p>
         </section>
       </main>
@@ -193,22 +223,41 @@ export default function MockResultsPage() {
   )
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatCard({
+  label,
+  value,
+  highlight,
+  tone = 'slate',
+}: {
+  label: string
+  value: string
+  highlight?: boolean
+  tone?: 'brand' | 'accent' | 'cta' | 'slate'
+}) {
+  const colorMap: Record<string, string> = {
+    brand: 'var(--brand-700)',
+    accent: 'var(--accent-700)',
+    cta: 'var(--cta-700)',
+    slate: 'var(--slate-900)',
+  }
   return (
-    <Card>
-      <CardContent className="p-4 text-center">
-        <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
-        <p
-          className={
-            accent
-              ? 'mt-1 text-3xl font-bold text-slate-900'
-              : 'mt-1 text-2xl font-semibold text-slate-800'
-          }
-        >
-          {value}
-        </p>
-      </CardContent>
-    </Card>
+    <div
+      className="rounded-[18px] border border-slate-100 bg-white p-5 text-center"
+      style={{ boxShadow: 'var(--shadow-sm)' }}
+    >
+      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+      <p
+        className={`mt-1.5 font-extrabold tracking-tight ${
+          highlight ? 'text-3xl' : 'text-2xl'
+        }`}
+        style={{
+          color: highlight ? 'var(--slate-900)' : colorMap[tone],
+          fontFamily: highlight ? undefined : 'var(--font-mono)',
+        }}
+      >
+        {value}
+      </p>
+    </div>
   )
 }
 
@@ -220,11 +269,11 @@ type Series = {
 }
 
 const SERIES: Series[] = [
-  { key: 'overall', label: 'Overall', color: '#0f172a', width: 3 },
-  { key: 'listening', label: 'Listening', color: '#16a34a', width: 2 },
-  { key: 'reading', label: 'Reading', color: '#2563eb', width: 2 },
-  { key: 'writing', label: 'Writing', color: '#ea580c', width: 2 },
-  { key: 'speaking', label: 'Speaking', color: '#9333ea', width: 2 },
+  { key: 'overall', label: 'Overall', color: '#0F172A', width: 3 },
+  { key: 'reading', label: 'Reading', color: '#2563EB', width: 2 },
+  { key: 'listening', label: 'Listening', color: '#EF4444', width: 2 },
+  { key: 'writing', label: 'Writing', color: '#14B8A6', width: 2 },
+  { key: 'speaking', label: 'Speaking', color: '#94A3B8', width: 2 },
 ]
 
 function ProgressChart({ rows }: { rows: MockResultRow[] }) {
@@ -288,7 +337,7 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
               className="inline-block h-2 w-4 rounded-sm"
               style={{ background: s.color }}
             />
-            <span className="text-slate-600">{s.label}</span>
+            <span className="font-semibold text-slate-600">{s.label}</span>
           </div>
         ))}
       </div>
@@ -306,7 +355,7 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
                 x2={W - PAD_X}
                 y1={yFor(band)}
                 y2={yFor(band)}
-                stroke="#e2e8f0"
+                stroke="#E2E8F0"
                 strokeDasharray={band === 0 ? '0' : '3 3'}
                 strokeWidth={1}
               />
@@ -314,7 +363,7 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
                 x={PAD_X - 6}
                 y={yFor(band) + 3}
                 fontSize="10"
-                fill="#94a3b8"
+                fill="#94A3B8"
                 textAnchor="end"
               >
                 {band}
@@ -347,7 +396,7 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
                 cx={xFor(i)}
                 cy={yFor(v)}
                 r={3.5}
-                fill="#0f172a"
+                fill="#0F172A"
               />
             )
           })}
@@ -358,7 +407,7 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
               x={xFor(i)}
               y={H - 4}
               fontSize="10"
-              fill="#64748b"
+              fill="#64748B"
               textAnchor="middle"
             >
               {label}
@@ -369,5 +418,3 @@ function ProgressChart({ rows }: { rows: MockResultRow[] }) {
     </div>
   )
 }
-
-void GraduationCap

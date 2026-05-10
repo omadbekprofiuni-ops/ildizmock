@@ -95,7 +95,7 @@ export default function ExcelImportPage() {
     <PageShell maxWidth="max-w-4xl">
       <Link
         to={`/${slug}/admin/tests`}
-        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
       >
         <ArrowLeft size={14} /> Tests
       </Link>
@@ -145,7 +145,7 @@ export default function ExcelImportPage() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Cambridge IELTS 19 — Reading Test 1"
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <div>
@@ -157,7 +157,7 @@ export default function ExcelImportPage() {
               onChange={(e) =>
                 setForm({ ...form, module: e.target.value as typeof form.module })
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="reading">Reading</option>
               <option value="listening">Listening</option>
@@ -176,7 +176,7 @@ export default function ExcelImportPage() {
                   difficulty: e.target.value as typeof form.difficulty,
                 })
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -199,7 +199,7 @@ export default function ExcelImportPage() {
                   duration_minutes: Number(e.target.value) || 60,
                 })
               }
-              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function ExcelImportPage() {
         <h2 className="mb-4 text-base font-semibold text-slate-900">
           3. Upload the filled file
         </h2>
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/40 p-8 hover:border-red-300 hover:bg-red-50/40">
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/40 p-8 hover:border-brand-300 hover:bg-brand-50/40">
           <FileSpreadsheet size={32} className="text-slate-400" />
           <span className="text-sm font-medium text-slate-700">
             {file ? file.name : 'Click to select an .xlsx file'}

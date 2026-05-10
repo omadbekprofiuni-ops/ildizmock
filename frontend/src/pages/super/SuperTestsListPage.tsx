@@ -150,7 +150,7 @@ export default function SuperTestsListPage() {
                           className={
                             t.status === 'published'
                               ? 'inline-flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100'
-                              : 'inline-flex items-center gap-1 rounded-xl bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100'
+                              : 'inline-flex items-center gap-1 rounded-xl bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100'
                           }
                         >
                           {t.status === 'published' ? 'Draft' : "Publish"}

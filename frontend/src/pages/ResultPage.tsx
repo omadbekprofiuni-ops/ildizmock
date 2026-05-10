@@ -2,8 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Check, History, RotateCcw, UserPlus, X } from 'lucide-react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import brandLogo from '@/assets/brand-logo.png'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
@@ -42,6 +41,45 @@ type ResultResponse = {
   answers: AnswerRow[]
 }
 
+function BrandMark({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{ width: size, height: size, borderRadius: size * 0.3, overflow: 'hidden' }}
+    >
+      <img
+        src={brandLogo}
+        alt="Mock Exam"
+        width={size}
+        height={size}
+        className="h-full w-full object-contain"
+        draggable={false}
+      />
+    </div>
+  )
+}
+
+function ResultHeader({ title }: { title: string }) {
+  return (
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-4 px-8">
+        <Link
+          to="/home"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+        >
+          <ArrowLeft className="h-4 w-4" /> Home
+        </Link>
+        <div className="hidden items-center gap-3 md:flex">
+          <BrandMark size={32} />
+          <h1 className="truncate text-base font-extrabold tracking-tight text-slate-900">
+            {title}
+          </h1>
+        </div>
+      </div>
+    </header>
+  )
+}
+
 export default function ResultPage() {
   const { attemptId } = useParams<{ attemptId: string }>()
   const navigate = useNavigate()
@@ -70,7 +108,7 @@ export default function ResultPage() {
   if (query.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-muted-foreground">Result yuklanmoqda…</p>
+        <p className="text-slate-500">Loading result…</p>
       </div>
     )
   }
@@ -78,7 +116,7 @@ export default function ResultPage() {
   if (query.isError || !query.data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-destructive">could not load result.</p>
+        <p className="text-cta-600">Could not load result.</p>
       </div>
     )
   }
@@ -93,58 +131,66 @@ export default function ResultPage() {
   if (isWriting) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <header className="border-b bg-white">
-          <div className="container flex h-16 items-center gap-3">
-            <Link to="/home">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Home
-              </Button>
-            </Link>
-            <h1 className="text-lg font-semibold">Your essay was submitted</h1>
+        <ResultHeader title="Your essay was submitted" />
+        <main className="mx-auto max-w-3xl space-y-5 px-8 py-10">
+          <div
+            className="rounded-[20px] border border-slate-100 bg-white p-10 text-center"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
+            <div className="icon-tile icon-tile--amber mx-auto" style={{ width: 56, height: 56 }}>
+              <History className="h-7 w-7" />
+            </div>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
+              Feedback pending
+            </h2>
+            <p className="mt-3 text-slate-600">
+              Your essay was received. Your teacher will review and grade it shortly.
+              For now, here's a quick word count:
+            </p>
+            <div className="mx-auto mt-6 inline-flex gap-8 rounded-2xl border border-slate-100 bg-slate-50 px-7 py-4">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  Words
+                </div>
+                <div className="mt-1 text-xl font-extrabold text-slate-900">
+                  {r.word_count ?? 0}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  Test
+                </div>
+                <div className="mt-1 truncate text-base font-extrabold text-slate-900">
+                  {r.test_name}
+                </div>
+              </div>
+            </div>
           </div>
-        </header>
-        <main className="container max-w-3xl space-y-6 py-10">
-          <Card>
-            <CardContent className="space-y-4 p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
-                <History className="h-6 w-6 text-amber-700" />
-              </div>
-              <h2 className="text-2xl font-bold">AI feedback pending</h2>
-              <p className="text-muted-foreground">
-                Inshangiz qabul qilindi. Automatic scoring{' '}
-                <strong>Phase 2</strong> will add (via the Claude API
-                band score and full analysis). For now, a simple word count:
-              </p>
-              <div className="mx-auto inline-flex gap-6 rounded-md border bg-slate-50 px-6 py-3 text-sm">
-                <div>
-                  <div className="text-xs text-muted-foreground">Words</div>
-                  <div className="text-lg font-semibold">{r.word_count ?? 0}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Test</div>
-                  <div className="text-lg font-semibold">{r.test_name}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
           {r.essay_text && (
-            <Card>
-              <CardContent className="p-6">
-                <CardTitle className="mb-3 text-base">Sizning inshengiz</CardTitle>
-                <div className="whitespace-pre-wrap rounded-md border bg-slate-50 p-4 text-sm text-slate-800">
-                  {r.essay_text}
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              className="rounded-[20px] border border-slate-100 bg-white p-7"
+              style={{ boxShadow: 'var(--shadow-sm)' }}
+            >
+              <h3 className="mb-3 text-base font-extrabold text-slate-900">Your essay</h3>
+              <div className="whitespace-pre-wrap rounded-xl border border-slate-100 bg-slate-50 p-5 text-sm leading-relaxed text-slate-800">
+                {r.essay_text}
+              </div>
+            </div>
           )}
-          <div className="flex gap-3">
-            <Link to={`/tests/${r.module}`}>
-              <Button variant="outline">Other tests</Button>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to={`/tests/${r.module}`}
+              className="rounded-xl border-2 border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+            >
+              Other tests
             </Link>
-            <Link to="/history">
-              <Button variant="ghost">
-                <History className="mr-2 h-4 w-4" /> History
-              </Button>
+            <Link
+              to="/history"
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+            >
+              <History className="h-4 w-4" /> History
             </Link>
           </div>
         </main>
@@ -152,10 +198,7 @@ export default function ResultPage() {
     )
   }
 
-  const unanswered = r.answers.filter(
-    (a) => !a.is_correct && a.user_answer == null,
-  ).length
-
+  const unanswered = r.answers.filter((a) => !a.is_correct && a.user_answer == null).length
   const isPractice = r.test?.is_practice_enabled === true
   const sortedAnswers = [...r.answers].sort(
     (a, b) =>
@@ -164,147 +207,183 @@ export default function ResultPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="border-b border-[var(--border)] bg-white">
-        <div className="container flex h-16 items-center gap-3">
-          <Link to="/home">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Home
-            </Button>
-          </Link>
-          <h1 className="text-lg font-semibold">{r.test_name}</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50">
+      <ResultHeader title={r.test_name} />
 
-      <main className="container max-w-3xl space-y-6 py-12">
+      <main className="mx-auto max-w-3xl space-y-6 px-8 py-12">
         {!user && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
-            <div className="flex items-start gap-3">
-              <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
-              <div className="flex-1">
-                <p className="font-medium text-amber-900">
-                  Sign in to save results and see your history →
-                </p>
-                <p className="mt-1 text-amber-800">
-                  Right now this result is not linked to your account.
-                </p>
-              </div>
-              <Link to="/login">
-                <Button size="sm" className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">
-                  Kirish
-                </Button>
-              </Link>
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-sm">
+            <UserPlus className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700" />
+            <div className="flex-1">
+              <p className="font-bold text-amber-900">
+                Sign in to save results and see your history →
+              </p>
+              <p className="mt-1 text-amber-800">
+                Right now this result is not linked to your account.
+              </p>
             </div>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center rounded-xl bg-cta-500 px-4 py-2 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600"
+            >
+              Sign In
+            </Link>
           </div>
         )}
 
         {isPractice && (
-          <div className="rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-4 text-sm text-emerald-900">
-            <p className="font-semibold">Practice mode</p>
-            <p className="mt-0.5">
-              Answers for each question are shown below. Limit
-              yo‘q — istagancha qayta urinib ko‘rishingiz mumkin.
+          <div
+            className="rounded-2xl border-l-4 p-5 text-sm"
+            style={{
+              borderColor: 'var(--accent-500)',
+              background: 'var(--accent-50)',
+              color: 'var(--accent-700)',
+            }}
+          >
+            <p className="font-extrabold">Practice mode</p>
+            <p className="mt-0.5 text-[var(--accent-700)]">
+              Correct answers are shown for each question. No retry limit.
             </p>
           </div>
         )}
 
-        <div className="text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-            Band Score
-          </p>
-          <p className="text-7xl font-bold tabular-nums leading-none">
-            {r.band_score}
-          </p>
-          <p className="mt-3 text-sm text-[var(--muted)]">
-            {r.module === 'reading' ? 'Reading' : 'Listening'} module
-          </p>
+        {/* Big band score */}
+        <div
+          className="relative overflow-hidden rounded-[28px] p-10 text-center text-white"
+          style={{ background: 'var(--gradient-hero)', boxShadow: 'var(--shadow-lg)' }}
+        >
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          <div className="relative">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-white/80">
+              Band Score
+            </p>
+            <p
+              className="mt-3 text-[88px] font-extrabold leading-none tracking-tight"
+              style={{ fontFeatureSettings: '"tnum"' }}
+            >
+              {r.band_score ?? '—'}
+            </p>
+            <p className="mt-3 text-sm font-semibold capitalize text-white/85">
+              {r.module} module
+            </p>
+          </div>
         </div>
 
+        {/* Stat boxes */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatBox label="Correct" value={correct} tone="success" />
-          <StatBox label="Wrong" value={wrong - unanswered} tone="error" />
-          <StatBox label="Unanswered" value={unanswered} tone="muted" />
-          <StatBox label="Accuracy" value={`${percentage}%`} tone="text" />
+          <StatBox label="Correct" value={correct} tone="accent" />
+          <StatBox label="Wrong" value={wrong - unanswered} tone="cta" />
+          <StatBox label="Unanswered" value={unanswered} tone="slate" />
+          <StatBox label="Accuracy" value={`${percentage}%`} tone="brand" />
         </div>
 
+        {/* Question analysis */}
         {sortedAnswers.length > 0 && (
-          <Card>
-            <CardContent className="space-y-3 p-6">
-              <CardTitle className="mb-1 text-base">Question analysis</CardTitle>
-              <ol className="space-y-3">
-                {sortedAnswers.map((a) => (
-                  <li
-                    key={a.question}
-                    className={`flex gap-3 rounded-md border-l-4 p-3 ${
-                      a.is_correct
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-rose-500 bg-rose-50'
-                    }`}
+          <div
+            className="rounded-[20px] border border-slate-100 bg-white p-7"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
+            <h3 className="mb-4 text-base font-extrabold text-slate-900">
+              Question analysis
+            </h3>
+            <ol className="space-y-2.5">
+              {sortedAnswers.map((a) => (
+                <li
+                  key={a.question}
+                  className="flex gap-3 rounded-2xl border-l-4 p-4"
+                  style={{
+                    borderColor: a.is_correct ? 'var(--accent-500)' : 'var(--cta-500)',
+                    background: a.is_correct ? 'var(--accent-50)' : 'var(--cta-50)',
+                  }}
+                >
+                  <span
+                    className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{
+                      background: a.is_correct ? 'var(--accent-500)' : 'var(--cta-500)',
+                    }}
                   >
-                    <span
-                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                        a.is_correct ? 'bg-emerald-500' : 'bg-rose-500'
-                      }`}
-                    >
-                      {a.is_correct ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">
-                        {a.question_number || a.question_order}
-                        {'. '}
-                        {a.question_prompt || a.question_text || `Question ${a.question}`}
+                    {a.is_correct ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900">
+                      {a.question_number || a.question_order}
+                      {'. '}
+                      {a.question_prompt || a.question_text || `Question ${a.question}`}
+                    </p>
+                    <div className="mt-1.5 space-y-0.5 text-sm">
+                      <p>
+                        <span className="text-slate-500">Your answer: </span>
+                        <span
+                          className="font-semibold"
+                          style={{
+                            color: a.is_correct
+                              ? 'var(--accent-700)'
+                              : 'var(--cta-700)',
+                          }}
+                        >
+                          {formatAnswer(a.user_answer)}
+                        </span>
                       </p>
-                      <div className="mt-1 space-y-0.5 text-sm">
+                      {!a.is_correct && (
                         <p>
-                          <span className="text-slate-500">Sizning javobingiz: </span>
+                          <span className="text-slate-500">Correct answer: </span>
                           <span
-                            className={
-                              a.is_correct
-                                ? 'font-semibold text-emerald-700'
-                                : 'text-rose-700'
-                            }
+                            className="font-bold"
+                            style={{ color: 'var(--accent-700)' }}
                           >
-                            {formatAnswer(a.user_answer)}
+                            {formatAnswer(a.correct_answer)}
                           </span>
                         </p>
-                        {!a.is_correct && (
-                          <p>
-                            <span className="text-slate-500">Correct answer: </span>
-                            <span className="font-semibold text-emerald-700">
-                              {formatAnswer(a.correct_answer)}
-                            </span>
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         )}
 
-        <div className="flex flex-wrap justify-center gap-3 pt-4">
+        {/* Actions */}
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
           {user && r.test?.id && (
-            <Button
+            <button
+              type="button"
               onClick={() => retry.mutate()}
               disabled={retry.isPending}
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+              style={{ background: 'var(--accent-600)' }}
             >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              {retry.isPending ? 'Creating…' : 'Qayta urinish'}
-            </Button>
+              <RotateCcw className="h-4 w-4" />
+              {retry.isPending ? 'Creating…' : 'Retry'}
+            </button>
           )}
-          <Link to={`/take/${r.id}?review=1`}>
-            <Button variant="outline">Review</Button>
+          <Link
+            to={`/take/${r.id}?review=1`}
+            className="inline-flex items-center justify-center rounded-xl border-2 border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+          >
+            Review
           </Link>
-          <Link to={`/tests/${r.module}`}>
-            <Button variant="outline">Other tests</Button>
+          <Link
+            to={`/tests/${r.module}`}
+            className="inline-flex items-center justify-center rounded-xl border-2 border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+          >
+            Other tests
           </Link>
-          <Link to="/home">
-            <Button variant="ghost">
-              <History className="mr-2 h-4 w-4" /> Home
-            </Button>
+          <Link
+            to="/home"
+            className="inline-flex items-center gap-1.5 rounded-xl px-5 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-600"
+          >
+            <History className="h-4 w-4" /> Home
           </Link>
         </div>
       </main>
@@ -327,7 +406,7 @@ function formatAnswer(value: unknown): string {
   return String(value)
 }
 
-type StatTone = 'success' | 'error' | 'muted' | 'text'
+type StatTone = 'brand' | 'accent' | 'cta' | 'slate'
 
 function StatBox({
   label,
@@ -338,18 +417,21 @@ function StatBox({
   value: number | string
   tone: StatTone
 }) {
-  const color =
-    tone === 'success'
-      ? 'text-[var(--success)]'
-      : tone === 'error'
-        ? 'text-[var(--error)]'
-        : tone === 'muted'
-          ? 'text-[var(--muted)]'
-          : 'text-[var(--text)]'
+  const colorMap: Record<StatTone, string> = {
+    brand: 'var(--brand-700)',
+    accent: 'var(--accent-700)',
+    cta: 'var(--cta-700)',
+    slate: 'var(--slate-700)',
+  }
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-white p-5 text-center">
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-wide text-[var(--muted)]">
+    <div
+      className="rounded-2xl border border-slate-100 bg-white p-5 text-center"
+      style={{ boxShadow: 'var(--shadow-sm)' }}
+    >
+      <div className="text-3xl font-extrabold tracking-tight" style={{ color: colorMap[tone] }}>
+        {value}
+      </div>
+      <div className="mt-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
         {label}
       </div>
     </div>

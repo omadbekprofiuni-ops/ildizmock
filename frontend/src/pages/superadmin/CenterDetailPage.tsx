@@ -81,7 +81,7 @@ export default function CenterDetailPage() {
   if (orgQ.isError || !orgQ.data) {
     return (
       <SuperAdminLayout>
-        <div className="p-8 text-sm text-rose-600">Center not found.</div>
+        <div className="p-8 text-sm text-cta-600">Center not found.</div>
       </SuperAdminLayout>
     )
   }
@@ -94,7 +94,7 @@ export default function CenterDetailPage() {
         <div>
           <Link
             to="/super/organizations"
-            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600"
+            className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
           >
             <ArrowLeft size={14} /> Back to centers
           </Link>
@@ -444,7 +444,7 @@ function LogoDropzone({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
-        <ImagePlus size={18} className="text-red-600" />
+        <ImagePlus size={18} className="text-brand-600" />
         <h2 className="text-base font-semibold text-slate-900">Center logo</h2>
       </div>
 
@@ -482,7 +482,7 @@ function LogoDropzone({
               type="button"
               onClick={remove}
               disabled={busy}
-              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
+              className="rounded-xl border border-cta-100 bg-cta-50 px-3 py-2 text-sm font-medium text-cta-700 hover:bg-cta-100"
             >
               <Trash2 size={14} className="mr-1 inline" /> Delete
             </button>
@@ -500,19 +500,19 @@ function LogoDropzone({
         onClick={() => inputRef.current?.click()}
         className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
           dragging
-            ? 'border-red-500 bg-red-50'
+            ? 'border-brand-500 bg-brand-50'
             : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
         }`}
       >
         <div
           className={`flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ${
-            dragging ? 'text-red-600' : 'text-slate-400'
+            dragging ? 'text-brand-600' : 'text-slate-400'
           }`}
         >
           {busy ? <Loader2 size={26} className="animate-spin" /> : <UploadCloud size={26} />}
         </div>
         <p className="mt-3 text-sm font-medium text-slate-700">
-          Drop the file here or <span className="text-red-600 underline">choose</span>
+          Drop the file here or <span className="text-brand-600 underline">choose</span>
         </p>
         <p className="mt-1 text-xs text-slate-500">PNG, JPG, SVG (transparent background recommended)</p>
       </div>

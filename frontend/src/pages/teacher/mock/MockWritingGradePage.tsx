@@ -94,7 +94,7 @@ export default function MockWritingGradePage() {
   if (error)
     return (
       <TeacherLayout>
-        <div className="p-8 text-red-600">{error}</div>
+        <div className="p-8 text-brand-600">{error}</div>
       </TeacherLayout>
     )
   if (!detail)
@@ -254,7 +254,7 @@ export default function MockWritingGradePage() {
         </section>
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-lg bg-brand-50 p-3 text-sm text-brand-700">
             {error}
           </div>
         )}
