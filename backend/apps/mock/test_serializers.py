@@ -10,6 +10,11 @@ def _absolute_media_url(file_field, request):
     """Build a full media URL, with a production safety-net that upgrades
     http:// to https:// when DEBUG is off (in case nginx forgot to send
     X-Forwarded-Proto and Django thinks it's serving plain HTTP).
+
+    HOTFIX (audio playback): fayl diskda mavjudligini ham tekshiramiz —
+    fayl o'chirilgan bo'lsa (masalan, MEDIA_ROOT volume reset yoki upload
+    yarim qolgan), null qaytaramiz. Frontend null'ni ko'rib 'audio
+    missing' deb aniq xabar beradi (404 olib alert ko'rsatish o'rniga).
     """
     if not file_field:
         return None
@@ -17,6 +22,15 @@ def _absolute_media_url(file_field, request):
         url = file_field.url
     except (ValueError, AttributeError):
         return None
+    # Fayl haqiqatda mavjudligini tekshirish (Storage.exists() — S3 yoki
+    # local FS ikkalasida ham ishlaydi).
+    try:
+        if not file_field.storage.exists(file_field.name):
+            return None
+    except Exception:
+        # Storage tekshiruvi xatosi — URL'ni qaytarib ko'ramiz (oldingi
+        # xulq, regression bo'lmasligi uchun).
+        pass
     if request is None:
         return url
     absolute = request.build_absolute_uri(url)
