@@ -11,6 +11,11 @@ Mounted at /api/v1/center/<slug>/ in apps/center/urls.py:
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from .escalation_views import (
+    EscalationListView,
+    EscalationResolveView,
+    TelegramBindView,
+)
 from .views import (
     AttendanceTodayView,
     CenterAttendanceSessionViewSet,
@@ -52,5 +57,19 @@ urlpatterns = session_router.urls + [
     path(
         'attendance/groups/<int:group_id>/report/',
         GroupAttendanceReportView.as_view(), name='group-attendance-report',
+    ),
+
+    # ETAP 28 — escalations va telegram bindings
+    path(
+        'attendance/escalations/',
+        EscalationListView.as_view(), name='attendance-escalations-list',
+    ),
+    path(
+        'attendance/escalations/<int:escalation_id>/resolve/',
+        EscalationResolveView.as_view(), name='attendance-escalations-resolve',
+    ),
+    path(
+        'attendance/telegram/bind/',
+        TelegramBindView.as_view(), name='attendance-telegram-bind',
     ),
 ]
