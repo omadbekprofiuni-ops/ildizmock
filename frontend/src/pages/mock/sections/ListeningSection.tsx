@@ -312,14 +312,29 @@ export function ListeningSection({
     if (!submittedRef.current) submit()
   }
 
-  // ── Questions grouped by part_number (1..4) ────────────────────────
+  // ── Group questions by part_number for display ────────────────────
+  // Spec form: Record<number, Question[]> with 1..4 pre-initialised.
+  // Per-part instructions tracked in a parallel map so the render can
+  // show them without the nested wrapper object.
   const questionsByPart = useMemo(() => {
-    const groups: Record<number, { part: ListeningPart; questions: Question[] }>
-      = {}
+    if (!parts || parts.length === 0) return {} as Record<number, Question[]>
+    const groups: Record<number, Question[]> = { 1: [], 2: [], 3: [], 4: [] }
     for (const p of parts) {
-      groups[p.part_number] = { part: p, questions: p.questions || [] }
+      const pn = p.part_number || 1
+      if (!groups[pn]) groups[pn] = []
+      for (const q of p.questions || []) {
+        groups[pn].push(q)
+      }
     }
     return groups
+  }, [parts])
+
+  const instructionsByPart = useMemo(() => {
+    const m: Record<number, string> = {}
+    for (const p of parts) {
+      if (p.instructions) m[p.part_number] = p.instructions
+    }
+    return m
   }, [parts])
 
   // ── Render guards ──────────────────────────────────────────────────
@@ -367,8 +382,6 @@ export function ListeningSection({
   }
 
   const inputsLocked = audioState === 'ready'
-  const partNumbers = Object.keys(questionsByPart)
-    .map(Number).sort((a, b) => a - b)
 
   return (
     <FullscreenGate title="Listening Test">
@@ -546,14 +559,13 @@ export function ListeningSection({
                   unlock automatically.
                 </div>
               )}
-              {partNumbers.map((pn) => {
-                const group = questionsByPart[pn]
-                if (!group || group.questions.length === 0) return null
-                const firstQ = group.questions[0]?.question_number
-                  ?? group.questions[0]?.order
-                const lastQ
-                  = group.questions[group.questions.length - 1]?.question_number
-                  ?? group.questions[group.questions.length - 1]?.order
+              {[1, 2, 3, 4].map((pn) => {
+                const qs = questionsByPart[pn] || []
+                if (qs.length === 0) return null
+                const firstQ = qs[0]?.question_number ?? qs[0]?.order
+                const lastQ = qs[qs.length - 1]?.question_number
+                  ?? qs[qs.length - 1]?.order
+                const instructions = instructionsByPart[pn]
                 return (
                   <fieldset
                     key={pn}
@@ -565,13 +577,13 @@ export function ListeningSection({
                     <h2 className="text-lg font-bold">
                       PART {pn} — Questions {firstQ}–{lastQ}
                     </h2>
-                    {group.part.instructions && (
+                    {instructions && (
                       <p className="mb-3 mt-1 text-sm text-slate-600">
-                        {group.part.instructions}
+                        {instructions}
                       </p>
                     )}
                     <div className="space-y-4">
-                      {group.questions.map((q, i) => (
+                      {qs.map((q, i) => (
                         <QuestionRenderer
                           key={q.id}
                           question={q}
