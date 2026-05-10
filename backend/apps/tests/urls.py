@@ -27,6 +27,12 @@ from .pdf_views import (
 )
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
+from .views_smart_paste import (
+    SmartPasteCreateView,
+    SmartPasteExcelImportView,
+    SmartPasteExcelTemplateView,
+    SmartPastePreviewView,
+)
 
 router = DefaultRouter()
 router.register(r'tests', TestViewSet, basename='tests')
@@ -56,6 +62,17 @@ urlpatterns = [
     path('tests/counts/', TestCountsView.as_view()),
     path('practice/stats/', PracticeStatsView.as_view()),
     path('super/audio/', SuperAdminAudioListView.as_view(), name='super-audio'),
+
+    # ETAP 24 — Smart Paste / Excel
+    path('admin/smart-paste/preview/', SmartPastePreviewView.as_view(),
+         name='smart-paste-preview'),
+    path('admin/smart-paste/create/', SmartPasteCreateView.as_view(),
+         name='smart-paste-create'),
+    path('admin/smart-paste/import-excel/', SmartPasteExcelImportView.as_view(),
+         name='smart-paste-excel'),
+    path('admin/smart-paste/excel-template.xlsx',
+         SmartPasteExcelTemplateView.as_view(),
+         name='smart-paste-template'),
 
     # PDF Tests (PDF + audio + answer key)
     path('pdf-tests/create/', create_pdf_test, name='create-pdf-test'),

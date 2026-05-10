@@ -23,6 +23,9 @@ import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
 import PDFTestCreate from './pages/center/PDFTestCreate'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
+import SmartPasteExcelImportPage from './pages/center/tests/ExcelImportPage'
+import NewTestModeSelector from './pages/center/tests/NewTestModeSelector'
+import SmartPasteEditor from './pages/center/tests/SmartPasteEditor'
 import GroupCreatePage from './pages/center/GroupCreatePage'
 import GroupDetailPage from './pages/center/GroupDetailPage'
 import GroupsComparisonPage from './pages/center/GroupsComparisonPage'
@@ -299,6 +302,10 @@ function AppRoutes() {
           <Route path="/admin/tests" element={<AdminRoute><AdminTestsPage /></AdminRoute>} />
           <Route path="/admin/tests/new" element={<AdminRoute><AdminTestEditPage /></AdminRoute>} />
           <Route path="/admin/tests/:testId/edit" element={<AdminRoute><AdminTestEditPage /></AdminRoute>} />
+          {/* ETAP 24 — Smart Paste */}
+          <Route path="/admin/tests/new-mode" element={<AdminRoute><NewTestModeSelector /></AdminRoute>} />
+          <Route path="/admin/tests/new/smart-paste" element={<AdminRoute><SmartPasteEditor /></AdminRoute>} />
+          <Route path="/admin/tests/new/smart-excel" element={<AdminRoute><SmartPasteExcelImportPage /></AdminRoute>} />
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
@@ -312,6 +319,9 @@ function AppRoutes() {
               <Route path="teachers" element={<CenterTeachersPage />} />
               <Route path="tests" element={<CenterTestsPage />} />
               <Route path="tests/new" element={<TestCreateHubPage />} />
+              <Route path="tests/new-mode" element={<NewTestModeSelector />} />
+              <Route path="tests/new/smart-paste" element={<SmartPasteEditor />} />
+              <Route path="tests/new/smart-excel" element={<SmartPasteExcelImportPage />} />
               <Route path="tests/new/ai" element={<AITestCreatePage />} />
               <Route path="tests/new/bulk" element={<BulkTestCreatePage />} />
               <Route path="tests/new/excel" element={<ExcelImportPage />} />
