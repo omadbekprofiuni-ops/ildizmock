@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 import { CheckCircle2, Headphones, Play } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -247,21 +248,24 @@ export function ListeningSection({
     }
   }
 
-  // ── Save individual answer (best-effort, also batch-on-submit) ────
-  // Per-input autosave: har o'zgarish uchun 600ms debounce, backend'ga
-  // POST mock/listening-answers/<bsid>/ — refresh paytida yo'qolmasin.
-  // Submit tugagandan keyin lock — autosave chaqirilmaydi.
+  // ── Save answer (tanstack useMutation + 600ms debounce per qid) ──
+  // Spec uses useMutation; debounce kept because mutate() fires
+  // immediately and ~800 POSTs/test would crush the backend.
+  const saveAnswer = useMutation({
+    mutationFn: ({ qid, ans }: { qid: string; ans: unknown }) =>
+      api.post(`/mock/listening-answers/${bsid}/`, {
+        question_id: qid, answer: ans,
+      }),
+    // Silent on error — submit batch fallback rescues any lost answers.
+  })
+
   const handleAnswer = (qid: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }))
     if (saveLockedRef.current) return
     const existing = saveTimersRef.current[qid]
     if (existing) clearTimeout(existing)
     saveTimersRef.current[qid] = setTimeout(() => {
-      api
-        .post(`/mock/listening-answers/${bsid}/`, {
-          question_id: qid, answer: value,
-        })
-        .catch(() => { /* best-effort — submit batch fallback */ })
+      saveAnswer.mutate({ qid, ans: value })
     }, 600)
   }
 
