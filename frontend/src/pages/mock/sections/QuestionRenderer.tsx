@@ -7,6 +7,11 @@ export interface Question {
   options: string[]
   instruction?: string
   order: number
+  // ETAP 22 — group-form payloads (currently used for matching_headings).
+  payload?: {
+    headings?: Array<{ id: string; text: string }>
+    paragraphs?: string[]
+  } & Record<string, unknown>
 }
 
 export function QuestionRenderer({
@@ -127,6 +132,76 @@ export function QuestionRenderer({
               <span className="text-sm font-medium">{opt}</span>
             </label>
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  // ETAP 22 — group-form Matching Headings: payload contains headings list
+  // and paragraph IDs; student picks a heading per paragraph.
+  if (
+    question.question_type === 'matching_headings' &&
+    Array.isArray(question.payload?.paragraphs) &&
+    question.payload!.paragraphs!.length > 0
+  ) {
+    const headings = question.payload?.headings ?? []
+    const paragraphs = question.payload?.paragraphs ?? []
+    const matches: Record<string, string> =
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? (value as Record<string, string>)
+        : {}
+    const set = (p: string, h: string) => {
+      const next = { ...matches }
+      if (!h) delete next[p]
+      else next[p] = h
+      onChange(next)
+    }
+    return (
+      <div>
+        <p className="mb-3 font-medium">
+          <span className="mr-2 inline-block min-w-[24px] rounded-full bg-slate-200 px-2 text-center text-sm font-bold">
+            {label}
+          </span>
+          {text || 'Match each paragraph with the correct heading.'}
+        </p>
+        <div className="ml-8 grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              List of Headings
+            </h4>
+            <ol className="space-y-1 rounded-md border border-slate-200 bg-slate-50/50 p-3 text-sm">
+              {headings.map((h) => (
+                <li key={h.id} className="flex gap-2">
+                  <span className="w-10 shrink-0 font-medium text-slate-700">{h.id}.</span>
+                  <span>{h.text}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Your matches
+            </h4>
+            <div className="space-y-1.5">
+              {paragraphs.map((p) => (
+                <div key={p} className="flex items-center gap-2">
+                  <span className="w-20 shrink-0 text-sm font-medium">Paragraph {p}</span>
+                  <select
+                    value={matches[p] ?? ''}
+                    onChange={(e) => set(p, e.target.value)}
+                    className="flex-1 rounded border border-slate-300 px-2 py-1 text-sm"
+                  >
+                    <option value="">— Select —</option>
+                    {headings.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.id}. {h.text}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
