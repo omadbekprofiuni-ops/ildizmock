@@ -28,6 +28,7 @@ from .pdf_views import (
 from .upload_views import AudioUploadView, ImageUploadView
 from .views import PracticeStatsView, TestCountsView, TestViewSet
 from .views_answer_sheet import AnswerSheetPreviewView
+from .views_audio_health import AudioHealthCheckView
 from .views_available_for_mock import AvailableTestsForMockView
 from .views_html_content import HtmlContentPreviewView
 from .views_library import (
@@ -94,6 +95,10 @@ urlpatterns = [
     # (org-owned + library testlarni birlashtirib qaytaradi)
     path('admin/available-for-mock/', AvailableTestsForMockView.as_view(),
          name='admin-available-for-mock'),
+
+    # HOTFIX — Audio playback diagnostic vositasi (admin)
+    path('admin/audio-health/', AudioHealthCheckView.as_view(),
+         name='admin-audio-health'),
 
     # ETAP 27 — Library (superadmin global testlar, markaz clone qiladi)
     path('library/tests/', LibraryTestListView.as_view(),
