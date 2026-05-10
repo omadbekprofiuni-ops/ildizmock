@@ -72,8 +72,6 @@ export function ListeningSection({
 
   const submittedRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const lastTimeRef = useRef(0)
-  const startedRef = useRef(false)
   // Per-input autosave uchun debounce timer (har savol uchun alohida).
   const saveTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   // Submit tugagandan keyin save chaqirilmasligi uchun.
@@ -131,33 +129,19 @@ export function ListeningSection({
     return () => { cancelled = true }
   }, [bsid])
 
-  // ── Audio event listeners ──────────────────────────────────────────
+  // ── Audio event listeners (spec-minimal: 4 listeners) ─────────────
   useEffect(() => {
     const el = audioRef.current
     if (!el) return
 
-    const handleSeeking = () => {
-      // IELTS: no rewind / seek.
-      if (Math.abs(el.currentTime - lastTimeRef.current) > 0.5) {
-        el.currentTime = lastTimeRef.current
-      }
-    }
-    const handleTimeUpdate = () => {
-      lastTimeRef.current = el.currentTime
-      setCurrentTime(el.currentTime)
-    }
-    const handleLoadedMeta = () => setDuration(el.duration || 0)
-    const handlePause = () => {
-      // IELTS: cannot pause. Browser/user pause → resume.
-      if (startedRef.current && !el.ended) {
-        el.play().catch(() => { /* ignore */ })
-      }
-    }
-    const handleEnded = () => {
-      startedRef.current = false
+    const onMeta = () => setDuration(el.duration || 0)
+    const onTime = () => setCurrentTime(el.currentTime)
+    const onEnded = () => {
       setAudioState('finished')
+      setAudioInterrupted(false)
       // Hamma part'larni "finished" deb belgilaymiz (bir fayl, hammasi
-      // tugadi). Best-effort POST — ikkala endpoint'ga ham yozamiz.
+      // tugadi). Best-effort POST — yangi endpoint yo'q bo'lsa eski'ga
+      // fallback (refresh-safety).
       for (const p of parts) {
         api
           .post(`/mock/audio-finished/${bsid}/`, { part_order: p.part_number })
@@ -168,41 +152,31 @@ export function ListeningSection({
           })
       }
     }
-    const handleError = () => {
+    const onErr = () => {
       const err = el.error
       const detail = !err
         ? 'Unknown audio error.'
-        : err.code === MediaError.MEDIA_ERR_ABORTED
-          ? 'Audio loading was aborted.'
-          : err.code === MediaError.MEDIA_ERR_NETWORK
-            ? 'Network error while loading audio. Check your internet.'
-            : err.code === MediaError.MEDIA_ERR_DECODE
-              ? 'Audio file is corrupted or could not be decoded.'
-              : err.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-                ? 'Audio format is not supported by your browser.'
+        : err.code === 1 ? 'Audio loading aborted.'
+          : err.code === 2 ? 'Network error while loading audio.'
+            : err.code === 3 ? 'Audio file is corrupted.'
+              : err.code === 4 ? 'Audio format not supported by your browser.'
                 : 'Unknown audio error.'
       console.error('Audio element error:', err, 'src:', el.src)
       setAudioError(detail)
+      // Don't auto-retry — let user click START again
       setAudioState('ready')
       setStarting(false)
     }
-    const handleContextMenu = (e: Event) => e.preventDefault()
 
-    el.addEventListener('seeking', handleSeeking)
-    el.addEventListener('timeupdate', handleTimeUpdate)
-    el.addEventListener('loadedmetadata', handleLoadedMeta)
-    el.addEventListener('pause', handlePause)
-    el.addEventListener('ended', handleEnded)
-    el.addEventListener('error', handleError)
-    el.addEventListener('contextmenu', handleContextMenu)
+    el.addEventListener('loadedmetadata', onMeta)
+    el.addEventListener('timeupdate', onTime)
+    el.addEventListener('ended', onEnded)
+    el.addEventListener('error', onErr)
     return () => {
-      el.removeEventListener('seeking', handleSeeking)
-      el.removeEventListener('timeupdate', handleTimeUpdate)
-      el.removeEventListener('loadedmetadata', handleLoadedMeta)
-      el.removeEventListener('pause', handlePause)
-      el.removeEventListener('ended', handleEnded)
-      el.removeEventListener('error', handleError)
-      el.removeEventListener('contextmenu', handleContextMenu)
+      el.removeEventListener('loadedmetadata', onMeta)
+      el.removeEventListener('timeupdate', onTime)
+      el.removeEventListener('ended', onEnded)
+      el.removeEventListener('error', onErr)
     }
   }, [bsid, parts])
 
@@ -215,26 +189,6 @@ export function ListeningSection({
     }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [audioState])
-
-  // ── Keyboard shortcut block during playback ────────────────────────
-  useEffect(() => {
-    if (audioState !== 'playing') return
-    const onKey = (e: KeyboardEvent) => {
-      const blocked = [
-        ' ', 'Space',
-        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-        'k', 'K', 'j', 'J', 'l', 'L',
-      ]
-      if (blocked.includes(e.key)) {
-        const t = e.target as HTMLElement | null
-        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'
-          || t.isContentEditable)) return
-        e.preventDefault()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
   }, [audioState])
 
   // ── Single START click — disabled after first press ───────────────
@@ -266,7 +220,6 @@ export function ListeningSection({
     }
     el.play()
       .then(() => {
-        startedRef.current = true
         setAudioState('playing')
         // starting=true qoladi — qayta bosish mumkin emas. 'playing'
         // ko'rinishga o'tilgach, START tugma butunlay yashirinadi.
