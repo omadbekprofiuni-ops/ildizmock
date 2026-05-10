@@ -6,7 +6,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from .grading import grade_listening, grade_pdf, grade_reading
+from .grading import grade_listening, grade_reading
 from .models import MockParticipant, MockSession
 from .serializers import (
     MockParticipantListSerializer,
@@ -270,8 +270,6 @@ def submit_listening(request, browser_session_id):
     session = participant.session
     if session.listening_test_id:
         correct, total, band = grade_listening(session.listening_test, answers)
-    elif session.listening_pdf_test_id:
-        correct, total, band = grade_pdf(session.listening_pdf_test, answers)
     else:
         return Response({'detail': 'No Listening test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)
@@ -305,8 +303,6 @@ def submit_reading(request, browser_session_id):
     session = participant.session
     if session.reading_test_id:
         correct, total, band = grade_reading(session.reading_test, answers)
-    elif session.reading_pdf_test_id:
-        correct, total, band = grade_pdf(session.reading_pdf_test, answers)
     else:
         return Response({'detail': 'No Reading test attached.'},
                         status=status.HTTP_400_BAD_REQUEST)

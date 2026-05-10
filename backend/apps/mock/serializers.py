@@ -39,84 +39,67 @@ class MockSessionListSerializer(serializers.ModelSerializer):
             'id', 'name', 'date', 'status', 'access_code',
             'created_at', 'participants_count',
             'listening_test', 'reading_test', 'writing_test', 'speaking_test',
-            'listening_pdf_test', 'reading_pdf_test',
             'allow_late_join', 'allow_guests', 'link_expires_at',
             'is_archived', 'archived_at',
         ]
 
 
 class MockSessionCreateSerializer(serializers.ModelSerializer):
+    active_skills = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = MockSession
         fields = [
             'name', 'date',
             'listening_test', 'reading_test', 'writing_test', 'speaking_test',
-            'listening_pdf_test', 'reading_pdf_test',
             'listening_duration', 'reading_duration', 'writing_duration',
             'speaking_duration',
             'allow_late_join', 'allow_guests', 'link_expires_at',
+            'active_skills',
         ]
+        read_only_fields = ['active_skills']
 
-    def to_internal_value(self, data):
-        """Frontend `listening_test`/`reading_test`'ga oddiy UUID yoki
-        `pdf:<public_id>` shaklidagi prefiksli stringni yuborishi mumkin.
-        Prefiksli bo'lsa — uni `<sec>_pdf_test` maydoniga ko'chiramiz va
-        oddiy `<sec>_test`'ni nullify qilamiz (mutual exclusion).
-        """
-        # QueryDict immutable bo'lishi mumkin — copy qilib mutate qilamiz
-        if hasattr(data, 'copy'):
-            data = data.copy()
-        else:
-            data = dict(data)
-
-        for sec in ('listening', 'reading'):
-            val = data.get(f'{sec}_test')
-            if not isinstance(val, str) or not val.startswith('pdf:'):
-                continue
-            public_id = val[len('pdf:'):]
-            try:
-                pdf_test = PDFTest.objects.get(public_id=public_id)
-            except (PDFTest.DoesNotExist, ValueError):
-                raise serializers.ValidationError({
-                    f'{sec}_test': 'PDF test topilmadi yoki noto‘g‘ri ID.',
-                })
-            if pdf_test.module != sec:
-                raise serializers.ValidationError({
-                    f'{sec}_test': f'Bu PDF test {sec} moduliga tegishli emas.',
-                })
-            data[f'{sec}_pdf_test'] = pdf_test.pk
-            data[f'{sec}_test'] = None
-        return super().to_internal_value(data)
+    def get_active_skills(self, obj):
+        return obj.get_active_skills() if hasattr(obj, 'get_active_skills') else []
 
     def validate(self, attrs):
+        # HOTFIX — kamida 1 ta skill biriktirilgan bo'lishi shart.
+        any_skill = any([
+            attrs.get('listening_test'),
+            attrs.get('reading_test'),
+            attrs.get('writing_test'),
+            attrs.get('speaking_test'),
+        ])
+        if not any_skill:
+            raise serializers.ValidationError(
+                'At least one skill must have a test assigned '
+                '(Listening, Reading, Writing, or Speaking).',
+            )
+
+        # Modul mosligi va organizatsiya egaligi
         org = self.context['organization']
-        for field in ('listening_test', 'reading_test', 'writing_test', 'speaking_test'):
+        type_pairs = [
+            ('listening_test', 'listening'),
+            ('reading_test', 'reading'),
+            ('writing_test', 'writing'),
+            ('speaking_test', 'speaking'),
+        ]
+        for field, expected_module in type_pairs:
             test = attrs.get(field)
             if not test:
                 continue
-            # Markazning o'z testi yoki published global test bo'lishi kerak
+            if test.module != expected_module:
+                raise serializers.ValidationError({
+                    field: (
+                        f'This test is module "{test.module}", '
+                        f'expected "{expected_module}".'
+                    ),
+                })
             is_own = test.organization_id == org.id
-            is_global = test.organization_id is None and test.is_global
+            is_global = test.organization_id is None or test.is_global
             if not (is_own or is_global):
                 raise serializers.ValidationError({
-                    field: 'Bu test sizning markazingizga tegishli emas.',
-                })
-        for field in ('listening_pdf_test', 'reading_pdf_test'):
-            pdf_test = attrs.get(field)
-            if not pdf_test:
-                continue
-            if pdf_test.organization_id != org.id:
-                raise serializers.ValidationError({
-                    field: 'Bu PDF test sizning markazingizga tegishli emas.',
-                })
-        # Bir modulga ham regular ham PDF biriktirish — taqiqlangan
-        for sec in ('listening', 'reading'):
-            if attrs.get(f'{sec}_test') and attrs.get(f'{sec}_pdf_test'):
-                raise serializers.ValidationError({
-                    f'{sec}_test': (
-                        f'{sec.capitalize()} uchun bir vaqtning o‘zida ham '
-                        'oddiy test, ham PDF test biriktirib bo‘lmaydi.'
-                    ),
+                    field: 'This test does not belong to your center.',
                 })
         return attrs
 
@@ -157,8 +140,7 @@ class MockSessionDetailSerializer(serializers.ModelSerializer):
     reading_test = TestPickSerializer(read_only=True)
     writing_test = TestPickSerializer(read_only=True)
     speaking_test = TestPickSerializer(read_only=True)
-    listening_pdf_test = PDFTestPickSerializer(read_only=True)
-    reading_pdf_test = PDFTestPickSerializer(read_only=True)
+    active_skills = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MockSession
@@ -166,12 +148,14 @@ class MockSessionDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'date', 'status', 'access_code',
             'created_at', 'started_at', 'finished_at', 'section_started_at',
             'listening_test', 'reading_test', 'writing_test', 'speaking_test',
-            'listening_pdf_test', 'reading_pdf_test',
             'listening_duration', 'reading_duration', 'writing_duration',
             'speaking_duration',
             'allow_late_join', 'allow_guests', 'link_expires_at',
-            'participants',
+            'participants', 'active_skills',
         ]
+
+    def get_active_skills(self, obj):
+        return obj.get_active_skills()
 
 
 # --- Student-facing serializers ----------------------------------------------
