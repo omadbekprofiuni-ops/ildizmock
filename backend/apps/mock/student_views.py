@@ -222,12 +222,46 @@ def section_data_view(request, browser_session_id):
 
     ctx = {'request': request}
     if session.status == 'listening':
+        # DEFINITIVE FIX — admin xato qilib audio'siz test biriktirsa, biz
+        # frontend'ga aniq sabab yuboramiz (false "All audio finished"
+        # ko'rsatilmasligi uchun).
+        listening_parts_qs = test.listening_parts.all().order_by('part_number')
+        if not listening_parts_qs.exists():
+            return Response(
+                {
+                    'detail': (
+                        'This Listening test has no parts. Ask your center '
+                        'admin to add Listening parts.'
+                    ),
+                    'error_code': 'NO_PARTS',
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        missing_audio = [
+            p.part_number for p in listening_parts_qs if not p.audio_file
+        ]
+        if missing_audio:
+            return Response(
+                {
+                    'detail': (
+                        'This Listening test is missing audio for Part(s) '
+                        f'{missing_audio}. Ask your center admin to upload them.'
+                    ),
+                    'error_code': 'MISSING_AUDIO',
+                    'missing_parts': missing_audio,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         payload['listening_parts'] = StudentListeningPartSerializer(
-            test.listening_parts.all(), many=True, context=ctx,
+            listening_parts_qs, many=True, context=ctx,
         ).data
-        # HOTFIX — refresh-safe: frontend qaysi audio'lar tugaganini biladi
+        # HOTFIX — refresh-safe: frontend qaysi audio'lar boshlangan va
+        # qaysilari to'liq tugaganini biladi.
         payload['audio_played_parts'] = list(
             participant.audio_played_parts or [],
+        )
+        payload['audio_finished_parts'] = list(
+            participant.audio_finished_parts or [],
         )
     elif session.status == 'reading':
         payload['passages'] = StudentPassageSerializer(
@@ -260,13 +294,16 @@ def _check_section(participant: MockParticipant, expected: str):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def mark_audio_played(request, browser_session_id):
-    """HOTFIX — refresh-safe audio playback.
+    """DEFINITIVE FIX — refresh-safe audio playback (semantics).
 
     Body: {"part_order": 1}
 
-    Listening audio part tugaganda frontend bu endpoint'ni chaqiradi.
-    Sahifa yangilanganda frontend audio_played_parts ro'yxatini olib,
-    qaysi part'lar tugaganini biladi va qayta o'ynashga ruxsat bermaydi.
+    Bu endpoint endi "audio boshlandi" (START bosildi) signali. Frontend
+    audio yangi part uchun .play() chaqirilganda darrov chaqiradi. Agar
+    talaba audio o'rtasida sahifani yangilasa, ushbu part qayta
+    boshlanmasligi uchun "boshlangan" deb belgilanadi. Eski mijozlar
+    `audio_played_parts`'ni "tugagan" deb yozardi — buni ham qabul
+    qilamiz: union(played, finished) = haqiqiy "tugagan" to'plam.
     """
     participant = get_object_or_404(
         MockParticipant, browser_session_id=browser_session_id,
@@ -283,7 +320,50 @@ def mark_audio_played(request, browser_session_id):
         played.append(part_order)
         participant.audio_played_parts = played
         participant.save(update_fields=['audio_played_parts'])
-    return Response({'audio_played_parts': played})
+    return Response({
+        'audio_played_parts': played,
+        'audio_finished_parts': list(participant.audio_finished_parts or []),
+    })
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def mark_audio_finished(request, browser_session_id):
+    """DEFINITIVE FIX — audio TO'LIQ tugaganda chaqiriladi.
+
+    Body: {"part_order": 1}
+
+    `audio` element'ining `ended` event'i atrofida ishlatiladi. Saqlash
+    safety net: audio_played_parts'ga ham yozamiz (refresh-safety eski
+    frontendlar uchun).
+    """
+    participant = get_object_or_404(
+        MockParticipant, browser_session_id=browser_session_id,
+    )
+    try:
+        part_order = int(request.data.get('part_order'))
+    except (TypeError, ValueError):
+        return Response(
+            {'detail': 'part_order must be an integer.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    finished = list(participant.audio_finished_parts or [])
+    played = list(participant.audio_played_parts or [])
+    updated_fields = []
+    if part_order not in finished:
+        finished.append(part_order)
+        participant.audio_finished_parts = finished
+        updated_fields.append('audio_finished_parts')
+    if part_order not in played:
+        played.append(part_order)
+        participant.audio_played_parts = played
+        updated_fields.append('audio_played_parts')
+    if updated_fields:
+        participant.save(update_fields=updated_fields)
+    return Response({
+        'audio_played_parts': played,
+        'audio_finished_parts': finished,
+    })
 
 
 @api_view(['POST'])
