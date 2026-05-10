@@ -19,8 +19,10 @@ import AITestCreatePage from './pages/center/AITestCreatePage'
 import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
 import ExcelImportPage from './pages/center/ExcelImportPage'
+import AttemptViolationReport from './pages/center/AttemptViolationReport'
 import LibraryBrowserPage from './pages/center/LibraryBrowserPage'
 import ListeningPdfImportPage from './pages/center/ListeningPdfImportPage'
+import StrictModeSettings from './pages/center/StrictModeSettings'
 import PDFTestCreate from './pages/center/PDFTestCreate'
 import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
@@ -323,6 +325,9 @@ function AppRoutes() {
           <Route path="/admin/tests/new/smart-excel" element={<AdminRoute><SmartPasteExcelImportPage /></AdminRoute>} />
           {/* ETAP 27 — Test Library */}
           <Route path="/admin/library" element={<AdminRoute><LibraryBrowserPage /></AdminRoute>} />
+          {/* ETAP 29 — Strict Test Mode */}
+          <Route path="/admin/strict-mode" element={<AdminRoute><StrictModeSettings /></AdminRoute>} />
+          <Route path="/admin/attempts/:attemptId/violations" element={<AdminRoute><AttemptViolationReport /></AdminRoute>} />
           <Route path="/admin/teachers" element={<AdminRoute><AdminTeachersPage /></AdminRoute>} />
           <Route path="/admin/students" element={<AdminRoute><AdminStudentsPage /></AdminRoute>} />
 
@@ -347,6 +352,9 @@ function AppRoutes() {
               <Route path="tests/import/listening" element={<ListeningPdfImportPage />} />
               {/* ETAP 27 — Test Library (slug-based) */}
               <Route path="library" element={<LibraryBrowserPage />} />
+              {/* ETAP 29 — Strict Test Mode */}
+              <Route path="strict-mode" element={<StrictModeSettings />} />
+              <Route path="attempts/:attemptId/violations" element={<AttemptViolationReport />} />
               <Route
                 path="tests/:testId/edit"
                 element={<EasyTestCreatePage />}

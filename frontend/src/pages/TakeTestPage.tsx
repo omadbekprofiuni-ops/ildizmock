@@ -21,9 +21,13 @@ import { ListeningPreloadGate } from '@/components/ListeningPreloadGate'
 import { LockedAudio } from '@/components/LockedAudio'
 import { QuestionRenderer } from '@/components/questions'
 import type { AnswerValue, QuestionData } from '@/components/questions/types'
+import { AutoSubmitModal } from '@/components/test-runner/AutoSubmitModal'
+import { FullscreenReturnModal } from '@/components/test-runner/FullscreenReturnModal'
 import { Highlightable } from '@/components/test-runner/Highlightable'
 import { ReviewScreen, type ReviewQuestion } from '@/components/test-runner/ReviewScreen'
 import { SplitPane } from '@/components/test-runner/SplitPane'
+import { StrictModeConsent } from '@/components/test-runner/StrictModeConsent'
+import { ViolationBanner } from '@/components/test-runner/ViolationBanner'
 import { TestStartDialog } from '@/components/TestStartDialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,6 +41,7 @@ import {
 import { toast } from '@/components/ui/toaster'
 import { useHighlights } from '@/hooks/useHighlights'
 import { useReviewFlags } from '@/hooks/useReviewFlags'
+import { useStrictTestMode } from '@/hooks/useStrictTestMode'
 import { api } from '@/lib/api'
 import { guestAttempts } from '@/lib/guest-attempts'
 import { ieltsRules } from '@/lib/ielts-rules'
@@ -92,6 +97,11 @@ type Attempt = {
   answers_saved: Record<string, AnswerValue>
   essay_text: string
   word_count: number | null
+  // ETAP 29 — Strict Test Mode
+  flagged_as_cheating?: boolean
+  auto_submitted?: boolean
+  auto_submit_reason?: string
+  strict_mode?: { enabled: boolean; violation_limit: number }
 }
 
 type ResultAnswer = {
@@ -354,6 +364,17 @@ function LiveAttemptView({
   const flags = useReviewFlags(attempt.id)
   const highlights = useHighlights(attempt.id)
 
+  // ETAP 29 — Strict Test Mode
+  const strictCfg = attempt.strict_mode ?? { enabled: false, violation_limit: 3 }
+  const [strictAccepted, setStrictAccepted] = useState(!strictCfg.enabled)
+  const [autoSubmittedByStrict, setAutoSubmittedByStrict] = useState(false)
+  const strict = useStrictTestMode({
+    attemptId: attempt.id,
+    enabled: strictCfg.enabled && strictAccepted,
+    violationLimit: strictCfg.violation_limit,
+    onAutoSubmit: () => setAutoSubmittedByStrict(true),
+  })
+
   useEffect(() => {
     if (!initialisedRef.current) {
       const seed: Record<number, AnswerValue> = {}
@@ -548,8 +569,36 @@ function LiveAttemptView({
         ? 'Saved'
         : ''
 
+  // ETAP 29 — Pre-test consent screen (strict mode yoqilgan bo'lsa)
+  if (strictCfg.enabled && !strictAccepted) {
+    return (
+      <StrictModeConsent
+        violationLimit={strictCfg.violation_limit}
+        onAccept={async () => {
+          setStrictAccepted(true)
+          await strict.enterFullscreen()
+        }}
+        onCancel={() => navigate(-1)}
+      />
+    )
+  }
+
   return (
-    <div className="test-app flex h-screen flex-col bg-slate-50">
+    <div
+      className="test-app flex h-screen flex-col bg-slate-50"
+      data-strict-mode={strictCfg.enabled ? 'true' : 'false'}
+    >
+      {/* ETAP 29 — Strict mode overlays */}
+      <FullscreenReturnModal
+        visible={strict.showFsReturnModal}
+        countdown={strict.fsCountdown}
+        onReturn={strict.enterFullscreen}
+      />
+      <ViolationBanner violation={strict.latestViolation} />
+      <AutoSubmitModal
+        visible={autoSubmittedByStrict}
+        resultUrl={`/result/${attempt.id}`}
+      />
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-6 text-white">
         <div className="flex items-center gap-3">
           <a href="/home" title="Home">

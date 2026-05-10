@@ -43,6 +43,10 @@ type ResultResponse = {
   total_questions: number | null
   band_score: string | null
   section_band_scores?: Record<string, SectionBand>
+  // ETAP 29 — Strict Test Mode flags
+  flagged_as_cheating?: boolean
+  auto_submitted?: boolean
+  auto_submit_reason?: string
   essay_text: string
   word_count: number | null
   answers: AnswerRow[]
@@ -250,6 +254,23 @@ export default function ResultPage() {
             <p className="font-extrabold">Practice mode</p>
             <p className="mt-0.5 text-[var(--accent-700)]">
               Correct answers are shown for each question. No retry limit.
+            </p>
+          </div>
+        )}
+
+        {/* ETAP 29 — Strict Mode flagged banner */}
+        {r.flagged_as_cheating && (
+          <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-6">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-2xl">🚫</span>
+              <h2 className="text-lg font-bold text-rose-800">
+                Test flagged for review
+              </h2>
+            </div>
+            <p className="text-sm text-rose-700">
+              {r.auto_submitted && r.auto_submit_reason === 'too_many_violations'
+                ? 'Your test was auto-submitted because you exceeded the violation limit. Your teacher will review the violation log.'
+                : 'Your test has been flagged. Your teacher will review it manually.'}
             </p>
           </div>
         )}
