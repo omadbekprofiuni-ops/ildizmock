@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { useConfirm } from '@/components/ConfirmDialog'
+import { PdfPagesViewer } from '@/components/test-runner/PdfPagesViewer'
 import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
@@ -19,7 +20,11 @@ type PDFTest = {
   module: 'reading' | 'listening'
   total_questions: number
   duration_minutes: number
-  pdf_url: string
+  /** HOTFIX — PNG sahifa rasmlari (Brave shield iframe muammosi). */
+  pdf_pages?: string[]
+  pdf_page_count?: number
+  /** Backfill qilinmagan eski testlar uchun fallback. */
+  pdf_url?: string
   audio_urls: AudioUrls
   answer_key_questions?: number[]
 }
@@ -284,30 +289,37 @@ export default function PDFTestTaking() {
 
       <div className="flex flex-1 overflow-hidden">
         <div className="w-3/5 border-r border-slate-200 bg-slate-100">
-          {/*
-            <object> brauzerning ichki PDF viewer'iga uzatadi va Brave/Chrome
-            shield'lar bloklamaydi (iframe bloklanardi). Yuklanmasa fallback.
-          */}
-          <object
-            data={`${test.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
-            type="application/pdf"
-            className="h-full w-full"
-          >
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="text-sm text-slate-600">
-                PDF brauzeringizda ko'rinmayapti. Brave/Chrome shield'lar
-                yoqilgan bo'lishi mumkin.
-              </p>
-              <a
-                href={test.pdf_url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700"
-              >
-                PDF'ni yangi oynada ochish
-              </a>
+          {/* HOTFIX — Brave shield iframe'ni bloklayotgani uchun PDF endi
+              PNG sahifa rasmlari sifatida ko'rsatiladi. */}
+          {test.pdf_pages && test.pdf_pages.length > 0 ? (
+            <PdfPagesViewer pages={test.pdf_pages} className="h-full" />
+          ) : test.pdf_url ? (
+            <object
+              data={`${test.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+              type="application/pdf"
+              className="h-full w-full"
+            >
+              <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                <p className="text-sm text-slate-600">
+                  PDF hali rasm sahifalarga aylantirilmagan. Server admin
+                  `python manage.py convert_existing_pdfs` ishga tushirsa,
+                  bu test ham galereya ko'rinishida ochiladi.
+                </p>
+                <a
+                  href={test.pdf_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700"
+                >
+                  PDF'ni yangi oynada ochish
+                </a>
+              </div>
+            </object>
+          ) : (
+            <div className="flex h-full items-center justify-center text-slate-400">
+              Bu test uchun kontent mavjud emas.
             </div>
-          </object>
+          )}
         </div>
         <div className="w-2/5 overflow-auto bg-slate-50 p-6">
           <h2 className="mb-4 text-lg font-extrabold text-slate-900">Your Answers</h2>

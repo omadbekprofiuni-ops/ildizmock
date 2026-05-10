@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from apps.organizations.models import Organization
 
 from .models import PDFTest, PDFTestAttempt, Test
+from .utils.pdf_convert import safe_convert
 
 
 PDF_MAX_BYTES = 50 * 1024 * 1024
@@ -209,11 +210,16 @@ def create_pdf_test(request):
             if updated:
                 test.save()
 
+    # HOTFIX — PDF'ni rasm sahifalarga aylantiramiz (Brave shield iframe'ni
+    # bloklamasligi uchun). Sinxron — ~30 sahifa ~5 soniya 150 DPI'da.
+    safe_convert(test)
+
     return Response({
         'success': True,
         'test_id': str(test.public_id),
         'message': f'Test created: {test.name}',
         'total_questions': total_questions,
+        'pdf_page_count': test.pdf_page_count,
     })
 
 
@@ -318,6 +324,10 @@ def get_pdf_test(request, test_id):
     if not _can_access(request.user, test):
         return Response({'error': 'Access denied'}, status=403)
 
+    # Talaba PDF source'ni olishi shart emas — sahifalar PNG sifatida
+    # ko'rsatiladi (Brave shield iframe muammosi). Backfill qilinmagan
+    # eski testlar uchun pdf_url'ni hali ham qaytaramiz (fallback).
+    pdf_pages = [request.build_absolute_uri(p) for p in (test.pdf_pages or [])]
     return Response({
         'success': True,
         'test': {
@@ -327,7 +337,9 @@ def get_pdf_test(request, test_id):
             'difficulty': test.difficulty,
             'total_questions': test.total_questions,
             'duration_minutes': test.duration_minutes,
-            'pdf_url': request.build_absolute_uri(test.pdf_file.url),
+            'pdf_pages': pdf_pages,
+            'pdf_page_count': test.pdf_page_count,
+            'pdf_url': request.build_absolute_uri(test.pdf_file.url) if not pdf_pages else None,
             'audio_urls': _audio_urls(request, test),
             'answer_key_questions': sorted(
                 (int(k) for k in test.answer_key.keys() if str(k).isdigit()),
@@ -398,12 +410,14 @@ def update_pdf_test(request, test_id):
         test.answer_key = answer_key
         test.total_questions = total_questions
 
+    pdf_replaced = False
     if 'pdf_file' in request.FILES:
         try:
             _validate_pdf(request.FILES['pdf_file'])
         except ValueError as e:
             return Response({'error': str(e)}, status=400)
         test.pdf_file = request.FILES['pdf_file']
+        pdf_replaced = True
 
     if test.module == 'listening':
         for i in (1, 2, 3, 4):
@@ -416,10 +430,14 @@ def update_pdf_test(request, test_id):
                 setattr(test, key, request.FILES[key])
 
     test.save()
+    if pdf_replaced:
+        # Yangi PDF — sahifalarini ham yangidan aylantiramiz.
+        safe_convert(test)
     return Response({
         'success': True,
         'test_id': str(test.public_id),
         'message': f'Test updated: {test.name}',
+        'pdf_page_count': test.pdf_page_count,
     })
 
 

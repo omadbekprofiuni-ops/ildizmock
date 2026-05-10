@@ -296,6 +296,15 @@ class PDFTest(models.Model):
 
     pdf_file = models.FileField(upload_to='test_pdfs/')
 
+    # HOTFIX — PDF sahifalari PNG'ga aylantirilib, talabaga rasm sifatida
+    # ko'rsatiladi (Brave/Chrome shield iframe'larni bloklayapti edi).
+    pdf_pages = models.JSONField(
+        default=list, blank=True,
+        help_text="Aylantirilgan PNG sahifalarning media URL'lari "
+                  "(masalan ['/media/pdf_pages/<uuid>/page_1.png', ...])",
+    )
+    pdf_page_count = models.PositiveIntegerField(default=0)
+
     audio_part1 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
     audio_part2 = models.FileField(upload_to='listening_audios/', null=True, blank=True)
     audio_part3 = models.FileField(upload_to='listening_audios/', null=True, blank=True)

@@ -23,6 +23,7 @@ openpyxl>=3.1          # xlsx export
 Pillow>=10.0           # image upload
 reportlab>=4.0         # PDF certificates
 pdfplumber>=0.11       # PDF parse (Listening test import)
+pdf2image==1.17.0      # PDF→PNG (HOTFIX — Brave shield iframe muammosi). poppler-utils kerak.
 
 # --- Phase 2 (AI / async / rate limit) ---
 # Hozircha ishlatilmaydi, lekin ETAP 17 (AI feedback, Telegram, payments) uchun:

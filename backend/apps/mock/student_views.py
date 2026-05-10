@@ -203,8 +203,16 @@ def section_data_view(request, browser_session_id):
     }
 
     if kind == 'pdf':
-        # PDFTest payload — frontend mavjud PDF viewer komponentini ishlatadi
-        payload['pdf_url'] = request.build_absolute_uri(test.pdf_file.url)
+        # PDFTest payload — HOTFIX: PDF endi PNG sahifa rasmlari sifatida
+        # ko'rsatiladi (Brave/Chrome shield iframe'ni bloklayapti edi).
+        # Backfill qilinmagan eski testlar uchun pdf_url ham fallback bo'lib
+        # turadi — frontend pdf_pages bo'sh bo'lsa unga qaytadi.
+        pdf_pages = [request.build_absolute_uri(p) for p in (test.pdf_pages or [])]
+        payload['pdf_pages'] = pdf_pages
+        payload['pdf_page_count'] = test.pdf_page_count
+        payload['pdf_url'] = (
+            request.build_absolute_uri(test.pdf_file.url) if not pdf_pages else None
+        )
         payload['audio_urls'] = _pdf_audio_urls(request, test)
         payload['answer_key_questions'] = sorted(
             int(k) for k in test.answer_key.keys() if str(k).isdigit()
