@@ -393,6 +393,12 @@ function CreateSessionDialog({
       .finally(() => setLoading(false))
   }, [slug])
 
+  // HOTFIX — kamida 1 ta test biriktirilganmi (Submit tugmasi va inline
+  // hint shu flag'ga qarab xulq qiladi).
+  const hasAnyTest = Boolean(
+    form.listening_test || form.reading_test || form.writing_test,
+  )
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -499,6 +505,16 @@ function CreateSessionDialog({
               onChange={(v) => setForm({ ...form, writing_test: v })}
               tests={tests.writing}
             />
+
+            {/* HOTFIX — kamida 1 ta test tanlanmasa, foydalanuvchini
+                ogohlantirish hint'i (form.name va date to'ldirilganda) */}
+            {!hasAnyTest && !!form.name.trim() && !!form.date && (
+              <p className="rounded bg-amber-50 p-3 text-sm text-amber-800">
+                Please select at least one test (Listening, Reading, Writing,
+                or Speaking). You don't need to fill all four — students will
+                only see the skills you assign.
+              </p>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               <Field label="Listening (min)">
