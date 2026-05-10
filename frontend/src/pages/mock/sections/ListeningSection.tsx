@@ -191,60 +191,55 @@ export function ListeningSection({
     return () => window.removeEventListener('beforeunload', handler)
   }, [audioState])
 
-  // ── Single START click — disabled after first press ───────────────
-  const handleStart = () => {
+  // ── THE SINGLE START HANDLER (spec form) ──────────────────────────
+  // 1. Validate audio. 2. Try play(). 3. On success: mark playing +
+  //    POST audio-started (refresh-safety). 4. On failure: rollback +
+  //    show error so user can click again.
+  // CRITICAL: POSTs happen AFTER play() succeeds — never mark "started"
+  // for a failed play attempt, otherwise refresh would falsely restore
+  // to 'playing' state.
+  const handleStart = async () => {
     if (starting) return                    // double-click guard
     const el = audioRef.current
     if (!el) {
-      setAudioError('Audio player not initialized. Please reload the page.')
+      setAudioError('Audio player not loaded.')
       return
     }
-    if (!testAudioUrl) {
+    if (!el.src || el.src.endsWith('null') || el.src.endsWith('undefined')) {
       setAudioError(
-        'Audio file is missing for this test. Ask your admin to re-upload it.',
+        'Audio file is missing. Ask your admin to re-upload it.',
       )
       return
     }
     setStarting(true)
     setAudioError(null)
-    if (!el.src || !el.src.endsWith(testAudioUrl)) {
-      el.src = testAudioUrl
-      try { el.load() } catch { /* ignore */ }
+    try {
+      await el.play()
+      setAudioState('playing')
+      // Mark all parts as "started" — refresh-safety. Backend has 4
+      // ListeningPart rows; single-audio mode means all 4 are started
+      // simultaneously.
+      for (const p of parts) {
+        api
+          .post(`/mock/audio-played/${bsid}/`, { part_order: p.part_number })
+          .catch(() => { /* best-effort */ })
+      }
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string }
+      const detail
+        = e?.name === 'NotAllowedError'
+          ? 'Browser blocked audio. Click START again.'
+          : e?.name === 'NotSupportedError'
+            ? 'Audio format not supported.'
+            : e?.name === 'AbortError'
+              ? 'Audio loading was interrupted. Check your internet.'
+              : e?.message || 'Unknown error.'
+      console.error('Audio play failed:', err, 'src:', el.src,
+        'readyState:', el.readyState)
+      setStarting(false)                    // rollback for retry
+      setAudioError(detail)
+      setAudioState('ready')
     }
-    // Backend'ga "audio boshlandi" deb yozamiz — refresh-safety uchun
-    // hamma part'larni "started" deb belgilaymiz.
-    for (const p of parts) {
-      api
-        .post(`/mock/audio-played/${bsid}/`, { part_order: p.part_number })
-        .catch(() => { /* ignore */ })
-    }
-    el.play()
-      .then(() => {
-        setAudioState('playing')
-        // starting=true qoladi — qayta bosish mumkin emas. 'playing'
-        // ko'rinishga o'tilgach, START tugma butunlay yashirinadi.
-      })
-      .catch((err: unknown) => {
-        const e = err as { name?: string; message?: string }
-        let detail: string
-        switch (e?.name) {
-          case 'NotAllowedError':
-            detail = 'Your browser blocked autoplay. Please click "Try again".'
-            break
-          case 'NotSupportedError':
-            detail = 'Your browser does not support this audio format.'
-            break
-          case 'AbortError':
-            detail = 'Audio loading was interrupted. Check your internet.'
-            break
-          default:
-            detail = e?.message || 'Unknown error.'
-        }
-        console.error('Audio play failed:', err, 'src:', el.src,
-          'readyState:', el.readyState)
-        setStarting(false)                  // rollback for retry
-        setAudioError(`Audio playback failed: ${detail}`)
-      })
   }
 
   // ── Save individual answer (best-effort, also batch-on-submit) ────
