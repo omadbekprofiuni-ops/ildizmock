@@ -198,10 +198,15 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         from django.db.models import Q
 
         org = self.get_organization()
+        # Test modelida 2 ta status indikatori bor — yangi 'status' (CharField)
+        # va eski 'is_published' (Bool). Eski testlar status maydoniga ega
+        # bo'lmasligi mumkin (default='draft'), lekin is_published=True bo'ladi.
+        # Shu sabab — ikkala holatni ham qabul qilamiz va is_deleted=False filteri.
         regular = Test.objects.filter(
             Q(organization=org) | Q(is_global=True, organization__isnull=True),
-            status='published',
-        ).order_by('name')
+            Q(status='published') | Q(is_published=True),
+            is_deleted=False,
+        ).distinct().order_by('name')
         # PDF testlar global emas — faqat shu markazga tegishli, published.
         pdfs = PDFTest.objects.filter(
             organization=org, status='published',
