@@ -283,14 +283,31 @@ export default function PDFTestTaking() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-3/5 border-r border-slate-200">
-          <iframe
-            src={test.pdf_url}
-            title="Test PDF"
+        <div className="w-3/5 border-r border-slate-200 bg-slate-100">
+          {/*
+            <object> brauzerning ichki PDF viewer'iga uzatadi va Brave/Chrome
+            shield'lar bloklamaydi (iframe bloklanardi). Yuklanmasa fallback.
+          */}
+          <object
+            data={`${test.pdf_url}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+            type="application/pdf"
             className="h-full w-full"
-            sandbox="allow-same-origin"
-            referrerPolicy="no-referrer"
-          />
+          >
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+              <p className="text-sm text-slate-600">
+                PDF brauzeringizda ko'rinmayapti. Brave/Chrome shield'lar
+                yoqilgan bo'lishi mumkin.
+              </p>
+              <a
+                href={test.pdf_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700"
+              >
+                PDF'ni yangi oynada ochish
+              </a>
+            </div>
+          </object>
         </div>
         <div className="w-2/5 overflow-auto bg-slate-50 p-6">
           <h2 className="mb-4 text-lg font-extrabold text-slate-900">Your Answers</h2>
