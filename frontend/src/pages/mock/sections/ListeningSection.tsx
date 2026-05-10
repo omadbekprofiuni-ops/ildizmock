@@ -199,6 +199,29 @@ export function ListeningSection({
     }
     const handleEnded = () => {
       startedRef.current = false
+      // HOTFIX — agar barcha part'lar bitta audio fayl bilan bo'lsa
+      // (admin har Part'ga shu URL biriktirgan, masalan eski 'full
+      // listening' audio'si), uni bir martalik o'ynaymiz va barcha
+      // part'larni darrov 'finished' deb belgilaymiz.
+      const sharedAudio
+        = parts.length > 1
+        && parts.every(
+          (p) => !!p.audio_url && p.audio_url === parts[0].audio_url,
+        )
+
+      if (sharedAudio) {
+        setFinished(new Array(parts.length).fill(true))
+        // Har part'ni serverga 'tugadi' deb belgilaymiz (best-effort)
+        for (const p of parts) {
+          api
+            .post(`/mock/audio-played/${bsid}/`, { part_order: p.part_number })
+            .catch(() => { /* ignore */ })
+        }
+        setAudioStatus('ended')
+        setProgress(100)
+        return
+      }
+
       setFinished((prev) => {
         const next = [...prev]
         next[playingIdx] = true
