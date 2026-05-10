@@ -85,13 +85,17 @@ def validate_test_for_publish(test: Test) -> list[dict]:
         errors.append({'code': 'NO_SECTIONS',
                        'message': 'Test has no parts/passages/tasks.'})
 
-    # Listening parts must have audio.
-    for lp in listening_parts:
-        if not lp.audio_file:
+    # FINAL FIX — Single audio mode: test'da kamida 1 ta part audio'si
+    # bo'lsa yetarli. Admin bitta MP3 fayl yuklaydi (Cambridge IELTS
+    # uslubida 4 ta part bir MP3 ichida bo'ladi).
+    if test.module == 'listening' and listening_parts:
+        if not any(lp.audio_file for lp in listening_parts):
             errors.append({
-                'section_id': lp.id,
                 'code': 'MISSING_AUDIO',
-                'message': f'Listening Part {lp.part_number} has no audio.',
+                'message': (
+                    'Listening test must have an audio file. Upload one MP3 '
+                    'covering all 4 parts (you can attach it to Part 1).'
+                ),
             })
 
     # Reading passages must have non-empty content.
