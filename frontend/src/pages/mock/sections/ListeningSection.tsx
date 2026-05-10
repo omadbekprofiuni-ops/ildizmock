@@ -17,33 +17,37 @@ interface ListeningPart {
 }
 
 /**
- * DEFINITIVE FIX — Listening sektsiyasi to'liq qayta yozildi.
+ * DEFINITIVE FIX — Listening sektsiyasi (yangi sequential auto-advance).
  *
- * Avvalgi 10 ta urinish nima uchun muvaffaqiyatsiz bo'lgan:
- *   1. Yuklanish vaqtida `audio_played_parts` bo'sh emas bo'lsa yoki
- *      birorta partda audio_url null bo'lsa, kaskad ravishda barcha
- *      part'lar "finished" deb belgilanardi → "All audio finished"
- *      birinchi clickdan oldin ko'rinardi.
- *   2. Pre-test ekrani yo'q edi — talaba to'g'ridan player'ga tushardi.
- *   3. "Audio o'ynay oladi" va "audio tugagan" bayroqlari bir xil
- *      qiymatdan boshlanardi — initialization paytida tasodifan true
- *      bo'lib qolardi.
+ * Foydalanuvchi talab qildi:
+ *   - Bitta START tugmasi (ko'p emas).
+ *   - Bosilgach, qayta bosilmasligi kerak (disabled / yashirin).
+ *   - Part 1 → Part 2 → Part 3 → Part 4 navbat bilan AVTOMATIK
+ *     o'ynashi kerak (har part oxirida foydalanuvchi click qilmasdan).
  *
- * Yangi yondashuv:
- *   - Har bir part'ning statusi alohida: 'pending' | 'ready' | 'playing'
- *     | 'finished'. Mount vaqtida HAR DOIM 'pending' boshlanadi.
- *   - Backend'dan kelgan audio_played_parts / audio_finished_parts
- *     birlashmasi orqali finished'larni aniqlaymiz, birinchi non-finished
- *     part 'ready' bo'ladi.
- *   - START tugmasi user gesture ichida audio.play() chaqiradi (autoplay
- *     restrictsiyasi shu yerda buzilmaydi — chunki pre-test ekrandagi
- *     "Start Exam" allaqachon gesture yaratgan).
- *   - "All audio finished" FAQAT statuses.every(s => s === 'finished')
- *     bo'lganda chiqadi. Bu — yagona haqiqat manbai.
- *   - Pending part'ning javob input'lari `<fieldset disabled>` ichida —
- *     audio boshlanmaguncha javob yozib bo'lmaydi.
+ * State machine:
+ *   - PartStatus: 'pending' | 'playing' | 'finished'.
+ *   - Mount vaqtida hamma part 'pending' (faqat backend allaqachon
+ *     finished deb yozgan part'lar 'finished').
+ *   - Bitta START tugmasi — birinchi 'pending' partga, audio.play()
+ *     chaqiradi. Bosilgach status 'playing' bo'ladi va tugma yo'qoladi.
+ *   - 'ended' event'ida: current part 'finished', keyingi non-finished
+ *     part 'playing' deb belgilanadi, audio src yangilanadi va
+ *     avtomatik .play() chaqiriladi (user gesture allaqachon berilgan —
+ *     brauzer ruxsat beradi).
+ *   - "All audio finished" FAQAT hamma part 'finished' bo'lganda.
+ *
+ * Refresh-safety:
+ *   - Backend audio_played_parts / audio_finished_parts birlashmasi
+ *     bilan boshlang'ich statuses tiklanadi.
+ *
+ * UX qoidalari:
+ *   - Audio o'ynayotgan paytda tab almashtirish src'ni o'zgartirmaydi
+ *     (el.paused tekshirilgani uchun) — talaba boshqa part'ning
+ *     savollarini ko'rishi mumkin, lekin audio uzilmaydi.
+ *   - Pending part'ning javob inputlari <fieldset disabled> ichida.
  */
-type PartStatus = 'pending' | 'ready' | 'playing' | 'finished'
+type PartStatus = 'pending' | 'playing' | 'finished'
 
 interface SectionDataError {
   detail: string
@@ -73,11 +77,21 @@ export function ListeningSection({
   const [currentTime, setCurrentTime] = useState(0)
   const [audioError, setAudioError] = useState<string | null>(null)
   const [configError, setConfigError] = useState<SectionDataError | null>(null)
+  // Bitta START click sodir bo'lganmi — qayta bosilmasligi uchun guard.
+  const [starting, setStarting] = useState(false)
 
   const submittedRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const lastTimeRef = useRef(0)
   const startedRef = useRef(false)
+  // 'ended' callback statuses snapshot'i bilan ishlashi uchun ref.
+  const statusesRef = useRef<PartStatus[]>([])
+  const activeIdxRef = useRef(0)
+  const partsRef = useRef<ListeningPart[]>([])
+
+  useEffect(() => { statusesRef.current = statuses }, [statuses])
+  useEffect(() => { activeIdxRef.current = activeIdx }, [activeIdx])
+  useEffect(() => { partsRef.current = parts }, [parts])
 
   // ── Load section data ──────────────────────────────────────────────
   useEffect(() => {
@@ -88,56 +102,34 @@ export function ListeningSection({
         if (cancelled) return
         const ps: ListeningPart[] = r.data.listening_parts || []
         setParts(ps)
-
-        // CRITICAL: backend ikkita ro'yxat qaytaradi — eski mijozlar
-        // faqat audio_played_parts ga yozardi; yangilari ikkalasiga.
-        // Union'ni "finished" deb hisoblaymiz (interrupted mid-play
-        // ham 'finished' deb qabul qilinadi — spec talabi).
         const played: number[] = Array.isArray(r.data.audio_played_parts)
-          ? r.data.audio_played_parts
-          : []
+          ? r.data.audio_played_parts : []
         const finished: number[] = Array.isArray(r.data.audio_finished_parts)
-          ? r.data.audio_finished_parts
-          : []
+          ? r.data.audio_finished_parts : []
         const finishedSet = new Set<number>([...played, ...finished])
-
         const initial: PartStatus[] = ps.map((p) =>
           finishedSet.has(p.part_number) ? 'finished' : 'pending',
         )
-        // Birinchi pending part 'ready' bo'ladi — uni o'ynaymiz.
-        const firstPending = initial.findIndex((s) => s === 'pending')
-        if (firstPending !== -1) {
-          initial[firstPending] = 'ready'
-          setActiveIdx(firstPending)
-        } else {
-          // Hammasi finished — talaba refresh qilganida bu yo'lga
-          // tushadi. activeIdx oxirgi partda qoladi.
-          setActiveIdx(Math.max(0, ps.length - 1))
-        }
         setStatuses(initial)
+        // Birinchi non-finished part — START tugmasi shu yerga ishora qiladi.
+        const firstPending = initial.findIndex((s) => s === 'pending')
+        setActiveIdx(firstPending !== -1 ? firstPending : Math.max(0, ps.length - 1))
       })
       .catch((err: unknown) => {
         if (cancelled) return
         const errData = (err as { response?: { data?: SectionDataError } })
           ?.response?.data
-        if (errData && (errData.error_code || errData.detail)) {
-          setConfigError(errData)
-        } else {
-          setConfigError({
-            detail:
-              'Could not load the Listening test. Please refresh the page.',
-          })
-        }
+        setConfigError(
+          errData && (errData.error_code || errData.detail)
+            ? errData
+            : { detail: 'Could not load the Listening test. Please refresh the page.' },
+        )
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [bsid])
 
-  // ── Preload upcoming parts in background ───────────────────────────
+  // ── Preload upcoming parts ─────────────────────────────────────────
   useEffect(() => {
     if (parts.length === 0) return
     const preloaders: HTMLAudioElement[] = []
@@ -157,20 +149,24 @@ export function ListeningSection({
     }
   }, [parts])
 
-  // ── Sync <audio> src when active part changes ─────────────────────
+  // ── Sync <audio> src when active tab changes — but NOT during play ─
+  // Audio o'ynayotgan paytda src'ni o'zgartirmaymiz (talaba boshqa
+  // part'ning savollarini ko'rmoqda — audio uzilmasligi kerak).
   useEffect(() => {
     if (parts.length === 0) return
     const part = parts[activeIdx]
     if (!part) return
-    setProgress(0)
-    setCurrentTime(0)
-    setDuration(0)
-    startedRef.current = false
-    lastTimeRef.current = 0
     const el = audioRef.current
-    if (el && part.audio_url && !el.src.endsWith(part.audio_url)) {
+    if (!el) return
+    if (!el.paused && !el.ended) return
+    if (part.audio_url && !el.src.endsWith(part.audio_url)) {
       el.src = part.audio_url
       try { el.load() } catch { /* ignore */ }
+      setProgress(0)
+      setCurrentTime(0)
+      setDuration(0)
+      startedRef.current = false
+      lastTimeRef.current = 0
     }
   }, [activeIdx, parts])
 
@@ -180,7 +176,6 @@ export function ListeningSection({
     if (!el) return
 
     const handleSeeking = () => {
-      // IELTS rule: no rewind/seek.
       if (Math.abs(el.currentTime - lastTimeRef.current) > 0.5) {
         el.currentTime = lastTimeRef.current
       }
@@ -192,46 +187,94 @@ export function ListeningSection({
         setProgress((el.currentTime / el.duration) * 100)
       }
     }
-    const handleLoadedMeta = () => {
-      setDuration(el.duration || 0)
-    }
+    const handleLoadedMeta = () => setDuration(el.duration || 0)
     const handlePlaying = () => {
-      setStatuses((prev) =>
-        prev.map((s, i) => (i === activeIdx ? 'playing' : s)),
-      )
+      // Audio chindan ham o'ynay boshlaganda, status 'playing' bo'lishini
+      // tasdiqlaymiz (handleStart va auto-advance ham qo'yadi — idempotent).
+      const idx = activeIdxRef.current
+      setStatuses((prev) => prev.map((s, i) => (i === idx ? 'playing' : s)))
     }
     const handlePause = () => {
-      // IELTS rule: cannot pause once started.
+      // IELTS: pause yo'q. Browser yoki user pause qilsa, darrov resume.
       if (startedRef.current && !el.ended) {
-        el.play().catch(() => { /* ignore — extreme edge case */ })
+        el.play().catch(() => { /* ignore */ })
       }
     }
     const handleEnded = () => {
       startedRef.current = false
-      const partOrder = parts[activeIdx]?.part_number
-      // Spec talabi: ikkala endpointga ham yozamiz.
-      if (partOrder) {
+      setProgress(100)
+      const curIdx = activeIdxRef.current
+      const currentParts = partsRef.current
+      const currentStatuses = statusesRef.current
+      const curPart = currentParts[curIdx]
+      if (curPart?.part_number) {
         api
-          .post(`/mock/audio-finished/${bsid}/`, { part_order: partOrder })
+          .post(`/mock/audio-finished/${bsid}/`, { part_order: curPart.part_number })
           .catch(() => {
-            // Yangi endpoint mavjud bo'lmasa (backend deploy oldin),
-            // eski endpoint refresh-safety ta'minlaydi.
+            // Eski endpoint — yangi backend yo'q bo'lsa fallback
             api
-              .post(`/mock/audio-played/${bsid}/`, { part_order: partOrder })
-              .catch(() => { /* ignore — best-effort */ })
+              .post(`/mock/audio-played/${bsid}/`, { part_order: curPart.part_number })
+              .catch(() => { /* ignore */ })
           })
       }
-      // BU YERDA activeIdx'ni avtomatik o'zgartirmaymiz —
-      // talaba "Continue to Part N+1" tugmasini bossa o'zgaradi.
+      // Keyingi non-finished part'ni izlaymiz.
+      let nextIdx = -1
+      for (let i = curIdx + 1; i < currentParts.length; i++) {
+        if (currentStatuses[i] !== 'finished') {
+          nextIdx = i
+          break
+        }
+      }
+      if (nextIdx === -1) {
+        // Hamma tugadi — faqat current'ni finished qilamiz.
+        setStatuses((prev) =>
+          prev.map((s, i) => (i === curIdx ? 'finished' : s)),
+        )
+        return
+      }
+      const nextPart = currentParts[nextIdx]
+      if (!nextPart?.audio_url) {
+        // Keyingi audio yo'q (theoretik holat — backend rad etishi kerak edi).
+        setStatuses((prev) =>
+          prev.map((s, i) => (i === curIdx ? 'finished' : s)),
+        )
+        return
+      }
+      // AUTO-ADVANCE: src yangilanadi, status 'playing', activeIdx
+      // o'tadi, audio darrov boshlanadi.
       setStatuses((prev) =>
         prev.map((s, i) => {
-          if (i === activeIdx) return 'finished'
-          // Keyingi part 'pending' bo'lsa, uni hali ham 'pending' qoldiramiz —
-          // "Continue" tugmasi bosilganda 'ready' ga aylanadi.
+          if (i === curIdx) return 'finished'
+          if (i === nextIdx) return 'playing'
           return s
         }),
       )
-      setProgress(100)
+      setActiveIdx(nextIdx)
+      setProgress(0)
+      setCurrentTime(0)
+      setDuration(0)
+      lastTimeRef.current = 0
+      // Audio src + play — sinxron qilamiz, sync effect aralashmaydi
+      // (el.paused tekshiruvi bilan).
+      el.src = nextPart.audio_url
+      try { el.load() } catch { /* ignore */ }
+      api
+        .post(`/mock/audio-played/${bsid}/`, { part_order: nextPart.part_number })
+        .catch(() => { /* ignore */ })
+      el.play()
+        .then(() => { startedRef.current = true })
+        .catch((err: unknown) => {
+          const e = err as { name?: string; message?: string }
+          console.error('Auto-advance play failed:', err, 'src:', el.src)
+          setStatuses((prev) =>
+            prev.map((s, i) => (i === nextIdx ? 'pending' : s)),
+          )
+          setAudioError(
+            `Auto-play of Part ${nextPart.part_number} failed: `
+            + (e?.message || e?.name || 'Unknown error')
+            + '. Please reload or click START again to resume.',
+          )
+        })
     }
     const handleError = () => {
       const err = el.error
@@ -248,12 +291,11 @@ export function ListeningSection({
                 : 'Unknown audio error.'
       console.error('Audio element error:', err, 'src:', el.src)
       setAudioError(detail)
-      // 'playing' holatdan 'ready'ga qaytamiz — talaba qayta urinib ko'radi.
+      const idx = activeIdxRef.current
       setStatuses((prev) =>
-        prev.map((s, i) =>
-          i === activeIdx && s === 'playing' ? 'ready' : s,
-        ),
+        prev.map((s, i) => (i === idx && s === 'playing' ? 'pending' : s)),
       )
+      setStarting(false)
     }
     const handleContextMenu = (e: Event) => e.preventDefault()
 
@@ -275,47 +317,45 @@ export function ListeningSection({
       el.removeEventListener('error', handleError)
       el.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [activeIdx, parts, bsid])
+    // Listenerlar bsid'ga bog'liq (mark-finished endpoint URL'i uchun).
+  }, [bsid])
 
-  // ── beforeunload warning when audio is mid-play ────────────────────
+  // ── beforeunload guard ─────────────────────────────────────────────
   useEffect(() => {
-    const cur = statuses[activeIdx]
-    if (cur !== 'playing') return
+    const anyPlaying = statuses.some((s) => s === 'playing')
+    if (!anyPlaying) return
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault()
       e.returnValue = ''
     }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [statuses, activeIdx])
+  }, [statuses])
 
-  // ── Block keyboard shortcuts that could pause/seek the audio ───────
+  // ── Keyboard shortcut block during playback ────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (statuses[activeIdx] !== 'playing') return
+      const anyPlaying = statuses.some((s) => s === 'playing')
+      if (!anyPlaying) return
       const blocked = [
         ' ', 'Space',
         'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
         'k', 'K', 'j', 'J', 'l', 'L',
       ]
       if (blocked.includes(e.key)) {
-        const target = e.target as HTMLElement | null
-        if (
-          target && (
-            target.tagName === 'INPUT'
-            || target.tagName === 'TEXTAREA'
-            || target.isContentEditable
-          )
-        ) return
+        const t = e.target as HTMLElement | null
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'
+          || t.isContentEditable)) return
         e.preventDefault()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [statuses, activeIdx])
+  }, [statuses])
 
-  // ── START Part N click ─────────────────────────────────────────────
+  // ── Single START click ────────────────────────────────────────────
   const handleStart = () => {
+    if (starting) return                 // double-click guard
     const el = audioRef.current
     if (!el) {
       setAudioError('Audio player not initialized. Please reload the page.')
@@ -329,23 +369,23 @@ export function ListeningSection({
       )
       return
     }
-    if (!el.src || el.src.endsWith('null') || el.src.endsWith('undefined')) {
+    setStarting(true)
+    setAudioError(null)
+    if (!el.src.endsWith(part.audio_url)) {
       el.src = part.audio_url
       try { el.load() } catch { /* ignore */ }
     }
-    setAudioError(null)
-    // START bosilishi bilan backend'ga "boshlandi" deb yozamiz — agar
-    // talaba sahifani yangilab yuborsa, ushbu part qayta boshlanmasligi
-    // uchun.
     api
       .post(`/mock/audio-played/${bsid}/`, { part_order: part.part_number })
-      .catch(() => { /* ignore — best-effort */ })
+      .catch(() => { /* ignore */ })
     el.play()
       .then(() => {
         startedRef.current = true
         setStatuses((prev) =>
           prev.map((s, i) => (i === activeIdx ? 'playing' : s)),
         )
+        // starting'ni false qilmaymiz — bir marta bosilgan, qayta
+        // ko'rsatilmaydi. Faqat error bo'lsa rollback qilamiz.
       })
       .catch((err: unknown) => {
         const e = err as { name?: string; message?: string }
@@ -358,32 +398,16 @@ export function ListeningSection({
             detail = 'Your browser does not support this audio format.'
             break
           case 'AbortError':
-            detail =
-              'Audio loading was interrupted. Check your internet connection.'
+            detail = 'Audio loading was interrupted. Check your internet.'
             break
           default:
             detail = e?.message || 'Unknown error.'
         }
         console.error('Audio play failed:', err, 'src:', el.src,
           'readyState:', el.readyState)
+        setStarting(false)              // rollback so user can retry
         setAudioError(`Audio playback failed: ${detail}`)
       })
-  }
-
-  // ── Continue to Part N+1 click ─────────────────────────────────────
-  // Note: don't auto-play; user will click START Part N (spec talabi).
-  // handleContinue faqat activeIdx'ni keyingisiga o'tkazadi va keyingi
-  // partni 'ready' qiladi — actual audio play uchun foydalanuvchi
-  // alohida "START Part N+1" tugmasini bosishi kerak.
-  const handleContinue = () => {
-    const nextIdx = activeIdx + 1
-    if (nextIdx >= parts.length) return
-    setActiveIdx(nextIdx)
-    setStatuses((prev) =>
-      prev.map((s, i) =>
-        i === nextIdx && s === 'pending' ? 'ready' : s,
-      ),
-    )
   }
 
   // ── Submit handler ─────────────────────────────────────────────────
@@ -422,8 +446,7 @@ export function ListeningSection({
           <p className="text-sm text-rose-700">{configError.detail}</p>
           {configError.missing_parts && configError.missing_parts.length > 0 && (
             <p className="mt-2 text-xs text-rose-600">
-              Missing audio for Part(s):{' '}
-              {configError.missing_parts.join(', ')}
+              Missing audio for Part(s): {configError.missing_parts.join(', ')}
             </p>
           )}
           <p className="mt-4 text-xs text-slate-500">
@@ -448,14 +471,24 @@ export function ListeningSection({
   const allFinished
     = statuses.length === parts.length
     && statuses.every((s) => s === 'finished')
+  const anyPlaying = statuses.some((s) => s === 'playing')
+  // START tugma faqat 'pending' partga ishora qilganda VA hech qanday
+  // part hozir o'ynamayotgan bo'lsa ko'rinadi. starting=true bo'lsa
+  // ham yashiramiz (bosilgach qayta bosilmaydi).
+  const showStartButton
+    = !allFinished
+    && currentStatus === 'pending'
+    && !anyPlaying
+    && !starting
+
+  // Topish: qaysi part 'playing' yoki keyingi non-finished — banner uchun.
+  const playingIdx = statuses.findIndex((s) => s === 'playing')
+  const shownPlayingPart = playingIdx >= 0 ? parts[playingIdx] : part
 
   const audioStatusLabel = (() => {
     if (allFinished) return 'All audio finished'
-    if (currentStatus === 'playing') {
-      return `Playing Part ${part.part_number} audio…`
-    }
-    if (currentStatus === 'finished') {
-      return `Part ${part.part_number} audio finished`
+    if (anyPlaying && shownPlayingPart) {
+      return `Playing Part ${shownPlayingPart.part_number} audio…`
     }
     return `Ready to play Part ${part.part_number}`
   })()
@@ -467,8 +500,8 @@ export function ListeningSection({
     return `${m}:${sec.toString().padStart(2, '0')}`
   }
 
-  // Pending statusi — javob inputlari LOCKED. Boshlanmagan part'ga
-  // o'tib javob yozish mumkin emas (spec talabi).
+  // Pending part'ning input'lari LOCKED — audio boshlanmaguncha javob
+  // yozib bo'lmaydi. (Playing/finished part'larniki — ochiq.)
   const inputsLocked = currentStatus === 'pending'
 
   return (
@@ -483,7 +516,6 @@ export function ListeningSection({
             <Timer initialSeconds={secondsRemaining} onExpire={handleAutoSubmit} />
           </div>
 
-          {/* Persistent audio header */}
           <div className="mx-auto max-w-7xl px-4 pb-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <div className="mb-2 flex items-center justify-between">
@@ -493,7 +525,7 @@ export function ListeningSection({
                 </div>
                 <Volume2
                   className={`h-4 w-4 ${
-                    currentStatus === 'playing'
+                    anyPlaying
                       ? 'animate-pulse text-brand-500'
                       : 'text-slate-400'
                   }`}
@@ -504,7 +536,7 @@ export function ListeningSection({
                   const s = statuses[i] ?? 'pending'
                   const widthPct
                     = s === 'finished' ? 100
-                      : i === activeIdx && s === 'playing' ? progress
+                      : i === playingIdx && s === 'playing' ? progress
                         : 0
                   return (
                     <div
@@ -521,13 +553,12 @@ export function ListeningSection({
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
                 Just like real IELTS: each part plays once. You can&apos;t
-                pause, rewind, or replay. Switching tabs won&apos;t affect
-                the audio.
+                pause, rewind, or replay. Parts play in sequence
+                automatically — no need to click between them.
               </p>
             </div>
           </div>
 
-          {/* Part tabs */}
           <div className="mx-auto flex max-w-7xl gap-2 px-4 pb-2">
             {parts.map((p, i) => {
               const s = statuses[i] ?? 'pending'
@@ -543,7 +574,7 @@ export function ListeningSection({
                       ? 'bg-slate-900 text-white'
                       : s === 'finished'
                         ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : s === 'ready' || s === 'playing'
+                        : s === 'playing'
                           ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           : 'cursor-not-allowed bg-slate-100 text-slate-400'
                   }`}
@@ -563,8 +594,8 @@ export function ListeningSection({
 
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-5xl space-y-4 px-4 py-6">
-            {/* ─── Audio control card ─── */}
-            {!allFinished && currentStatus === 'ready' && (
+            {/* ─── Bitta START tugmasi ─── */}
+            {showStartButton && (
               <div className="rounded-2xl border-2 border-brand-200 bg-brand-50 p-8 text-center">
                 <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-600 text-white">
                   <Headphones className="h-8 w-8" />
@@ -573,17 +604,18 @@ export function ListeningSection({
                   Ready to play Part {part.part_number}
                 </h2>
                 <p className="mb-6 text-sm text-slate-600">
-                  {activeIdx === 0
-                    ? `Click START below to begin the audio for Part ${part.part_number}. Once started, you can't pause, rewind, or replay it — just like the real IELTS.`
-                    : `Part ${parts[activeIdx - 1]?.part_number ?? activeIdx} finished. When ready, click START to begin Part ${part.part_number}.`}
+                  Click START below to begin. All {parts.length} parts will
+                  play one after another automatically. You can&apos;t pause,
+                  rewind, or replay — just like the real IELTS.
                 </p>
                 <button
                   type="button"
                   onClick={handleStart}
-                  className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-10 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700"
+                  disabled={starting}
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-10 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Play className="h-5 w-5 fill-current" />
-                  START Part {part.part_number}
+                  START Listening
                 </button>
                 {audioError && (
                   <div className="mt-4 rounded-lg border-2 border-rose-300 bg-rose-50 p-4 text-left">
@@ -605,27 +637,18 @@ export function ListeningSection({
                       >
                         Reload page
                       </button>
-                      {part.audio_url && (
-                        <a
-                          href={part.audio_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                          Open audio directly
-                        </a>
-                      )}
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {!allFinished && currentStatus === 'playing' && (
+            {/* ─── Audio o'ynamoqda ─── */}
+            {!allFinished && anyPlaying && (
               <div className="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 text-center">
                 <div className="mb-2 flex items-center justify-center gap-2 text-lg font-bold text-brand-700">
                   <span className="inline-block h-3 w-3 animate-pulse rounded-full bg-brand-600" />
-                  Playing Part {part.part_number} audio…
+                  Playing Part {shownPlayingPart?.part_number} audio…
                 </div>
                 <div className="mx-auto mt-3 h-2.5 max-w-md overflow-hidden rounded-full bg-brand-100">
                   <div
@@ -638,34 +661,12 @@ export function ListeningSection({
                 </p>
                 <p className="mt-2 text-xs text-amber-700">
                   ⚠️ Audio cannot be paused, rewound, or replayed.
+                  Parts {playingIdx + 1}–{parts.length} continue automatically.
                 </p>
               </div>
             )}
 
-            {!allFinished
-              && currentStatus === 'finished'
-              && activeIdx < parts.length - 1 && (
-              <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-6 text-center">
-                <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
-                <h2 className="mt-2 text-lg font-bold text-emerald-800">
-                  Part {part.part_number} audio finished
-                </h2>
-                <p className="mt-1 text-sm text-emerald-700">
-                  When ready, continue to Part{' '}
-                  {parts[activeIdx + 1]?.part_number ?? activeIdx + 2}.
-                  You&apos;ll then click START to begin the audio.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-700"
-                >
-                  Continue to Part{' '}
-                  {parts[activeIdx + 1]?.part_number ?? activeIdx + 2}
-                </button>
-              </div>
-            )}
-
+            {/* ─── Hammasi tugadi ─── */}
             {allFinished && (
               <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-6 text-center">
                 <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
@@ -679,13 +680,13 @@ export function ListeningSection({
               </div>
             )}
 
-            {/* ─── Questions area ─── */}
+            {/* ─── Savollar ─── */}
             <div className="relative">
               {inputsLocked && (
                 <div className="absolute inset-0 z-10 flex items-start justify-center rounded-2xl bg-white/70 pt-8 backdrop-blur-[2px]">
                   <p className="rounded-lg bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg">
-                    ▲ Click &quot;START Part {part.part_number}&quot; above to
-                    unlock these questions
+                    ▲ Waiting for Part {part.part_number} audio to start.
+                    Questions will unlock automatically.
                   </p>
                 </div>
               )}
@@ -720,15 +721,12 @@ export function ListeningSection({
               </div>
             </div>
 
-            {/* ─── Navigation + Submit ─── */}
+            {/* ─── Navigatsiya + Submit ─── */}
             <div className="flex items-center justify-between gap-3 pt-2">
               <button
                 type="button"
-                disabled={activeIdx === 0}
+                disabled={activeIdx === 0 || statuses[activeIdx - 1] === 'pending'}
                 onClick={() => {
-                  // Faqat finished/playing/ready part'larga o'tish mumkin —
-                  // pending part'ga "Previous" tugmasi orqali ham
-                  // o'tib bo'lmaydi.
                   const prev = activeIdx - 1
                   if (prev >= 0 && statuses[prev] !== 'pending') {
                     setActiveIdx(prev)
@@ -775,7 +773,6 @@ export function ListeningSection({
           </div>
         </main>
 
-        {/* Hidden <audio> — re-used across part transitions. */}
         <audio
           ref={audioRef}
           preload="auto"
