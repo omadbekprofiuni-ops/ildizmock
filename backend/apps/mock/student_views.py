@@ -225,6 +225,10 @@ def section_data_view(request, browser_session_id):
         payload['listening_parts'] = StudentListeningPartSerializer(
             test.listening_parts.all(), many=True, context=ctx,
         ).data
+        # HOTFIX — refresh-safe: frontend qaysi audio'lar tugaganini biladi
+        payload['audio_played_parts'] = list(
+            participant.audio_played_parts or [],
+        )
     elif session.status == 'reading':
         payload['passages'] = StudentPassageSerializer(
             test.passages.all().order_by('order', 'part_number'),
@@ -251,6 +255,35 @@ def _check_section(participant: MockParticipant, expected: str):
             status=status.HTTP_400_BAD_REQUEST,
         )
     return None
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def mark_audio_played(request, browser_session_id):
+    """HOTFIX — refresh-safe audio playback.
+
+    Body: {"part_order": 1}
+
+    Listening audio part tugaganda frontend bu endpoint'ni chaqiradi.
+    Sahifa yangilanganda frontend audio_played_parts ro'yxatini olib,
+    qaysi part'lar tugaganini biladi va qayta o'ynashga ruxsat bermaydi.
+    """
+    participant = get_object_or_404(
+        MockParticipant, browser_session_id=browser_session_id,
+    )
+    try:
+        part_order = int(request.data.get('part_order'))
+    except (TypeError, ValueError):
+        return Response(
+            {'detail': 'part_order must be an integer.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    played = list(participant.audio_played_parts or [])
+    if part_order not in played:
+        played.append(part_order)
+        participant.audio_played_parts = played
+        participant.save(update_fields=['audio_played_parts'])
+    return Response({'audio_played_parts': played})
 
 
 @api_view(['POST'])

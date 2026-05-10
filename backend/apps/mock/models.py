@@ -261,6 +261,15 @@ class MockParticipant(models.Model):
     reading_submitted_at = models.DateTimeField(null=True, blank=True)
     writing_submitted_at = models.DateTimeField(null=True, blank=True)
 
+    # HOTFIX — refresh-safe audio playback (Listening). Har bir part'ning
+    # audio tugaganini saqlaydi: [1, 2] = Part 1 va 2 ning audio'si
+    # eshitilgan. Frontend sahifani yangilaganda, qaysi part'lar
+    # tugaganini bilib ularni qayta o'ynashga ruxsat bermaydi.
+    audio_played_parts = models.JSONField(
+        default=list, blank=True,
+        help_text="List of part orders whose audio has finished: [1, 2, ...]",
+    )
+
     # ETAP 14 BUG #11 — Speaking audio recording
     speaking_audio = models.FileField(
         upload_to='speaking_recordings/%Y/%m/',

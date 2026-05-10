@@ -60,6 +60,11 @@ urlpatterns = [
         name='mock-submit-listening',
     ),
     path(
+        'mock/audio-played/<str:browser_session_id>/',
+        student_views.mark_audio_played,
+        name='mock-mark-audio-played',
+    ),
+    path(
         'mock/submit/reading/<str:browser_session_id>/',
         student_views.submit_reading,
         name='mock-submit-reading',
