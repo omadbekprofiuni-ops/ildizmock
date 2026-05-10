@@ -169,8 +169,6 @@ export default function HomePage() {
             {t('home.hero.title.start') || 'Experience the real'}
             <br />
             <span className="gradient-text">Computer-Delivered IELTS</span>
-            <br />
-            {t('home.hero.title.tail') || 'from your home'}
           </h1>
           <p className="mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-[19px]">
             {t('home.hero.subtitle')}
