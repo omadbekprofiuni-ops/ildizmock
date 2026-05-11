@@ -1,10 +1,16 @@
 from django.conf import settings
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .catalog_serializers import (
+    B2CCatalogTestDetailSerializer,
+    B2CCatalogTestListSerializer,
+)
 from .serializers import (
     B2CGoogleAuthSerializer,
     B2CLoginSerializer,
@@ -12,6 +18,7 @@ from .serializers import (
     B2CSignupSerializer,
     B2CUserSerializer,
 )
+from .services import catalog as catalog_service
 
 
 def _set_auth_cookies(response, access: str, refresh: str | None = None):
@@ -145,3 +152,85 @@ class B2CDashboardView(APIView):
             'getting_started': activity_service.get_getting_started(user),
             'sections': activity_service.get_section_overview(),
         })
+
+
+def _ensure_b2c(request):
+    """B2C foydalanuvchi tekshiruvi (boshqa rol → 403)."""
+    if request.user.role != 'b2c_user':
+        return Response(
+            {'detail': 'Faqat individual foydalanuvchilar uchun.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    return None
+
+
+class B2CCatalogListView(APIView):
+    """GET /api/v1/b2c/catalog?section=&difficulty=&source=&q=&page=&page_size=
+
+    Faqat `available_for_b2c=True` testlar. Paginated (default 24).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+
+        section = request.GET.get('section', 'all')
+        difficulty = request.GET.get('difficulty', 'all')
+        source = request.GET.get('source', 'all')
+        query = (request.GET.get('q') or '').strip()
+        try:
+            page_number = max(1, int(request.GET.get('page', 1)))
+        except ValueError:
+            page_number = 1
+        try:
+            # ETAP 16.6 — default 12 → 24 (dense 4-column grid uchun)
+            page_size = max(1, min(48, int(request.GET.get('page_size', 24))))
+        except ValueError:
+            page_size = 24
+
+        qs = catalog_service.filter_catalog(
+            section=section, difficulty=difficulty,
+            source=source, query=query,
+        )
+        paginator = Paginator(qs, page_size)
+        page = paginator.get_page(page_number)
+        results = B2CCatalogTestListSerializer(page.object_list, many=True).data
+
+        counts = catalog_service.get_section_counts()
+        return Response({
+            'results': results,
+            'pagination': {
+                'page': page.number,
+                'num_pages': paginator.num_pages,
+                'total': paginator.count,
+                'page_size': page_size,
+                'has_next': page.has_next(),
+                'has_previous': page.has_previous(),
+            },
+            'filters': {
+                'section': section,
+                'difficulty': difficulty,
+                'source': source,
+                'q': query,
+            },
+            'meta': {
+                'section_choices': catalog_service.SECTION_CHOICES,
+                'difficulty_choices': catalog_service.DIFFICULTY_CHOICES,
+                'section_counts': counts,
+                'sources': catalog_service.get_available_sources(),
+            },
+        })
+
+
+class B2CCatalogDetailView(APIView):
+    """GET /api/v1/b2c/catalog/<uuid:pk> — bitta testning preview ma'lumotlari."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+        test = get_object_or_404(catalog_service.get_published_tests(), pk=pk)
+        return Response(B2CCatalogTestDetailSerializer(test).data)

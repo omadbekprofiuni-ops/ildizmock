@@ -35,11 +35,23 @@ type ConfirmResponse = {
   questions_saved: number
 }
 
-export default function PdfImportPage() {
+interface PdfImportPageProps {
+  /** Override base path for "/<base>/<id>/edit" navigation after save. */
+  editBasePath?: string
+  /** Override "Back" button destination. */
+  backPath?: string
+}
+
+export default function PdfImportPage({
+  editBasePath,
+  backPath: backPathProp,
+}: PdfImportPageProps = {}) {
   const navigate = useNavigate()
   const { slug } = useParams<{ slug?: string }>()
-  const backPath = slug ? `/${slug}/admin/tests/new-mode` : '/admin/tests/new-mode'
-  const editBase = slug ? `/${slug}/admin/tests` : '/admin/tests'
+  const backPath =
+    backPathProp ?? (slug ? `/${slug}/admin/tests/new-mode` : '/admin/tests/new-mode')
+  const editBase =
+    editBasePath ?? (slug ? `/${slug}/admin/tests` : '/admin/tests')
 
   const [dragOver, setDragOver] = useState(false)
   const [parsed, setParsed] = useState<ParsedTest | null>(null)

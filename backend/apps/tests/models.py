@@ -32,6 +32,27 @@ class Test(models.Model):
         ('archived', 'Archived'),
     ]
 
+    class Source(models.TextChoices):
+        CAMBRIDGE_7 = 'cambridge_7', 'Cambridge 7'
+        CAMBRIDGE_8 = 'cambridge_8', 'Cambridge 8'
+        CAMBRIDGE_9 = 'cambridge_9', 'Cambridge 9'
+        CAMBRIDGE_10 = 'cambridge_10', 'Cambridge 10'
+        CAMBRIDGE_11 = 'cambridge_11', 'Cambridge 11'
+        CAMBRIDGE_12 = 'cambridge_12', 'Cambridge 12'
+        CAMBRIDGE_13 = 'cambridge_13', 'Cambridge 13'
+        CAMBRIDGE_14 = 'cambridge_14', 'Cambridge 14'
+        CAMBRIDGE_15 = 'cambridge_15', 'Cambridge 15'
+        CAMBRIDGE_16 = 'cambridge_16', 'Cambridge 16'
+        CAMBRIDGE_17 = 'cambridge_17', 'Cambridge 17'
+        CAMBRIDGE_18 = 'cambridge_18', 'Cambridge 18'
+        CAMBRIDGE_19 = 'cambridge_19', 'Cambridge 19'
+        CAMBRIDGE_20 = 'cambridge_20', 'Cambridge 20'
+        REAL_EXAM_2024 = 'real_exam_2024', 'Real Exam 2024'
+        REAL_EXAM_2025 = 'real_exam_2025', 'Real Exam 2025'
+        REAL_EXAM_2026 = 'real_exam_2026', 'Real Exam 2026'
+        ILDIZ_ORIGINAL = 'ildiz_original', 'ILDIZ Original'
+        OTHER = 'other', 'Boshqa'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         'organizations.Organization',
@@ -87,11 +108,47 @@ class Test(models.Model):
         related_name='deleted_tests',
     )
 
+    # ETAP 16 — B2C catalog metadata
+    available_for_b2c = models.BooleanField(
+        default=False, db_index=True,
+        help_text="B2C katalogida ko'rinishi uchun belgilang.",
+    )
+    b2c_published_at = models.DateTimeField(null=True, blank=True)
+    b2c_display_name = models.CharField(max_length=200, blank=True, default='')
+    b2c_description = models.TextField(blank=True, default='')
+
+    # ETAP 16.6 — Test manbasi (Cambridge yili, Real Exam, ILDIZ Original).
+    # Catalog'da source bo'yicha filtrlash uchun ishlatiladi.
+    source = models.CharField(
+        max_length=30,
+        choices=Source.choices,
+        default=Source.OTHER,
+        db_index=True,
+    )
+    source_custom_name = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text=(
+            "source=OTHER bo'lsa, erkin nom yozish mumkin "
+            "(masalan, 'IELTS Original 2026')."
+        ),
+    )
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.name} ({self.module})'
+
+    @property
+    def b2c_name(self):
+        return self.b2c_display_name or self.name
+
+    @property
+    def source_display(self):
+        """Catalog UI uchun: OTHER + custom_name bo'lsa erkin nom, aks holda label."""
+        if self.source == self.Source.OTHER and self.source_custom_name:
+            return self.source_custom_name
+        return self.get_source_display()
 
     def soft_delete(self, user=None):
         from django.utils import timezone

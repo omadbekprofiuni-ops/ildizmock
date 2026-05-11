@@ -16,6 +16,8 @@ import CenterAdminLayout from './layouts/CenterAdminLayout'
 import CenterAnalyticsPage from './pages/center/AnalyticsPage'
 import CenterDashboard from './pages/center/CenterDashboard'
 import AttendancePage from './pages/center/AttendancePage'
+import AttendanceMarkPage from './pages/center/AttendanceMarkPage'
+import AttendanceReportPage from './pages/center/AttendanceReportPage'
 import AITestCreatePage from './pages/center/AITestCreatePage'
 import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
@@ -56,7 +58,9 @@ import OrgTestResultsPage from './pages/superadmin/OrgTestResultsPage'
 import OrgTestsPage from './pages/superadmin/OrgTestsPage'
 import OrgWritingsPage from './pages/superadmin/OrgWritingsPage'
 import SuperAdminAudioPage from './pages/superadmin/SuperAdminAudioPage'
+import SuperAdminB2CCatalogPage from './pages/superadmin/SuperAdminB2CCatalogPage'
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
+import SuperAdminPdfImportPage from './pages/superadmin/SuperAdminPdfImportPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
 import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
@@ -76,6 +80,8 @@ import B2CSignupPage from './pages/b2c/SignupPage'
 import B2CLoginPage from './pages/b2c/LoginPage'
 import B2CDashboardPage from './pages/b2c/DashboardPage'
 import B2CProfilePage from './pages/b2c/ProfilePage'
+import B2CCatalogPage from './pages/b2c/CatalogPage'
+import B2CCatalogDetailPage from './pages/b2c/CatalogDetailPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
@@ -129,6 +135,9 @@ function AppRoutes() {
           <Route path="/b2c/login" element={<B2CLoginPage />} />
           <Route path="/b2c/dashboard" element={<B2CRoute><B2CDashboardPage /></B2CRoute>} />
           <Route path="/b2c/profile" element={<B2CRoute><B2CProfilePage /></B2CRoute>} />
+          {/* ETAP 16 — B2C catalog */}
+          <Route path="/b2c/catalog" element={<B2CRoute><B2CCatalogPage /></B2CRoute>} />
+          <Route path="/b2c/catalog/:id" element={<B2CRoute><B2CCatalogDetailPage /></B2CRoute>} />
 
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
@@ -271,6 +280,14 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/super/tests/new/pdf-import"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminPdfImportPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
             path="/super/tests/wizard/:id"
             element={
               <SuperAdminRoute>
@@ -299,6 +316,14 @@ function AppRoutes() {
             element={
               <SuperAdminRoute>
                 <SuperAdminBillingPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/b2c-catalog"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminB2CCatalogPage />
               </SuperAdminRoute>
             }
           />
@@ -385,6 +410,8 @@ function AppRoutes() {
               <Route path="groups/comparison" element={<GroupsComparisonPage />} />
               <Route path="groups/:groupId" element={<GroupDetailPage />} />
               <Route path="attendance" element={<AttendancePage />} />
+              <Route path="attendance/sessions/:sessionId" element={<AttendanceMarkPage />} />
+              <Route path="attendance/groups/:groupId/report" element={<AttendanceReportPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
               <Route path="settings" element={<CenterSettingsPage />} />
             </Route>

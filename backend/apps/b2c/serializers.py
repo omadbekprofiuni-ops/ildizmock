@@ -26,11 +26,14 @@ def _username_from_email(email: str) -> str:
 
 
 class B2CSignupSerializer(serializers.Serializer):
-    first_name = serializers.CharField(max_length=150)
-    last_name = serializers.CharField(max_length=150)
+    # Ism va familiya ixtiyoriy — keyin profilda to'ldirsa bo'ladi.
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=6)
-    password_confirm = serializers.CharField(write_only=True, min_length=6)
+    password_confirm = serializers.CharField(
+        write_only=True, min_length=6, required=False, allow_blank=True,
+    )
 
     def validate_email(self, value: str) -> str:
         normalized = value.lower().strip()
@@ -41,8 +44,10 @@ class B2CSignupSerializer(serializers.Serializer):
         return normalized
 
     def validate(self, attrs):
-        p1, p2 = attrs.get('password'), attrs.get('password_confirm')
-        if p1 != p2:
+        p1 = attrs.get('password')
+        p2 = attrs.get('password_confirm')
+        # password_confirm taqdim etilgan bo'lsa, mos kelishi shart.
+        if p2 and p1 != p2:
             raise serializers.ValidationError(
                 {'password_confirm': 'Parollar mos kelmadi.'},
             )
@@ -57,8 +62,8 @@ class B2CSignupSerializer(serializers.Serializer):
         user = User(
             username=_username_from_email(email),
             email=email,
-            first_name=validated_data['first_name'].strip(),
-            last_name=validated_data['last_name'].strip(),
+            first_name=(validated_data.get('first_name') or '').strip(),
+            last_name=(validated_data.get('last_name') or '').strip(),
             role='b2c_user',
         )
         user.set_password(validated_data['password'])

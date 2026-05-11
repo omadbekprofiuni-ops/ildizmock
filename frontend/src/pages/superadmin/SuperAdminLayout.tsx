@@ -6,6 +6,7 @@ import {
   FileText,
   Headphones,
   LayoutDashboard,
+  Library,
   LogOut,
   Settings,
 } from 'lucide-react'
@@ -29,6 +30,7 @@ const MAIN_NAV: NavItem[] = [
   { to: '/super/organizations', label: 'Centers', Icon: Building2 },
   { to: '/super/payments', label: 'Payments', Icon: CreditCard },
   { to: '/super/tests', label: 'Global tests', Icon: FileText },
+  { to: '/super/b2c-catalog', label: 'B2C Catalog', Icon: Library },
   { to: '/super/audio', label: 'Audio files', Icon: Headphones },
   { to: '/super/stats', label: 'Statistics', Icon: BarChart3 },
   { to: '/super/settings', label: 'Settings', Icon: Settings },
@@ -48,6 +50,7 @@ const TITLES: Record<string, string> = {
   '/super/organizations': 'Centers',
   '/super/payments': 'Billing',
   '/super/tests': 'Global tests',
+  '/super/b2c-catalog': 'B2C Catalog',
   '/super/audio': 'Audio files',
   '/super/stats': 'Statistics',
   '/super/settings': 'Settings',
