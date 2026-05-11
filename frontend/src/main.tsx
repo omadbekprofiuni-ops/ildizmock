@@ -23,12 +23,3 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
-
-// Splash CSS animation 1.4s'da o'z-o'zidan o'chadi (index.html). Bu yerda
-// React mount bo'lganda ertaroq (250ms) dismiss qilamiz.
-requestAnimationFrame(() => {
-  window.setTimeout(() => {
-    const hide = (window as { __hideBrandSplash?: () => void }).__hideBrandSplash
-    if (typeof hide === 'function') hide()
-  }, 250)
-})
