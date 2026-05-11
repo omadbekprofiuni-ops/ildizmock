@@ -158,117 +158,101 @@ export default function HomePage() {
 
   return (
     <PublicLayout>
-      {/* ── HERO (ILDIZmock split layout) ── */}
-      <section className="relative overflow-hidden px-8 pb-20 pt-16">
+      {/* ── HERO (centered, full-width feel) ── */}
+      <section className="relative overflow-hidden px-8 pb-20 pt-20">
         <div className="hero-bg" />
-        <div className="relative mx-auto max-w-7xl">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
-            {/* Left — bold IELTS exam title (rounded brand blocks) */}
-            <div>
-              <div className="eyebrow">
-                <span className="eyebrow__dot eyebrow__dot--pulse" />
-                Computer-Delivered IELTS · Instant Score
-              </div>
+        <div className="relative mx-auto max-w-5xl text-center">
+          <div className="eyebrow mx-auto">
+            <span className="eyebrow__dot eyebrow__dot--pulse" />
+            Computer-Delivered IELTS · Instant Score
+          </div>
 
-              <h1 className="mt-5 text-[44px] font-extrabold uppercase leading-[0.95] tracking-tight text-slate-900 md:text-6xl lg:text-[78px]">
-                Prepare
-                <br />
-                for the
-                <br />
-                <span className="mt-4 inline-flex flex-wrap items-center gap-2.5">
-                  <span
-                    className="inline-block rounded-2xl px-4 py-1.5 text-white"
-                    style={{ background: 'var(--gradient-brand)' }}
-                  >
-                    IELTS
-                  </span>
-                  <span className="inline-block rounded-2xl bg-slate-900 px-4 py-1.5 text-white">
-                    Exam
-                  </span>
-                </span>
-              </h1>
-
-              {/* Accent underline — adds visual identity, breaks Examy parity */}
-              <div className="mt-5 flex items-center gap-3">
-                <span
-                  className="h-1.5 w-20 rounded-full"
-                  style={{ background: 'var(--gradient-brand)' }}
-                />
-                <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                  Practice · Score · Improve
-                </span>
-              </div>
-
-              <div
-                className="mt-8 inline-flex flex-col gap-1 rounded-2xl border border-slate-100 bg-white px-5 py-4"
-                style={{ boxShadow: 'var(--shadow-md)' }}
-              >
-                <p className="text-sm font-semibold text-slate-700">
-                  Trusted by{' '}
-                  <span className="font-extrabold text-brand-600">1,200+</span> Uzbek students
-                </p>
-                <p className="text-xs text-slate-500">
-                  someone registered{' '}
-                  <span className="font-semibold text-emerald-600">31 minutes</span> ago
-                </p>
-              </div>
-            </div>
-
-            {/* Right — pitch card + CTAs + trust signals */}
-            <div className="relative">
-              {/* Decorative gradient blob */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full opacity-20 blur-3xl"
+          <h1 className="mt-7 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-slate-900 md:text-6xl lg:text-[78px]">
+            Prepare for the
+            <br />
+            <span className="mt-4 inline-flex flex-wrap items-center justify-center gap-2.5">
+              <span
+                className="inline-block rounded-2xl px-4 py-1.5 text-white"
                 style={{ background: 'var(--gradient-brand)' }}
-              />
-
-              <div
-                className="relative rounded-3xl border border-slate-100 bg-white p-8"
-                style={{ boxShadow: 'var(--shadow-lg)' }}
               >
-                <p className="text-2xl leading-relaxed text-slate-800 md:text-[26px]">
-                  Take a Mock Test and get your IELTS Score for{' '}
-                  <span className="font-extrabold text-slate-900">FREE</span>{' '}
-                  within{' '}
-                  <span
-                    className="inline-block bg-clip-text font-extrabold text-transparent"
-                    style={{ backgroundImage: 'var(--gradient-brand)' }}
-                  >
-                    60 seconds
-                  </span>
-                </p>
+                IELTS
+              </span>
+              <span className="inline-block rounded-2xl bg-slate-900 px-4 py-1.5 text-white">
+                Exam
+              </span>
+            </span>
+          </h1>
 
-                <div className="mt-7 flex flex-wrap items-center gap-3.5">
-                  <Link
-                    to={user ? '/practice' : '/tests/reading'}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.25)]"
-                  >
-                    <Play className="h-5 w-5" />
-                    {t('home.hero.cta') || 'Start Practice Test'}
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-7 py-4 text-base font-bold text-slate-700 transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-                  >
-                    {t('nav.pricing')}
-                  </Link>
-                </div>
+          {/* Accent underline — adds visual identity */}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <span
+              className="h-1.5 w-20 rounded-full"
+              style={{ background: 'var(--gradient-brand)' }}
+            />
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Practice · Score · Improve
+            </span>
+            <span
+              className="h-1.5 w-20 rounded-full"
+              style={{ background: 'var(--gradient-brand)' }}
+            />
+          </div>
 
-                <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-slate-500">
-                  {TRUST.map((label) => (
-                    <span key={label} className="inline-flex items-center gap-2">
-                      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-teal-50 text-teal-600">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-[19px]">
+            Take a Mock Test and get your IELTS Score for{' '}
+            <span className="font-extrabold text-slate-900">FREE</span> within{' '}
+            <span
+              className="inline-block bg-clip-text font-extrabold text-transparent"
+              style={{ backgroundImage: 'var(--gradient-brand)' }}
+            >
+              60 seconds
+            </span>
+            . Authentic Cambridge format with real timing and instant scoring.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5">
+            <Link
+              to={user ? '/practice' : '/tests/reading'}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,125,110,0.30)]"
+            >
+              <Play className="h-5 w-5" />
+              {t('home.hero.cta') || 'Start Practice Test'}
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-7 py-4 text-base font-bold text-slate-700 transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+            >
+              {t('nav.pricing')}
+            </Link>
+          </div>
+
+          {/* Trust signals row */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-500">
+            {TRUST.map((label) => (
+              <span key={label} className="inline-flex items-center gap-2">
+                <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Trusted by pill — bottom of hero */}
+          <div
+            className="mx-auto mt-10 inline-flex flex-col gap-1 rounded-2xl border border-slate-100 bg-white px-5 py-3 text-left"
+            style={{ boxShadow: 'var(--shadow-md)' }}
+          >
+            <p className="text-sm font-semibold text-slate-700">
+              Trusted by{' '}
+              <span className="font-extrabold text-brand-600">1,200+</span> Uzbek students
+            </p>
+            <p className="text-xs text-slate-500">
+              someone registered{' '}
+              <span className="font-semibold text-teal-600">31 minutes</span> ago
+            </p>
           </div>
         </div>
 

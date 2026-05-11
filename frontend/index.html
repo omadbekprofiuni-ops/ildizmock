@@ -5,8 +5,87 @@
     <link rel="icon" type="image/png" href="/ildizmock-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ILDIZmock</title>
+    <style>
+      /* Brand splash — shown on initial load + during refresh, hidden by main.tsx */
+      #brand-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        transition: opacity 0.45s ease;
+      }
+      #brand-splash.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #brand-splash__stage {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #brand-splash__ring {
+        position: absolute;
+        inset: -14px;
+        border: 3px solid transparent;
+        border-top-color: #1F3FAB;       /* logo blue */
+        border-right-color: #21AC8C;     /* logo teal */
+        border-radius: 50%;
+        animation: brand-spin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      #brand-splash__logo {
+        width: 92px;
+        height: 92px;
+        object-fit: contain;
+        animation: brand-pulse 1.6s ease-in-out infinite;
+      }
+      #brand-splash__caption {
+        position: absolute;
+        top: calc(50% + 80px);
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #64748B;
+        animation: brand-fade 1.8s ease-in-out infinite;
+        white-space: nowrap;
+      }
+      #brand-splash__caption b {
+        color: #122158;     /* logo navy */
+      }
+      #brand-splash__caption i {
+        color: #21AC8C;     /* logo teal */
+        font-style: normal;
+      }
+      @keyframes brand-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes brand-pulse {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(0.92); }
+      }
+      @keyframes brand-fade {
+        0%, 100% { opacity: 0.45; }
+        50%      { opacity: 1; }
+      }
+    </style>
   </head>
   <body>
+    <div id="brand-splash" aria-hidden="true">
+      <div id="brand-splash__stage">
+        <div id="brand-splash__ring"></div>
+        <img id="brand-splash__logo" src="/ildizmock-logo.png" alt="ILDIZmock" />
+      </div>
+      <div id="brand-splash__caption"><b>ILDIZ</b><i>mock</i></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
