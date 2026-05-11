@@ -25,22 +25,39 @@ from .base import (
 logger = logging.getLogger(__name__)
 
 
-# Gemini structured-output JSON schema (OpenAPI subset). google-genai
-# kutubxonasi `response_schema` parametri orqali qabul qiladi.
+# Gemini structured-output JSON schema (OpenAPI subset). Description'lar
+# Gemini'ga har maydon nimani aniq kutayotganini aytadi — bu input'da kichik
+# qo'shimcha token, lekin sifatni sezilarli oshiradi.
 IELTS_SCHEMA = {
     'type': 'OBJECT',
     'properties': {
         'test_metadata': {
             'type': 'OBJECT',
             'properties': {
-                'title': {'type': 'STRING'},
+                'title': {
+                    'type': 'STRING',
+                    'description': (
+                        "Test sarlavhasi (masalan 'IELTS Listening Test 1' "
+                        "yoki PDF'dagi haqiqiy nom)."
+                    ),
+                },
                 'section_type': {
                     'type': 'STRING',
                     'enum': ['listening', 'reading', 'writing', 'full'],
+                    'description': 'Test moduli.',
                 },
-                'source_book': {'type': 'STRING'},
-                'test_number': {'type': 'STRING'},
-                'duration_minutes': {'type': 'INTEGER'},
+                'source_book': {
+                    'type': 'STRING',
+                    'description': "Masalan 'Cambridge IELTS 19', 'Real Exam 2024'.",
+                },
+                'test_number': {
+                    'type': 'STRING',
+                    'description': "Masalan 'Test 1', 'Test 2'.",
+                },
+                'duration_minutes': {
+                    'type': 'INTEGER',
+                    'description': 'IELTS: listening=30, reading=60, writing=60.',
+                },
                 'difficulty': {
                     'type': 'STRING',
                     'enum': ['easy', 'medium', 'hard'],
@@ -49,19 +66,46 @@ IELTS_SCHEMA = {
         },
         'sections': {
             'type': 'ARRAY',
+            'description': (
+                "IELTS sectionlar. Listening — 4 part, Reading — 3 passage, "
+                "Writing — 2 task."
+            ),
             'items': {
                 'type': 'OBJECT',
                 'properties': {
-                    'section_number': {'type': 'INTEGER'},
-                    'section_title': {'type': 'STRING'},
-                    'passage': {'type': 'STRING'},
-                    'instructions': {'type': 'STRING'},
+                    'section_number': {
+                        'type': 'INTEGER',
+                        'description': '1, 2, 3 yoki 4.',
+                    },
+                    'section_title': {
+                        'type': 'STRING',
+                        'description': (
+                            "Masalan 'Part 1 — Booking form', 'Reading Passage 1'."
+                        ),
+                    },
+                    'passage': {
+                        'type': 'STRING',
+                        'description': (
+                            "Reading: to'liq passage matni. Listening: agar "
+                            "PDF'da transcript bo'lsa shuni qo'y, aks holda bo'sh."
+                        ),
+                    },
+                    'instructions': {
+                        'type': 'STRING',
+                        'description': (
+                            "PDF'dagi instruksiya: masalan 'NO MORE THAN TWO "
+                            "WORDS AND/OR A NUMBER'."
+                        ),
+                    },
                     'questions': {
                         'type': 'ARRAY',
                         'items': {
                             'type': 'OBJECT',
                             'properties': {
-                                'question_number': {'type': 'INTEGER'},
+                                'question_number': {
+                                    'type': 'INTEGER',
+                                    'description': 'IELTS 1-40 oralig\'ida.',
+                                },
                                 'question_type': {
                                     'type': 'STRING',
                                     'enum': [
@@ -77,14 +121,41 @@ IELTS_SCHEMA = {
                                         'essay',
                                     ],
                                 },
-                                'question_text': {'type': 'STRING'},
+                                'question_text': {
+                                    'type': 'STRING',
+                                    'description': (
+                                        "To'liq stem. Bo'sh joy uchun '____' "
+                                        "(4 ta pastki chiziq). Kontekstni kesma."
+                                    ),
+                                },
                                 'options': {
                                     'type': 'ARRAY',
                                     'items': {'type': 'STRING'},
+                                    'description': (
+                                        "Multiple choice / matching uchun "
+                                        "variantlar. Faqat to'liq matn, A/B/C "
+                                        "harflarisiz."
+                                    ),
                                 },
-                                'correct_answer': {'type': 'STRING'},
-                                'max_words': {'type': 'INTEGER'},
-                                'explanation': {'type': 'STRING'},
+                                'correct_answer': {
+                                    'type': 'STRING',
+                                    'description': (
+                                        "PDF oxiridagi Answer Key'dan ol. MCQ "
+                                        "uchun harf yoki to'liq matn; fill uchun "
+                                        "aynan PDF'dagi shaklda."
+                                    ),
+                                },
+                                'max_words': {
+                                    'type': 'INTEGER',
+                                    'description': (
+                                        "fill_in_blank uchun ruxsat etilgan "
+                                        "maksimal so'z (instruksiyadan)."
+                                    ),
+                                },
+                                'explanation': {
+                                    'type': 'STRING',
+                                    'description': 'Ixtiyoriy (PDF\'da bo\'lsa).',
+                                },
                             },
                             'required': [
                                 'question_number',
@@ -100,6 +171,9 @@ IELTS_SCHEMA = {
         'audio_references': {
             'type': 'ARRAY',
             'items': {'type': 'STRING'},
+            'description': (
+                "Listening uchun audio fayl nomi ko'rsatilgan bo'lsa (mp3/wav)."
+            ),
         },
     },
     'required': ['test_metadata', 'sections'],
@@ -133,9 +207,39 @@ class GeminiAIStudioProvider(AIProvider):
     ) -> ParseResult:
         from google.genai import types
 
-        user_prompt = "Quyidagi IELTS test PDF'ini parse qiling va JSON qaytaring."
+        user_prompt = (
+            "Quyidagi IELTS test PDF'ini boshidan oxirigacha (Answer Key "
+            "bo'limini ham) chuqur o'qib, schema'ga aynan mos JSON qaytaring. "
+            "Stem'larda kontekstni saqlang, bo'sh joylar uchun '____' "
+            "ishlating. Hech bir savolni o'tkazib yubormang."
+        )
         if hint_section_type:
-            user_prompt += f"\n\nHint: bu test {hint_section_type} bo'limi uchun."
+            user_prompt += (
+                f"\n\nUser hint: bu test {hint_section_type} bo'limi uchun."
+            )
+
+        # Token-aware config:
+        # - thinking_budget=2048 — modelga chuqur o'ylash uchun reasoning token
+        #   beradi (output emas). Sifatni sezilarli oshiradi.
+        # - max_output_tokens=16000 — 40 savol + passage uchun yetadi.
+        # - temperature=0 — determinism, har safar bir xil natija.
+        # Eski SDK versiyalari `thinking_config`'ni qo'llab-quvvatlamasligi
+        # mumkin — shu sababli try-except orqali fallback.
+        base_kwargs = dict(
+            system_instruction=SYSTEM_PROMPT,
+            response_mime_type='application/json',
+            response_schema=IELTS_SCHEMA,
+            temperature=0,
+            max_output_tokens=16000,
+        )
+        try:
+            config_obj = types.GenerateContentConfig(
+                **base_kwargs,
+                thinking_config=types.ThinkingConfig(thinking_budget=2048),
+            )
+        except (AttributeError, TypeError):
+            # SDK eskiroq yoki model thinking'ni qo'llamaydi
+            config_obj = types.GenerateContentConfig(**base_kwargs)
 
         try:
             response = self.client.models.generate_content(
@@ -146,13 +250,7 @@ class GeminiAIStudioProvider(AIProvider):
                     ),
                     user_prompt,
                 ],
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    response_mime_type='application/json',
-                    response_schema=IELTS_SCHEMA,
-                    temperature=0.1,
-                    max_output_tokens=32000,
-                ),
+                config=config_obj,
             )
         except Exception as exc:
             logger.exception('Gemini API error')
