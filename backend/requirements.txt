@@ -32,6 +32,10 @@ celery>=5.3            # async task queue
 redis>=5.0             # Celery broker
 django-ratelimit>=4.1  # login throttling
 
+# --- ETAP 15 — Google OAuth (B2C) ---
+google-auth>=2.34      # ID token verification (Sign-in with Google)
+requests>=2.32         # google-auth HTTP transport uchun kerak
+
 # --- Production ---
 gunicorn>=21.2
 whitenoise>=6.6

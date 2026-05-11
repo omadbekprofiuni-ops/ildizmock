@@ -12,6 +12,13 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv(
 # AI question generation (Claude API) — passage text -> IELTS questions
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 
+# ETAP 15 — Google OAuth (B2C "Sign in with Google").
+# Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
+# (Application type: Web). Authorized JS origins: http://localhost:5173,
+# https://ildiz-testing.uz. Authorized redirect URIs kerak emas (Identity
+# Services kutubxonasi popup orqali ID token qaytaradi).
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID', default='')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

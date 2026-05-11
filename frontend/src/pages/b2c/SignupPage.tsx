@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import brandLogo from '@/assets/brand-logo.png'
+import { GoogleSignInButton } from '@/components/GoogleSignInButton'
 import { toast } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
@@ -186,6 +187,19 @@ export default function B2CSignupPage() {
               {loading ? 'Yaratilmoqda…' : "Ro'yxatdan o'tish"}
             </button>
           </form>
+
+          <div className="my-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" /> yoki <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <GoogleSignInButton
+            text="signup_with"
+            onSuccess={() => {
+              toast.success("Xush kelibsiz! Ro'yxatdan o'tdingiz.")
+              navigate('/b2c/dashboard')
+            }}
+            onError={(msg) => toast.error(msg)}
+          />
 
           <p className="mt-7 text-center text-sm text-slate-600">
             Akkauntingiz bormi?{' '}

@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import (
+    B2CGoogleAuthSerializer,
     B2CLoginSerializer,
     B2CProfileUpdateSerializer,
     B2CSignupSerializer,
@@ -64,6 +65,24 @@ class B2CLoginView(APIView):
         serializer = B2CLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        return _issue_tokens_response(user)
+
+
+class B2CGoogleAuthView(APIView):
+    """ETAP 15 — Sign in / sign up with Google ID token.
+
+    Frontend Google Identity Services tugmasini bossadi va `credential`
+    (ID token) qaytariladi. Shu token bilan POST /api/v1/b2c/auth/google
+    chaqiriladi; foydalanuvchi yaratiladi (yangi) yoki topiladi (mavjud),
+    keyin cookie JWT qaytadi.
+    """
+    permission_classes = [AllowAny]
+    throttle_scope = 'login'
+
+    def post(self, request):
+        serializer = B2CGoogleAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
         return _issue_tokens_response(user)
 
 

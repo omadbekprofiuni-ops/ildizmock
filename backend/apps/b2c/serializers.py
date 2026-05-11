@@ -94,6 +94,77 @@ class B2CLoginSerializer(serializers.Serializer):
         return attrs
 
 
+class B2CGoogleAuthSerializer(serializers.Serializer):
+    """Google Identity Services'dan kelgan ID tokenni qabul qiladi.
+
+    Frontend Google "Sign in with Google" tugmasini bossadi → Google brauzer'da
+    ID token qaytaradi (JWT) → frontend uni shu endpoint'ga POST qiladi.
+    Bekend `google.oauth2.id_token.verify_oauth2_token` orqali tokenni
+    Google'ning umumiy kalitlari bilan tekshiradi va email/sub/name'ni oladi.
+    """
+    id_token = serializers.CharField()
+
+    def validate_id_token(self, value):
+        from django.conf import settings
+        client_id = settings.GOOGLE_OAUTH_CLIENT_ID
+        if not client_id:
+            raise serializers.ValidationError(
+                'Google OAuth sozlanmagan (GOOGLE_OAUTH_CLIENT_ID).',
+            )
+        try:
+            from google.auth.transport import requests as google_requests
+            from google.oauth2 import id_token as google_id_token
+        except ImportError as exc:  # pragma: no cover
+            raise serializers.ValidationError(
+                f'google-auth library mavjud emas: {exc}',
+            )
+        try:
+            payload = google_id_token.verify_oauth2_token(
+                value, google_requests.Request(), client_id,
+            )
+        except ValueError as exc:
+            raise serializers.ValidationError(
+                f"Google ID token noto'g'ri: {exc}",
+            )
+        if not payload.get('email_verified'):
+            raise serializers.ValidationError(
+                'Google email tasdiqlanmagan.',
+            )
+        return payload
+
+    def save(self):
+        payload = self.validated_data['id_token']  # parsed dict
+        email = (payload.get('email') or '').lower().strip()
+        if not email:
+            raise serializers.ValidationError(
+                'Google javobida email yo\'q.',
+            )
+        first_name = payload.get('given_name') or ''
+        last_name = payload.get('family_name') or ''
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None:
+            user = User(
+                username=_username_from_email(email),
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                role='b2c_user',
+            )
+            user.set_unusable_password()
+            user.save()
+            B2CProfile.objects.create(user=user, signup_source='google')
+        else:
+            if user.role != 'b2c_user':
+                raise serializers.ValidationError(
+                    'Bu email allaqachon B2B akkaunt sifatida ro\'yxatda.',
+                )
+            # Profile bo'lmasa yaratamiz (data migration safety)
+            B2CProfile.objects.get_or_create(
+                user=user, defaults={'signup_source': 'google'},
+            )
+        return user
+
+
 class B2CUserSerializer(serializers.ModelSerializer):
     """B2C user uchun /me javobi — profil ma'lumotlari bilan birga."""
     phone_number = serializers.CharField(
