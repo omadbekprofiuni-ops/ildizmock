@@ -28,14 +28,14 @@
     --accent-600: #0F9C80;   /* ← deep teal */
     --accent-700: #0B7A66;
 
-    /* CTA — logo coral'ning jonli (warm) versiyasi. Pure blue sovuq edi,
-       teal yetarli warm emas. Coral logo'da bor + warmth & energy beradi. */
-    --cta-50:  #FFF1EE;
-    --cta-100: #FFDAD2;
-    --cta-400: #FF8A78;
-    --cta-500: #FF6B5C;   /* ← vibrant warm coral (jonli, sovuq emas) */
-    --cta-600: #E54D3D;   /* ← deeper coral on hover */
-    --cta-700: #C03A2C;
+    /* CTA — logo "mock" teal (vibrant green-teal). Coral juda qizil edi,
+       blue juda sovuq edi. Teal — logo identity + warmth (yashil) + energy. */
+    --cta-50:  #E6FBF5;
+    --cta-100: #BFF3E1;
+    --cta-400: #2BD2A8;
+    --cta-500: #14B898;   /* ← vibrant logo teal (CTA buttons) */
+    --cta-600: #0F9C80;   /* ← deeper teal on hover */
+    --cta-700: #0B7A66;
 
     /* Slate */
     --slate-50: #F8FAFC;

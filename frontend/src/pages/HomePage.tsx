@@ -230,7 +230,7 @@ export default function HomePage() {
           >
             <Link
               to={user ? '/practice' : '/tests/reading'}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(255,107,92,0.40)]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(20,184,152,0.40)]"
             >
               <Play className="h-5 w-5" />
               {t('home.hero.cta') || 'Start Practice Test'}
@@ -645,7 +645,7 @@ export default function HomePage() {
               </p>
               <Link
                 to={user ? '/practice' : '/tests/reading'}
-                className="mt-9 inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-8 py-[18px] text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(242,85,64,0.40)]"
+                className="mt-9 inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-8 py-[18px] text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(20,184,152,0.40)]"
               >
                 <Play className="h-5 w-5" />
                 {t('home.cta.button')}

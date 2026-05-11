@@ -39,15 +39,15 @@ export default {
           600: '#0F9C80',  // ← deep teal
           700: '#0B7A66',
         },
-        // CTA — vibrant warm coral (logo coral, with energy). Pure blue
-        // sovuq edi; coral logo'da bor + warmth/jon beradi.
+        // CTA — logo "mock" teal (vibrant green-teal). On-brand, energetic,
+        // warm enough (yashil), qizil emas, sovuq emas.
         cta: {
-          50: '#FFF1EE',
-          100: '#FFDAD2',
-          400: '#FF8A78',
-          500: '#FF6B5C',  // ← vibrant warm coral
-          600: '#E54D3D',  // ← deeper coral on hover
-          700: '#C03A2C',
+          50: '#E6FBF5',
+          100: '#BFF3E1',
+          400: '#2BD2A8',
+          500: '#14B898',  // ← vibrant logo teal
+          600: '#0F9C80',  // ← deeper teal on hover
+          700: '#0B7A66',
         },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
