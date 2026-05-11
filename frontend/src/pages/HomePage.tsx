@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  ArrowRight,
   AudioLines,
+  Building2,
   Clock,
   Feather,
   Gauge,
@@ -11,6 +13,7 @@ import {
   Play,
   Timer,
   TrendingUp,
+  User as UserIcon,
   X,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
@@ -380,6 +383,81 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── DUAL LANDING (ETAP 14): B2B vs B2C audience split ── */}
+      {!user && (
+        <section className="px-8 pt-4">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <div className="eyebrow eyebrow--accent">
+                <span className="eyebrow__dot eyebrow__dot--accent" />
+                Who is it for?
+              </div>
+              <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 md:text-[34px]">
+                ILDIZmock — har kim uchun yo'l bor
+              </h2>
+              <p className="mt-3 text-[16px] leading-relaxed text-slate-600">
+                O'quv markazlarga to'liq boshqaruv, individual o'quvchilarga
+                erkin kirish — bittagina platformada.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {/* B2B */}
+              <Link
+                to="/login"
+                className="group rounded-[24px] border border-slate-100 bg-white p-8 transition-all hover:-translate-y-0.5 hover:border-brand-100"
+                style={{ boxShadow: 'var(--shadow-sm)' }}
+              >
+                <div className="icon-tile icon-tile--brand">
+                  <Building2 className="h-7 w-7" />
+                </div>
+                <h3 className="mb-2.5 text-[22px] font-extrabold tracking-tight text-slate-900">
+                  O'quv markazlar uchun
+                </h3>
+                <p className="text-[14.5px] leading-relaxed text-slate-600">
+                  Guruh boshqaruvi, o'qituvchi paneli, davomat va batafsil
+                  hisobotlar. Markaz logini orqali kiring.
+                </p>
+                <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
+                  <li>· Markaz / guruh / o'qituvchi ierarxiyasi</li>
+                  <li>· Mock sessiyalar va davomat jurnali</li>
+                  <li>· Markazning brending sahifasi</li>
+                </ul>
+                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-brand-600">
+                  Markaz logini <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+
+              {/* B2C */}
+              <Link
+                to="/b2c/signup"
+                className="group rounded-[24px] border border-slate-100 bg-white p-8 transition-all hover:-translate-y-0.5 hover:border-brand-100"
+                style={{ boxShadow: 'var(--shadow-sm)' }}
+              >
+                <div className="icon-tile icon-tile--cta">
+                  <UserIcon className="h-7 w-7" />
+                </div>
+                <h3 className="mb-2.5 text-[22px] font-extrabold tracking-tight text-slate-900">
+                  Individual foydalanuvchilar uchun
+                </h3>
+                <p className="text-[14.5px] leading-relaxed text-slate-600">
+                  O'zingiz uchun tayyorlanmoqdamisiz? Email orqali ro'yxatdan
+                  o'ting va hoziroq boshlang.
+                </p>
+                <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
+                  <li>· Email orqali tezkor ro'yxat</li>
+                  <li>· Modullar va kreditli testlar</li>
+                  <li>· Shaxsiy progress va natijalar</li>
+                </ul>
+                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-brand-600">
+                  Ro'yxatdan o'tish <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── FEATURES ── */}
       <section className="bg-slate-50 px-8 py-24">

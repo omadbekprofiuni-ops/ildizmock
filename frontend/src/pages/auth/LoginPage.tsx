@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
@@ -112,6 +113,12 @@ export default function LoginPage() {
           'linear-gradient(135deg, var(--brand-50), white 50%, var(--accent-50))',
       }}
     >
+      <Link
+        to="/"
+        className="fixed left-6 top-6 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-bold text-slate-700 backdrop-blur transition-colors hover:border-brand-300 hover:text-brand-700"
+      >
+        <ArrowLeft className="h-4 w-4" /> Bosh sahifa
+      </Link>
       <div className="w-full max-w-md">
         <div
           className="rounded-[24px] border border-slate-100 bg-white p-10"
@@ -150,15 +157,12 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex items-baseline justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-[13px] font-bold text-slate-700"
-                >
-                  Password
-                </label>
-                <span className="text-xs font-bold text-brand-600">Forgot?</span>
-              </div>
+              <label
+                htmlFor="password"
+                className="block text-[13px] font-bold text-slate-700"
+              >
+                Password
+              </label>
               <input
                 id="password"
                 type="password"
@@ -183,9 +187,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-slate-600">
-            Forgot password? <Link to="/" className="font-bold text-brand-600 hover:text-brand-700">Contact your education center</Link>
-          </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-500">

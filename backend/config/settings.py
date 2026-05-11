@@ -12,6 +12,13 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv(
 # AI question generation (Claude API) — passage text -> IELTS questions
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 
+# ETAP 15 — Google OAuth (B2C "Sign in with Google").
+# Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
+# (Application type: Web). Authorized JS origins: http://localhost:5173,
+# https://ildiz-testing.uz. Authorized redirect URIs kerak emas (Identity
+# Services kutubxonasi popup orqali ID token qaytaradi).
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID', default='')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -29,6 +36,7 @@ INSTALLED_APPS = [
     'apps.mock',
     'apps.billing',
     'apps.attendance',  # mahalliy: center/urls.py attendance.urls import qiladi
+    'apps.b2c',  # ETAP 14 — Individual (B2C) foydalanuvchi
     'apps._startup',  # heal_schema management command + AutoMigrateMiddleware
 ]
 
@@ -43,6 +51,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.organizations.middleware.OrganizationContextMiddleware',
+    # ETAP 14 — B2B/B2C URL isolation (defense-in-depth)
+    'apps.b2c.middleware.UserTypeRouteMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

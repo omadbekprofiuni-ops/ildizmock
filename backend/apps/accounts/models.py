@@ -32,7 +32,10 @@ class User(AbstractUser):
         ('org_admin', 'Center Admin'),
         ('teacher', 'Teacher'),
         ('student', 'Student'),
+        # ETAP 14 — B2C individual user (markazga bog'lanmagan).
+        ('b2c_user', 'Individual (B2C)'),
     ]
+    B2B_ROLES = ('org_admin', 'teacher', 'student')
     LANGUAGE_CHOICES = [('uz', 'Uzbek'), ('ru', 'Russian'), ('en', 'English')]
 
     # MUHIM: AbstractUser allaqachon username field bor, ammo unique va max_length=150.
@@ -72,13 +75,23 @@ class User(AbstractUser):
     def __str__(self):
         return f'{self.username} ({self.get_role_display()})'
 
+    @property
+    def is_b2c(self) -> bool:
+        return self.role == 'b2c_user'
+
+    @property
+    def is_b2b(self) -> bool:
+        return self.role in self.B2B_ROLES
+
     def clean(self):
         super().clean()
         from django.core.exceptions import ValidationError
-        if self.role in ('org_admin', 'teacher', 'student') and not self.organization_id:
+        if self.role in self.B2B_ROLES and not self.organization_id:
             raise ValidationError({'organization': 'Center is required for this role.'})
-        if self.role == 'superadmin' and self.organization_id:
-            raise ValidationError({'organization': 'Superadmin must not be linked to a center.'})
+        if self.role in ('superadmin', 'b2c_user') and self.organization_id:
+            raise ValidationError(
+                {'organization': 'Superadmin/B2C user must not be linked to a center.'},
+            )
         if self.teacher_id and self.role != 'student':
             raise ValidationError({'teacher': 'Only students can have a teacher assigned.'})
         if self.teacher_id and self.teacher.organization_id != self.organization_id:
