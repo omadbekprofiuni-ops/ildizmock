@@ -158,17 +158,9 @@ class CenterAttendanceSessionViewSet(viewsets.ModelViewSet):
         if group.organization_id != org.id:
             raise ValidationError('Group boshqa markazdan.')
 
-        # Session ham talaba yozuvlari ham bir tranzaksiyada
-        from django.db import transaction
-        with transaction.atomic():
-            session = ser.save(created_by=request.user)
-            for student in group.members.filter(role='student', is_active=True):
-                AttendanceRecord.objects.create(
-                    session=session,
-                    student=student,
-                    status='present',
-                    marked_by=request.user,
-                )
+        # ETAP 20 — Records'ni signal (`_bootstrap_records_for_session`) yaratadi
+        # status=null holatida. O'qituvchi keyin Tab 1 orqali belgilaydi.
+        session = ser.save(created_by=request.user)
         return Response(
             AttendanceSessionDetailSerializer(session).data,
             status=status.HTTP_201_CREATED,

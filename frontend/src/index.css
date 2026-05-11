@@ -339,3 +339,51 @@
     color: white;
   }
 }
+
+/* ============================================================
+ * ETAP 20 — Attendance grid print stylesheet (A4 landscape)
+ *
+ * `<AttendanceMonthlyTab>` renders Tab 2 inside `.attendance-monthly`.
+ * Print rules hide chrome (sidebar/header/controls) and lock the colored
+ * status cells so they survive Chrome/Safari background-color printing.
+ * ============================================================ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #fff !important;
+  }
+
+  /* CenterAdminLayout chrome — sidebar va header */
+  aside, header { display: none !important; }
+  main { overflow: visible !important; }
+
+  /* Page padding'ni qisqartiramiz — Print uchun edge-to-edge */
+  .attendance-monthly { padding: 0 !important; }
+
+  .attendance-grid {
+    border: 1px solid #94A3B8;
+    page-break-inside: avoid;
+  }
+  .attendance-grid table { font-size: 11px; }
+  .attendance-grid th,
+  .attendance-grid td {
+    border: 1px solid #CBD5E1;
+  }
+
+  /* Sticky cell'lar print'da disturbing bo'lmasin */
+  .attendance-grid .sticky {
+    position: static !important;
+  }
+
+  /* Status hujayralar — print uchun ranglar majburiy chiqsin */
+  .bg-emerald-100 { background-color: #D1FAE5 !important; color: #047857 !important; }
+  .bg-amber-100   { background-color: #FEF3C7 !important; color: #B45309 !important; }
+  .bg-rose-100    { background-color: #FFE4E6 !important; color: #BE123C !important; }
+  .bg-slate-200   { background-color: #E2E8F0 !important; color: #334155 !important; }
+}

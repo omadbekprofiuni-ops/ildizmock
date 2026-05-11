@@ -16,6 +16,15 @@ from .escalation_views import (
     EscalationResolveView,
     TelegramBindView,
 )
+from .grid_views import (
+    CellUpdateView,
+    GridAnalyticsView,
+    GridExcelExportView,
+    MonthlyGridView,
+    StudentHistoryView,
+    TodaySessionBulkMarkView,
+    TodaySessionView,
+)
 from .views import (
     AttendanceTodayView,
     CenterAttendanceSessionViewSet,
@@ -57,6 +66,36 @@ urlpatterns = session_router.urls + [
     path(
         'attendance/groups/<int:group_id>/report/',
         GroupAttendanceReportView.as_view(), name='group-attendance-report',
+    ),
+
+    # ETAP 20 — 3-tab redesign (Today / Monthly grid / Analytics)
+    path(
+        'attendance/v2/today-session/',
+        TodaySessionView.as_view(), name='attendance-v2-today',
+    ),
+    path(
+        'attendance/v2/sessions/<int:session_id>/bulk-mark/',
+        TodaySessionBulkMarkView.as_view(), name='attendance-v2-bulk-mark',
+    ),
+    path(
+        'attendance/v2/monthly-grid/',
+        MonthlyGridView.as_view(), name='attendance-v2-monthly-grid',
+    ),
+    path(
+        'attendance/v2/records/<int:record_id>/',
+        CellUpdateView.as_view(), name='attendance-v2-cell-update',
+    ),
+    path(
+        'attendance/v2/analytics/',
+        GridAnalyticsView.as_view(), name='attendance-v2-analytics',
+    ),
+    path(
+        'attendance/v2/students/<int:student_id>/history/',
+        StudentHistoryView.as_view(), name='attendance-v2-student-history',
+    ),
+    path(
+        'attendance/v2/export.xlsx',
+        GridExcelExportView.as_view(), name='attendance-v2-excel',
     ),
 
     # ETAP 28 — escalations va telegram bindings

@@ -18,6 +18,7 @@ import CenterDashboard from './pages/center/CenterDashboard'
 import AttendancePage from './pages/center/AttendancePage'
 import AttendanceMarkPage from './pages/center/AttendanceMarkPage'
 import AttendanceReportPage from './pages/center/AttendanceReportPage'
+import StudentAttendanceDetailPage from './pages/center/attendance/StudentDetailPage'
 import AITestCreatePage from './pages/center/AITestCreatePage'
 import BulkTestCreatePage from './pages/center/BulkTestCreatePage'
 import EasyTestCreatePage from './pages/center/EasyTestCreatePage'
@@ -410,6 +411,7 @@ function AppRoutes() {
               <Route path="groups/comparison" element={<GroupsComparisonPage />} />
               <Route path="groups/:groupId" element={<GroupDetailPage />} />
               <Route path="attendance" element={<AttendancePage />} />
+              <Route path="attendance/student/:studentId" element={<StudentAttendanceDetailPage />} />
               <Route path="attendance/sessions/:sessionId" element={<AttendanceMarkPage />} />
               <Route path="attendance/groups/:groupId/report" element={<AttendanceReportPage />} />
               <Route path="analytics" element={<CenterAnalyticsPage />} />
