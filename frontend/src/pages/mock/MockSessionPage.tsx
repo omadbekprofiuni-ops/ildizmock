@@ -264,7 +264,9 @@ function BetweenScreen({
 }
 
 function FinishedScreen({ state }: { state: MockState }) {
-  const { scores } = state
+  // Markaz boshqaradigan mock sessiya — ballar talabaga ko'rsatilmaydi.
+  // O'qituvchi ko'rib chiqib, natijalarni e'lon qilgandan keyin markaz
+  // talabalarga alohida yetkazadi.
   return (
     <Center>
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
@@ -274,36 +276,17 @@ function FinishedScreen({ state }: { state: MockState }) {
         <p className="mb-6 text-center text-slate-600">
           {state.participant.full_name}
         </p>
-        <div className="space-y-3">
-          <ScoreRow label="Listening" value={scores.listening} />
-          <ScoreRow label="Reading" value={scores.reading} />
-          <ScoreRow label="Writing" value={scores.writing} pending />
-          <ScoreRow label="Speaking" value={scores.speaking} pending />
+        <div className="rounded-xl bg-slate-50 px-5 py-6 text-center">
+          <p className="text-sm font-medium text-slate-700">
+            Javoblaringiz qabul qilindi.
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Natijalar o'qituvchi tomonidan ko'rib chiqilgach, o'quv
+            markazingiz orqali e'lon qilinadi.
+          </p>
         </div>
-        <p className="mt-6 text-center text-xs text-slate-500">
-          Writing and Speaking scores will appear after the teacher reviews.
-        </p>
       </div>
     </Center>
-  )
-}
-
-function ScoreRow({
-  label,
-  value,
-  pending,
-}: {
-  label: string
-  value: string | null
-  pending?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
-      <span className="font-medium text-slate-700">{label}</span>
-      <span className="font-mono text-xl font-bold">
-        {value ?? (pending ? <span className="text-sm font-normal text-slate-400">pending…</span> : '—')}
-      </span>
-    </div>
   )
 }
 
