@@ -28,6 +28,7 @@ import StudentDetailPage from './pages/center/StudentDetailPage'
 import TestCreateHubPage from './pages/center/TestCreateHubPage'
 import SmartPasteExcelImportPage from './pages/center/tests/ExcelImportPage'
 import NewTestModeSelector from './pages/center/tests/NewTestModeSelector'
+import PdfImportPage from './pages/center/tests/PdfImportPage'
 import SmartPasteEditor from './pages/center/tests/SmartPasteEditor'
 import GroupCreatePage from './pages/center/GroupCreatePage'
 import GroupDetailPage from './pages/center/GroupDetailPage'
@@ -323,6 +324,8 @@ function AppRoutes() {
           <Route path="/admin/tests/new-mode" element={<AdminRoute><NewTestModeSelector /></AdminRoute>} />
           <Route path="/admin/tests/new/smart-paste" element={<AdminRoute><SmartPasteEditor /></AdminRoute>} />
           <Route path="/admin/tests/new/smart-excel" element={<AdminRoute><SmartPasteExcelImportPage /></AdminRoute>} />
+          {/* ETAP 31 — Smart PDF Import */}
+          <Route path="/admin/tests/new/pdf-import" element={<AdminRoute><PdfImportPage /></AdminRoute>} />
           {/* ETAP 27 — Test Library */}
           <Route path="/admin/library" element={<AdminRoute><LibraryBrowserPage /></AdminRoute>} />
           {/* ETAP 29 — Strict Test Mode */}
@@ -344,6 +347,8 @@ function AppRoutes() {
               <Route path="tests/new-mode" element={<NewTestModeSelector />} />
               <Route path="tests/new/smart-paste" element={<SmartPasteEditor />} />
               <Route path="tests/new/smart-excel" element={<SmartPasteExcelImportPage />} />
+              {/* ETAP 31 — Smart PDF Import */}
+              <Route path="tests/new/pdf-import" element={<PdfImportPage />} />
               <Route path="tests/new/ai" element={<AITestCreatePage />} />
               <Route path="tests/new/bulk" element={<BulkTestCreatePage />} />
               <Route path="tests/new/excel" element={<ExcelImportPage />} />

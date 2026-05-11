@@ -31,6 +31,7 @@ from .views_answer_sheet import AnswerSheetPreviewView
 from .views_audio_health import AudioHealthCheckView
 from .views_available_for_mock import AvailableTestsForMockView
 from .views_html_content import HtmlContentPreviewView
+from .views_pdf_import import PDFImportConfirmView, PDFImportPreviewView
 from .views_library import (
     LibraryCloneToOrgView,
     LibraryTestDetailView,
@@ -90,6 +91,12 @@ urlpatterns = [
     # ETAP 30 — HTML Test Platform (DSL → HTML preview + validation)
     path('admin/html-content/preview/', HtmlContentPreviewView.as_view(),
          name='html-content-preview'),
+
+    # ETAP 31 — Smart PDF Import (extract structured questions from a PDF)
+    path('admin/tests/import-pdf/preview/', PDFImportPreviewView.as_view(),
+         name='pdf-import-preview'),
+    path('admin/tests/import-pdf/confirm/', PDFImportConfirmView.as_view(),
+         name='pdf-import-confirm'),
 
     # HOTFIX — Mock session test dropdown'i uchun yagona endpoint
     # (org-owned + library testlarni birlashtirib qaytaradi)

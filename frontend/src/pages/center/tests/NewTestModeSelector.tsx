@@ -13,13 +13,21 @@ const buildModes = (slug?: string): ModeCard[] => {
   const base = slug ? `/${slug}/admin/tests` : '/admin/tests'
   return [
     {
+      to: `${base}/new/pdf-import`,
+      emoji: '📄',
+      title: 'PDF Import',
+      blurb:
+        'Cambridge IELTS PDF\'ni tortib tashlang — biz savollarni avtomatik ajratamiz, siz tahrir qilib saqlaysiz.',
+      time: '~5 daqiqa',
+      recommended: true,
+    },
+    {
       to: `${base}/new/smart-paste`,
       emoji: '📋',
       title: 'Smart Paste',
       blurb:
         "Passage, savollar va javob kalitini yopishtiring — biz har bir savol turini avtomatik aniqlaymiz.",
       time: '5–8 daqiqa',
-      recommended: true,
     },
     {
       to: `${base}/new/import-excel`,
