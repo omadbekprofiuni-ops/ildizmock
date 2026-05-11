@@ -1,12 +1,12 @@
 import {
-  BookOpen,
+  AudioLines,
   CalendarCheck,
   CheckCircle2,
   CreditCard,
+  Feather,
   FileEdit,
-  Headphones,
-  Mic,
-  PenTool,
+  Library,
+  MicVocal,
   Play,
   Radio,
   ShieldCheck,
@@ -34,10 +34,10 @@ const MODULE_META: Array<{
   Icon: ComponentType<{ className?: string }>
   tone: 'brand' | 'accent' | 'cta' | 'slate'
 }> = [
-  { Icon: BookOpen, tone: 'brand' },
-  { Icon: Headphones, tone: 'cta' },
-  { Icon: PenTool, tone: 'accent' },
-  { Icon: Mic, tone: 'slate' },
+  { Icon: Library, tone: 'brand' },
+  { Icon: AudioLines, tone: 'cta' },
+  { Icon: Feather, tone: 'accent' },
+  { Icon: MicVocal, tone: 'slate' },
 ]
 
 const PLATFORM_META: Array<{

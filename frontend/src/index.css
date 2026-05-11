@@ -58,9 +58,9 @@
     --shadow-lg: 0 12px 28px rgba(37, 99, 235, 0.14);
     --shadow-xl: 0 24px 48px rgba(37, 99, 235, 0.18);
 
-    /* Gradients */
-    --gradient-brand: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #14B8A6 100%);
-    --gradient-hero: linear-gradient(135deg, #1E40AF 0%, #2563EB 35%, #14B8A6 100%);
+    /* Gradients — ILDIZmock logo palette: navy (#1E3A8A) → teal (#0D9488) */
+    --gradient-brand: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 45%, #0D9488 100%);
+    --gradient-hero: linear-gradient(135deg, #172554 0%, #1E3A8A 35%, #0D9488 100%);
     --gradient-brand-soft: linear-gradient(135deg, #DBEAFE 0%, #CCFBF1 100%);
     --gradient-cta: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
 
