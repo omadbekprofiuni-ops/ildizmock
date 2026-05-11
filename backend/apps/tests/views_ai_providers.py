@@ -57,6 +57,54 @@ class IsSuperAdmin(permissions.BasePermission):
         )
 
 
+def _humanize_provider_error(exc: Exception) -> str:
+    """Google/Anthropic SDK xatolaridan foydalanuvchi uchun toza xabar.
+
+    Google `google.genai.errors.ClientError` xato matnida JSON dict bo'ladi
+    (`{'error': {'code': 400, 'message': '...', 'status': 'INVALID_ARGUMENT'}}`)
+    — biz `message`'ni va `reason`'ni ajratib olamiz.
+
+    Anthropic SDK `anthropic.APIStatusError` `.message` atributi bilan keladi.
+    """
+    raw = str(exc)
+
+    # 1) Google `genai` errors — `ClientError: 400 INVALID_ARGUMENT. {...}`
+    json_start = raw.find('{')
+    if json_start != -1:
+        import ast
+
+        try:
+            data = ast.literal_eval(raw[json_start:])
+        except (SyntaxError, ValueError):
+            data = None
+        if isinstance(data, dict):
+            err_payload = data.get('error') if isinstance(data.get('error'), dict) else data
+            message = (err_payload or {}).get('message') or ''
+            details = (err_payload or {}).get('details') or []
+            reason = ''
+            for d in details:
+                if isinstance(d, dict) and d.get('reason'):
+                    reason = d['reason']
+                    break
+            if reason == 'API_KEY_INVALID':
+                return 'API kalit yaroqsiz — Google AI Studio\'dan qayta nusxa ko\'chiring.'
+            if reason == 'PERMISSION_DENIED':
+                return 'API kalitda yetarli ruxsat yo\'q.'
+            if reason == 'RATE_LIMIT_EXCEEDED' or 'rate' in message.lower():
+                return 'Kunlik limit tugagan. Ertaga qayta urinib ko\'ring.'
+            if message:
+                return message[:200]
+
+    # 2) Anthropic — xato xabarida odatda "Error code: 401 ..." formatda
+    lower = raw.lower()
+    if 'authentication' in lower or 'invalid api key' in lower or '401' in lower:
+        return 'API kalit yaroqsiz — Anthropic Console\'dan qayta nusxa ko\'chiring.'
+    if 'rate_limit' in lower or '429' in lower:
+        return 'Kunlik limit tugagan. Bir oz kutib qayta urinib ko\'ring.'
+
+    return raw[:200]
+
+
 def _serialize_config(c: AIProviderConfig) -> dict:
     return {
         'id': c.id,
@@ -246,15 +294,21 @@ class AIProviderTestView(APIView):
                     api_key=api_key,
                     model_name=config.model_name or 'gemini-2.5-flash',
                 )
+                # Sinov: API ping. Gemini 2.5 Flash "thinking" mode qo'shimcha
+                # tokenlarni iste'mol qiladi — `max_output_tokens=64` qo'yamiz va
+                # response.candidates bo'sh emasligini tekshiramiz (mazmun emas).
                 response = provider.client.models.generate_content(
                     model=provider.model_name,
-                    contents=['Reply with the single word: OK'],
+                    contents=['Say hello.'],
                     config=types.GenerateContentConfig(
-                        max_output_tokens=10, temperature=0,
+                        max_output_tokens=64, temperature=0,
                     ),
                 )
-                ok = 'OK' in ((response.text or '').upper())
-                err = '' if ok else 'Kutilgan javob kelmadi'
+                # Muvaffaqiyat: Google javob qaytardi va kamida bir kandidat bor.
+                has_candidate = bool(getattr(response, 'candidates', None))
+                has_text = bool((getattr(response, 'text', None) or '').strip())
+                ok = has_candidate or has_text
+                err = '' if ok else 'Modeldan bo\'sh javob keldi'
             elif config.provider == 'claude_anthropic':
                 from .services.ai_providers.claude_anthropic import (
                     ClaudeAnthropicProvider,
@@ -266,20 +320,16 @@ class AIProviderTestView(APIView):
                 )
                 resp = provider.client.messages.create(
                     model=provider.model_name,
-                    max_tokens=10,
-                    messages=[{'role': 'user', 'content': 'Reply with the single word: OK'}],
+                    max_tokens=64,
+                    messages=[{'role': 'user', 'content': 'Say hello.'}],
                 )
-                text = ''
-                for block in resp.content:
-                    if getattr(block, 'type', None) == 'text':
-                        text = block.text
-                        break
-                ok = 'OK' in text.upper()
-                err = '' if ok else 'Kutilgan javob kelmadi'
+                # Claude API javob qaytardi → kalit ishlaydi.
+                ok = bool(getattr(resp, 'content', None))
+                err = '' if ok else 'Modeldan bo\'sh javob keldi'
             else:
                 err = "Noma'lum provider"
-        except Exception as exc:  # noqa: BLE001 — API xatosi to'liq saqlanadi
-            err = str(exc)[:500]
+        except Exception as exc:  # noqa: BLE001 — har qanday SDK xatosi
+            err = _humanize_provider_error(exc)
             ok = False
 
         latency_ms = int((time.monotonic() - start) * 1000)
