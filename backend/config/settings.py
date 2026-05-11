@@ -12,6 +12,12 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv(
 # AI question generation (Claude API) — passage text -> IELTS questions
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 
+# ETAP 16.7 — AI provider abstraction for PDF parsing.
+# 'gemini_aistudio' (default) yoki 'claude_anthropic'. Provider tanlash uchun
+# tegishli API key (.env'da GEMINI_API_KEY yoki ANTHROPIC_API_KEY) bo'lishi kerak.
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+AI_PROVIDER = config('AI_PROVIDER', default='gemini_aistudio')
+
 # ETAP 15 — Google OAuth (B2C "Sign in with Google").
 # Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
 # (Application type: Web). Authorized JS origins: http://localhost:5173,

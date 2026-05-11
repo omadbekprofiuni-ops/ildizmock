@@ -14,6 +14,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
+import { AIQuotaBadge } from '@/components/AIQuotaBadge'
 import brandLogo from '@/assets/brand-logo.png'
 import { roleLabel, useAuth } from '@/stores/auth'
 import { useOrgContext } from '@/stores/orgContext'
@@ -162,6 +163,9 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         </nav>
 
         <div className="border-t border-white/5 p-4">
+          <div className="mb-3">
+            <AIQuotaBadge variant="dark" />
+          </div>
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-extrabold text-white"

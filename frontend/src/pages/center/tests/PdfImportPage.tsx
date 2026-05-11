@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { ArrowLeft, FileText, Loader2, Upload } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Sparkles, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -26,6 +26,13 @@ type ParsedTest = {
   audio_hint: string | null
   warnings: string[]
   questions: ParsedQuestion[]
+  // ETAP 16.7 — AI provider metadata
+  ai_used?: boolean
+  ai_provider?: string
+  ai_model?: string
+  tokens_used?: number
+  cost_usd?: number
+  log_id?: number
 }
 
 type ConfirmResponse = {
@@ -82,7 +89,10 @@ export default function PdfImportPage({
   const confirm = useMutation({
     mutationFn: async () => {
       if (!parsed) throw new Error('No parsed data')
-      const res = await api.post('/admin/tests/import-pdf/confirm/', parsed)
+      const res = await api.post('/admin/tests/import-pdf/confirm/', {
+        ...parsed,
+        log_id: parsed.log_id,
+      })
       return res.data as ConfirmResponse
     },
     onSuccess: (data) => {
@@ -186,7 +196,8 @@ export default function PdfImportPage({
                   onChange={(e) => setUseAI(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-300"
                 />
-                Use AI to improve question parsing (slower but more accurate)
+                Use AI to parse PDF (Gemini AI Studio / Claude — slower but
+                much more accurate)
               </label>
             </>
           )}
@@ -239,6 +250,27 @@ export default function PdfImportPage({
               <li key={i}>{w}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* ETAP 16.7 — AI provider metadata */}
+      {parsed.ai_used && parsed.ai_provider && (
+        <div className="mt-4 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+          <div className="flex-1">
+            <p className="font-semibold text-blue-900">
+              {parsed.ai_provider}
+              {parsed.ai_model && (
+                <span className="font-mono text-blue-700"> · {parsed.ai_model}</span>
+              )}
+            </p>
+            <p className="mt-0.5 text-blue-700">
+              {(parsed.tokens_used ?? 0).toLocaleString()} token ishlatildi
+              {typeof parsed.cost_usd === 'number' && parsed.cost_usd > 0 && (
+                <> · ${parsed.cost_usd.toFixed(4)}</>
+              )}
+            </p>
+          </div>
         </div>
       )}
 

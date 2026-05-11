@@ -473,6 +473,55 @@ class PDFTestAttempt(models.Model):
         return f'{self.student} — {self.test.name}'
 
 
+class PDFImportLog(models.Model):
+    """ETAP 16.7 — Har bir PDF import urinishini audit va quota uchun logga yozadi."""
+
+    class Status(models.TextChoices):
+        PROCESSING = 'processing', 'Davom etmoqda'
+        AI_PARSED = 'ai_parsed', 'AI parse qildi'
+        SAVED = 'saved', 'Test saqlandi'
+        FAILED = 'failed', 'Xato'
+        COMPLETED_NO_AI = 'completed_no_ai', 'AI ishlatilmadi'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='pdf_imports',
+    )
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='pdf_imports',
+    )
+
+    file_name = models.CharField(max_length=255)
+    file_size_bytes = models.PositiveIntegerField(default=0)
+
+    use_ai = models.BooleanField(default=False)
+    section_type_hint = models.CharField(max_length=20, blank=True, default='')
+
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PROCESSING,
+    )
+
+    provider_name = models.CharField(max_length=50, blank=True, default='')
+    model_used = models.CharField(max_length=50, blank=True, default='')
+    tokens_used = models.PositiveIntegerField(default=0)
+    cost_usd = models.DecimalField(max_digits=10, decimal_places=6, default=0)
+
+    error_message = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'PDF import log'
+        verbose_name_plural = 'PDF import logs'
+
+    def __str__(self):
+        return f'{self.file_name} — {self.status} — {self.created_at:%Y-%m-%d %H:%M}'
+
+
 class TestClone(models.Model):
     """Center qaysi global testni nusxalaganini kuzatish (audit)."""
 

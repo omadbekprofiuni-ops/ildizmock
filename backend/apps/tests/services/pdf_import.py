@@ -5,7 +5,9 @@ PDF → structured questions preview → admin reviews → save as Test rows.
 3-layer hybrid:
   Layer 1: pdfplumber — extract raw text
   Layer 2: regex pattern matcher — IELTS question patterns (handles ~80%)
-  Layer 3: AI fallback (Claude) — only fires for low-confidence questions
+  Layer 3: AI fallback (Claude/Gemini) — provider abstraction in
+           `ai_providers/`. `use_ai=True` bo'lsa, butun PDF AI'ga yuboriladi
+           va schema'ga mos JSON qaytariladi (ETAP 16.7).
 
 Returned `ParsedTest` is editable JSON sent to the frontend review screen.
 The save step is a separate pass (`PDFImportConfirmView`) — this module
@@ -17,7 +19,7 @@ from __future__ import annotations
 import io
 import re
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import pdfplumber
 
@@ -249,64 +251,172 @@ class IELTSPDFParser:
 
 
 # ============================================
-# AI fallback (optional — gated by ANTHROPIC_API_KEY)
+# ETAP 16.7 — AI provider full-PDF parsing
 # ============================================
 
-def enhance_with_ai(parsed: ParsedTest) -> ParsedTest:
-    """Send low-confidence / needs-review questions to Claude in one batch.
+# Schema'dagi question_type (Gemini/Claude) → mavjud parser type
+_AI_QTYPE_TO_PARSER = {
+    'multiple_choice': 'multiple_choice',
+    'true_false_not_given': 'true_false',
+    'yes_no_not_given': 'true_false',
+    'fill_in_blank': 'completion',
+    'matching': 'matching',
+    'short_answer': 'completion',
+    'sentence_completion': 'completion',
+    'summary_completion': 'completion',
+    'diagram_labeling': 'completion',
+    'essay': 'completion',  # writing tasks — admin reviews
+}
 
-    No-op if `ANTHROPIC_API_KEY` is not configured. Always swallows errors
-    (degrades gracefully — original parser results stay).
+# Schema section_type → mavjud test_type
+_AI_SECTION_TO_TEST_TYPE = {
+    'listening': 'listening',
+    'reading': 'reading',
+    'writing': 'writing',
+    'full': 'reading',  # multi-section PDF — Admin can change later
+}
+
+
+@dataclass
+class AIParsedResult:
+    """ETAP 16.7 — Provider'dan kelgan natija + ParsedTest formatiga
+    aylantirilgan ko'rinish. View'da quota/log uchun token/cost ham ishlatiladi.
     """
-    from django.conf import settings
 
-    api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
-    if not api_key:
-        return parsed
+    parsed: ParsedTest
+    provider_name: str
+    model_used: str
+    tokens_used: int
+    cost_usd: float
 
-    low_confidence = [
-        q for q in parsed.questions
-        if q.needs_review or q.confidence < 0.5
-    ]
-    if not low_confidence:
-        return parsed
 
-    try:
-        import anthropic
-        import json
+def _ai_data_to_parsed_test(data: Dict[str, Any]) -> ParsedTest:
+    """AI schema (test_metadata + sections) → mavjud `ParsedTest`."""
+    metadata = data.get('test_metadata') or {}
+    section_type = (metadata.get('section_type') or '').lower()
+    test_type = _AI_SECTION_TO_TEST_TYPE.get(section_type, 'reading')
 
-        client = anthropic.Anthropic(api_key=api_key)
-        prompt_parts = [
-            "You are an IELTS test parser. The following question texts were "
-            "extracted from a PDF but the parser was uncertain about them. For "
-            "each one, return JSON with: order (int), type (one of "
-            "'completion', 'multiple_choice', 'matching', 'true_false'), "
-            "stem (cleaned question text with blanks as ____), and options "
-            "(list of strings, empty for completion). Return ONLY a JSON "
-            "array. No prose.\n\n",
-        ]
-        for q in low_confidence:
-            prompt_parts.append(f"Q{q.order}: {q.raw_text}\n\n")
-        prompt = ''.join(prompt_parts)
-
-        resp = client.messages.create(
-            model='claude-sonnet-4-6',
-            max_tokens=2000,
-            messages=[{'role': 'user', 'content': prompt}],
+    title = (
+        metadata.get('title')
+        or (
+            f"{metadata.get('source_book', '')} {metadata.get('test_number', '')}".strip()
         )
-        text = resp.content[0].text.strip()
-        if text.startswith('```'):
-            text = text.split('```', 2)[1].lstrip('json').strip()
-        results = json.loads(text)
-        for r in results:
-            q = next((x for x in parsed.questions if x.order == r.get('order')), None)
-            if q:
-                q.type = r.get('type', q.type)
-                q.stem = r.get('stem', q.stem)
-                q.options = r.get('options', q.options) or []
-                q.confidence = 0.9
-                q.needs_review = False
-    except Exception as exc:
-        parsed.warnings.append(f'AI enhancement skipped: {exc}')
+        or 'Imported test (please rename)'
+    )
 
-    return parsed
+    duration = metadata.get('duration_minutes')
+    if not isinstance(duration, int) or duration <= 0:
+        duration = {'listening': 30, 'reading': 60, 'writing': 60}.get(test_type, 60)
+
+    questions: List[ParsedQuestion] = []
+    full_text_parts: List[str] = []
+
+    sections = data.get('sections') or []
+    for section in sections:
+        part_no = int(section.get('section_number') or 1)
+        passage = (section.get('passage') or '').strip()
+        if passage:
+            full_text_parts.append(passage)
+
+        for q in section.get('questions') or []:
+            qnum_raw = q.get('question_number')
+            try:
+                order = int(qnum_raw)
+            except (TypeError, ValueError):
+                order = len(questions) + 1
+
+            ai_type = (q.get('question_type') or '').lower()
+            parser_type = _AI_QTYPE_TO_PARSER.get(ai_type, 'completion')
+            options_in = q.get('options') or []
+            options: List[str] = []
+            for idx, opt in enumerate(options_in):
+                opt_text = (opt or '').strip()
+                if not opt_text:
+                    continue
+                # MCQ uchun "A. text" formatiga normalizatsiya — preview UI
+                # shu shaklni kutadi.
+                if (
+                    parser_type == 'multiple_choice'
+                    and len(opt_text) > 2
+                    and not opt_text[1:3] in ('. ', ') ')
+                ):
+                    letter = chr(ord('A') + idx)
+                    options.append(f'{letter}. {opt_text}')
+                else:
+                    options.append(opt_text)
+
+            stem = (q.get('question_text') or '').strip()
+            answer = (q.get('correct_answer') or '').strip()
+
+            questions.append(
+                ParsedQuestion(
+                    order=order,
+                    part_number=part_no,
+                    stem=stem,
+                    type=parser_type,
+                    options=options,
+                    suggested_answer=answer or None,
+                    confidence=0.92,  # AI muvaffaqiyatli parse qildi
+                    raw_text=stem[:1000],
+                    needs_review=False,
+                ),
+            )
+
+    questions.sort(key=lambda q: q.order)
+
+    audio_refs = data.get('audio_references') or []
+    audio_hint = audio_refs[0] if audio_refs else None
+
+    warnings: List[str] = []
+    if test_type == 'listening' and not audio_hint:
+        warnings.append(
+            "No audio file mentioned in PDF — you'll need to upload it separately.",
+        )
+    if test_type in ('listening', 'reading') and len(questions) not in (40,):
+        warnings.append(
+            f'Expected 40 questions, AI found {len(questions)}. Please review.',
+        )
+    if not questions:
+        warnings.append('AI returned no questions — please switch to manual entry.')
+
+    return ParsedTest(
+        title=title,
+        test_type=test_type,
+        duration_minutes=duration,
+        questions=questions,
+        full_text='\n\n'.join(full_text_parts),
+        audio_hint=audio_hint,
+        confidence=0.92 if questions else 0.0,
+        warnings=warnings,
+    )
+
+
+def parse_pdf_with_ai(
+    pdf_bytes: bytes,
+    *,
+    hint_section_type: Optional[str] = None,
+) -> Optional[AIParsedResult]:
+    """Provider abstraction orqali PDF'ni AI'ga yuboradi.
+
+    Muvaffaqiyatli bo'lsa `AIParsedResult` (parsed + token usage) qaytaradi.
+    Provider xato bersa — `RuntimeError`. Provider yaratish ham xato bersa
+    (API key yo'q va h.k.) yuqoriga qayta uloqtiradi.
+    """
+    from .ai_providers import get_ai_provider
+
+    provider = get_ai_provider()
+    result = provider.parse_ielts_pdf(
+        pdf_bytes, hint_section_type=hint_section_type,
+    )
+    if not result.success:
+        raise RuntimeError(result.error_message or 'AI parse failed')
+
+    parsed = _ai_data_to_parsed_test(result.data or {})
+    info = provider.info()
+    return AIParsedResult(
+        parsed=parsed,
+        provider_name=info.name,
+        model_used=result.model_used or info.model,
+        tokens_used=result.tokens_used,
+        cost_usd=result.cost_usd,
+    )

@@ -12,17 +12,20 @@ existing admin tests editor.
 
 from __future__ import annotations
 
+from datetime import date as date_cls
 from typing import Any, Dict, List
 
 from django.db import transaction
+from django.db.models import Sum
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ListeningPart, Passage, Question, Test
-from .services.pdf_import import IELTSPDFParser, enhance_with_ai
+from .models import ListeningPart, Passage, PDFImportLog, Question, Test
+from .services.pdf_import import IELTSPDFParser, parse_pdf_with_ai
 
 
 PDF_MAX_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -119,17 +122,71 @@ class PDFImportPreviewView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            parser = IELTSPDFParser(pdf_file.read())
-            parsed = parser.parse()
-        except Exception as exc:
-            return Response(
-                {'error': f'Failed to parse PDF: {exc}'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        pdf_bytes = pdf_file.read()
+        use_ai = str(request.data.get('use_ai', '')).lower() == 'true'
+        hint = (request.data.get('section_type') or '').strip().lower() or None
 
-        if str(request.data.get('use_ai', '')).lower() == 'true':
-            parsed = enhance_with_ai(parsed)
+        # ETAP 16.7 — har bir urinishni audit + quota tracking uchun yozamiz.
+        log = PDFImportLog.objects.create(
+            user=request.user,
+            organization=getattr(request.user, 'organization', None),
+            file_name=pdf_file.name or 'untitled.pdf',
+            file_size_bytes=len(pdf_bytes),
+            use_ai=use_ai,
+            section_type_hint=hint or '',
+            status=PDFImportLog.Status.PROCESSING,
+        )
+
+        ai_provider_name = ''
+        ai_model = ''
+        ai_tokens = 0
+        ai_cost = 0.0
+
+        if use_ai:
+            try:
+                ai_result = parse_pdf_with_ai(pdf_bytes, hint_section_type=hint)
+            except Exception as exc:
+                # Provider yaratish yoki API xatosi — regex pipeline'ga tushamiz,
+                # warning bilan. Log'ga xato xabarini ham saqlaymiz.
+                log.status = PDFImportLog.Status.FAILED
+                log.error_message = str(exc)[:1000]
+                log.save(update_fields=['status', 'error_message'])
+                try:
+                    parsed = IELTSPDFParser(pdf_bytes).parse()
+                except Exception as exc2:
+                    return Response(
+                        {'error': f'Failed to parse PDF: {exc2}'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                parsed.warnings.insert(0, f'AI ishlamadi, regex bilan parse: {exc}')
+            else:
+                parsed = ai_result.parsed
+                ai_provider_name = ai_result.provider_name
+                ai_model = ai_result.model_used
+                ai_tokens = ai_result.tokens_used
+                ai_cost = ai_result.cost_usd
+                log.status = PDFImportLog.Status.AI_PARSED
+                log.provider_name = ai_provider_name
+                log.model_used = ai_model
+                log.tokens_used = ai_tokens
+                log.cost_usd = ai_cost
+                log.save(update_fields=[
+                    'status', 'provider_name', 'model_used',
+                    'tokens_used', 'cost_usd',
+                ])
+        else:
+            try:
+                parsed = IELTSPDFParser(pdf_bytes).parse()
+            except Exception as exc:
+                log.status = PDFImportLog.Status.FAILED
+                log.error_message = str(exc)[:1000]
+                log.save(update_fields=['status', 'error_message'])
+                return Response(
+                    {'error': f'Failed to parse PDF: {exc}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            log.status = PDFImportLog.Status.COMPLETED_NO_AI
+            log.save(update_fields=['status'])
 
         return Response({
             'title': parsed.title,
@@ -151,6 +208,13 @@ class PDFImportPreviewView(APIView):
                 }
                 for q in parsed.questions
             ],
+            # ETAP 16.7 — AI metadata UI badge uchun
+            'ai_used': use_ai and bool(ai_provider_name),
+            'ai_provider': ai_provider_name,
+            'ai_model': ai_model,
+            'tokens_used': ai_tokens,
+            'cost_usd': round(ai_cost, 6),
+            'log_id': log.id,
         })
 
 
@@ -162,6 +226,7 @@ class PDFImportConfirmView(APIView):
     @transaction.atomic
     def post(self, request):
         data = request.data
+        log_id = data.get('log_id')
         title = (data.get('title') or 'Imported Test').strip()
         test_type = data.get('test_type', 'reading')
         if test_type not in ('listening', 'reading', 'writing'):
@@ -255,9 +320,81 @@ class PDFImportConfirmView(APIView):
                     **container_kwargs,
                 )
 
+        if log_id:
+            try:
+                PDFImportLog.objects.filter(pk=int(log_id)).update(
+                    status=PDFImportLog.Status.SAVED,
+                )
+            except (TypeError, ValueError):
+                pass
+
         return Response({
             'id': str(test.id),
             'next': f'/admin/tests/{test.id}/edit',
             'is_library': is_library,
             'questions_saved': sum(len(v) for v in parts_by_number.values()),
         }, status=status.HTTP_201_CREATED)
+
+
+# ============================================
+# ETAP 16.7 — AI usage / quota
+# ============================================
+
+class AIQuotaStatsView(APIView):
+    """`GET /api/v1/admin/tests/ai-quota/` — bugungi AI ishlatish va limit.
+
+    Foydalanuvchining markazga tegishli importlarini hisoblaymiz (superadmin
+    bo'lsa — barchasini). Free-tier limit 250/kun (Gemini AI Studio 2.5 Flash).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = getattr(request.user, 'role', None)
+        if role not in ('teacher', 'org_admin', 'superadmin'):
+            return Response(
+                {'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN,
+            )
+
+        today = timezone.localdate()
+        qs = PDFImportLog.objects.filter(
+            created_at__date=today, use_ai=True,
+        )
+        if role != 'superadmin':
+            org_id = getattr(request.user, 'organization_id', None)
+            qs = qs.filter(organization_id=org_id)
+
+        today_requests = qs.count()
+        agg = qs.aggregate(
+            tokens=Sum('tokens_used'),
+            cost=Sum('cost_usd'),
+        )
+
+        # Provider info ham qaytaramiz (UI badge'i uchun)
+        provider_info: dict = {}
+        try:
+            from .services.ai_providers import get_ai_provider
+
+            info = get_ai_provider().info()
+            provider_info = {
+                'name': info.name,
+                'model': info.model,
+                'supports_pdf_direct': info.supports_pdf_direct,
+                'free_tier_available': info.free_tier_available,
+                'daily_quota': info.daily_quota,
+                'notes': info.notes,
+            }
+        except Exception as exc:
+            provider_info = {'error': str(exc)}
+
+        daily_limit = provider_info.get('daily_quota') or 250
+
+        return Response({
+            'today_requests': today_requests,
+            'today_tokens': int(agg['tokens'] or 0),
+            'today_cost_usd': float(agg['cost'] or 0),
+            'daily_free_limit': daily_limit,
+            'remaining': max(0, daily_limit - today_requests),
+            'provider': provider_info,
+            'date': today.isoformat(),
+        })
