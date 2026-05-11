@@ -15,38 +15,38 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        // ILDIZmock brand palette — Logo blue (#1F3FAB)
+        // ILDIZmock brand palette — vibrant blue (logo navy + saturation)
         brand: {
           50: '#EEF2FB',
           100: '#DAE2F6',
           200: '#B4C5EE',
           300: '#88A3E2',
-          400: '#5979CE',
-          500: '#2F58BC',
-          600: '#1F3FAB',  // ← logo blue
+          400: '#4D6FE0',
+          500: '#2D4FD8',  // vibrant brand blue (buttons, links)
+          600: '#1F3FAB',  // ← logo navy (headings, anchors)
           700: '#1B348C',
           800: '#16296F',
           900: '#122158',
           950: '#0B173E',
         },
-        // Accent — Logo teal (#21AC8C)
+        // Accent — vibrant teal (logo teal + saturation)
         teal: {
-          50: '#EAFAF5',
-          100: '#CDF3E5',
-          200: '#9CE7CC',
-          400: '#3DC59E',
-          500: '#21AC8C',  // ← logo teal
-          600: '#1A8B72',
-          700: '#136C58',
+          50: '#E6FBF5',
+          100: '#BFF3E1',
+          200: '#8AE7C7',
+          400: '#2BD2A8',
+          500: '#14B898',  // vibrant teal
+          600: '#0F9C80',  // ← deep teal
+          700: '#0B7A66',
         },
-        // CTA — Logo coral (#EF7D6E) — softer than pure red
+        // CTA — vibrant coral-red (energetic, not dusty)
         cta: {
           50: '#FEF1EE',
-          100: '#FCDFDA',
-          400: '#F49A8E',
-          500: '#EF7D6E',  // ← logo coral
-          600: '#DD5D4D',
-          700: '#BF4537',
+          100: '#FBDAD2',
+          400: '#FB7E68',
+          500: '#F25540',  // ← vibrant tomato-coral (CTA buttons)
+          600: '#DC3E2A',
+          700: '#B82E1D',
         },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
@@ -55,8 +55,8 @@ export default {
           100: '#DAE2F6',
           200: '#B4C5EE',
           300: '#88A3E2',
-          400: '#5979CE',
-          500: '#2F58BC',
+          400: '#4D6FE0',
+          500: '#2D4FD8',
           600: '#1F3FAB',
           700: '#1B348C',
           800: '#16296F',

@@ -6,35 +6,35 @@
 
 @layer base {
   :root {
-    /* Brand — ILDIZmock logo blue (#1F3FAB) */
+    /* Brand — ILDIZmock vibrant blue (logo navy + saturation) */
     --brand-50:  #EEF2FB;
     --brand-100: #DAE2F6;
     --brand-200: #B4C5EE;
     --brand-300: #88A3E2;
-    --brand-400: #5979CE;
-    --brand-500: #2F58BC;
-    --brand-600: #1F3FAB;   /* ← logo blue */
+    --brand-400: #4D6FE0;
+    --brand-500: #2D4FD8;   /* vibrant brand blue (buttons, links) */
+    --brand-600: #1F3FAB;   /* ← logo navy (headings, anchors) */
     --brand-700: #1B348C;
     --brand-800: #16296F;
     --brand-900: #122158;
     --brand-950: #0B173E;
 
-    /* Accent — ILDIZmock logo teal (#21AC8C) */
-    --accent-50:  #EAFAF5;
-    --accent-100: #CDF3E5;
-    --accent-200: #9CE7CC;
-    --accent-400: #3DC59E;
-    --accent-500: #21AC8C;   /* ← logo teal */
-    --accent-600: #1A8B72;
-    --accent-700: #136C58;
+    /* Accent — ILDIZmock vibrant teal (logo teal + saturation) */
+    --accent-50:  #E6FBF5;
+    --accent-100: #BFF3E1;
+    --accent-200: #8AE7C7;
+    --accent-400: #2BD2A8;
+    --accent-500: #14B898;   /* vibrant teal (badges, success) */
+    --accent-600: #0F9C80;   /* ← deep teal */
+    --accent-700: #0B7A66;
 
-    /* CTA — ILDIZmock logo coral (#EF7D6E) — softer than pure red */
+    /* CTA — vibrant coral-red (energetic, not dusty) */
     --cta-50:  #FEF1EE;
-    --cta-100: #FCDFDA;
-    --cta-400: #F49A8E;
-    --cta-500: #EF7D6E;   /* ← logo coral */
-    --cta-600: #DD5D4D;
-    --cta-700: #BF4537;
+    --cta-100: #FBDAD2;
+    --cta-400: #FB7E68;
+    --cta-500: #F25540;   /* ← vibrant tomato-coral (CTA buttons) */
+    --cta-600: #DC3E2A;
+    --cta-700: #B82E1D;
 
     /* Slate */
     --slate-50: #F8FAFC;
@@ -53,16 +53,16 @@
     --amber-50:  #FFFBEB;
 
     /* Brand-flavoured shadows (logo blue tint) */
-    --shadow-sm: 0 1px 3px rgba(31, 63, 171, 0.08);
-    --shadow-md: 0 4px 12px rgba(31, 63, 171, 0.10);
-    --shadow-lg: 0 12px 28px rgba(31, 63, 171, 0.14);
-    --shadow-xl: 0 24px 48px rgba(31, 63, 171, 0.18);
+    --shadow-sm: 0 1px 3px rgba(31, 63, 171, 0.10);
+    --shadow-md: 0 4px 12px rgba(31, 63, 171, 0.14);
+    --shadow-lg: 0 12px 28px rgba(31, 63, 171, 0.18);
+    --shadow-xl: 0 24px 48px rgba(31, 63, 171, 0.22);
 
-    /* Gradients — ILDIZmock logo palette: blue (#1F3FAB) → teal (#21AC8C) */
-    --gradient-brand: linear-gradient(135deg, #1F3FAB 0%, #1B348C 45%, #21AC8C 100%);
-    --gradient-hero: linear-gradient(135deg, #122158 0%, #1F3FAB 40%, #21AC8C 100%);
-    --gradient-brand-soft: linear-gradient(135deg, #DAE2F6 0%, #CDF3E5 100%);
-    --gradient-cta: linear-gradient(135deg, #EF7D6E 0%, #DD5D4D 100%);
+    /* Gradients — vibrant logo palette */
+    --gradient-brand: linear-gradient(135deg, #1F3FAB 0%, #2D4FD8 50%, #14B898 100%);
+    --gradient-hero: linear-gradient(135deg, #122158 0%, #1F3FAB 40%, #14B898 100%);
+    --gradient-brand-soft: linear-gradient(135deg, #DAE2F6 0%, #BFF3E1 100%);
+    --gradient-cta: linear-gradient(135deg, #F25540 0%, #DC3E2A 100%);
 
     --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;

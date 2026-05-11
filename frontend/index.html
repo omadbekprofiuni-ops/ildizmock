@@ -31,17 +31,20 @@
       }
       #brand-splash__ring {
         position: absolute;
-        inset: -14px;
-        border: 3px solid transparent;
-        border-top-color: #1F3FAB;       /* logo blue */
-        border-right-color: #21AC8C;     /* logo teal */
+        inset: -16px;
+        border: 4px solid transparent;
+        border-top-color: #2D4FD8;       /* vibrant brand blue */
+        border-right-color: #14B898;     /* vibrant teal */
+        border-bottom-color: #F25540;    /* vibrant coral */
         border-radius: 50%;
-        animation: brand-spin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        animation: brand-spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       }
       #brand-splash__logo {
-        width: 92px;
-        height: 92px;
+        width: 110px;
+        height: 110px;
         object-fit: contain;
+        /* JPEG'dagi oq fonni splash oq fonidan ajratmaslik uchun */
+        mix-blend-mode: multiply;
         animation: brand-pulse 1.6s ease-in-out infinite;
       }
       #brand-splash__caption {
@@ -62,7 +65,7 @@
         color: #122158;     /* logo navy */
       }
       #brand-splash__caption i {
-        color: #21AC8C;     /* logo teal */
+        color: #14B898;     /* vibrant teal */
         font-style: normal;
       }
       @keyframes brand-spin {
