@@ -126,11 +126,12 @@ class AttendanceSession(models.Model):
     # ===== Aggregations =====
 
     def get_attendance_rate(self) -> float:
-        total = self.records.count()
-        if total == 0:
+        # ETAP 20 — faqat belgilangan (markirovkalangan) yozuvlardan foiz.
+        marked = self.records.filter(status__isnull=False).count()
+        if marked == 0:
             return 0.0
         present = self.records.filter(status__in=['present', 'late']).count()
-        return round(present / total * 100, 1)
+        return round(present / marked * 100, 1)
 
     def get_count(self, status: str) -> int:
         return self.records.filter(status=status).count()
@@ -174,8 +175,11 @@ class AttendanceRecord(models.Model):
         limit_choices_to={'role': 'student'},
     )
 
+    # ETAP 20 — status nullable: yangi yaratilgan record o'qituvchi belgilamaguncha
+    # "unmarked" holatda turadi (Tab 1 ko'rinishida bo'sh hujayra).
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='present',
+        max_length=20, choices=STATUS_CHOICES, null=True, blank=True,
+        db_index=True,
     )
     notes = models.TextField(
         blank=True, default='',

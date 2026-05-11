@@ -136,6 +136,7 @@ class WritingTaskSerializer(serializers.ModelSerializer):
 class SuperTestListSerializer(serializers.ModelSerializer):
     questions_count = serializers.SerializerMethodField()
     is_cloned = serializers.SerializerMethodField()
+    source_display = serializers.CharField(read_only=True)
 
     class Meta:
         model = Test
@@ -146,6 +147,11 @@ class SuperTestListSerializer(serializers.ModelSerializer):
             'questions_count', 'is_cloned',
             'is_practice_enabled', 'practice_time_limit',
             'created_at', 'published_at',
+            # ETAP 16 — B2C catalog metadata
+            'available_for_b2c', 'b2c_published_at',
+            'b2c_display_name', 'b2c_description',
+            # ETAP 16.6 — source
+            'source', 'source_custom_name', 'source_display',
         ]
 
     def get_questions_count(self, obj):

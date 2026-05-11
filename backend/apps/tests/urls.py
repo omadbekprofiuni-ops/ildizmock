@@ -31,7 +31,11 @@ from .views_answer_sheet import AnswerSheetPreviewView
 from .views_audio_health import AudioHealthCheckView
 from .views_available_for_mock import AvailableTestsForMockView
 from .views_html_content import HtmlContentPreviewView
-from .views_pdf_import import PDFImportConfirmView, PDFImportPreviewView
+from .views_pdf_import import (
+    AIQuotaStatsView,
+    PDFImportConfirmView,
+    PDFImportPreviewView,
+)
 from .views_library import (
     LibraryCloneToOrgView,
     LibraryTestDetailView,
@@ -97,6 +101,9 @@ urlpatterns = [
          name='pdf-import-preview'),
     path('admin/tests/import-pdf/confirm/', PDFImportConfirmView.as_view(),
          name='pdf-import-confirm'),
+    # ETAP 16.7 — AI quota / usage stats
+    path('admin/tests/ai-quota/', AIQuotaStatsView.as_view(),
+         name='pdf-import-ai-quota'),
 
     # HOTFIX — Mock session test dropdown'i uchun yagona endpoint
     # (org-owned + library testlarni birlashtirib qaytaradi)

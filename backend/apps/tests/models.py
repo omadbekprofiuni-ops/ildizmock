@@ -32,6 +32,27 @@ class Test(models.Model):
         ('archived', 'Archived'),
     ]
 
+    class Source(models.TextChoices):
+        CAMBRIDGE_7 = 'cambridge_7', 'Cambridge 7'
+        CAMBRIDGE_8 = 'cambridge_8', 'Cambridge 8'
+        CAMBRIDGE_9 = 'cambridge_9', 'Cambridge 9'
+        CAMBRIDGE_10 = 'cambridge_10', 'Cambridge 10'
+        CAMBRIDGE_11 = 'cambridge_11', 'Cambridge 11'
+        CAMBRIDGE_12 = 'cambridge_12', 'Cambridge 12'
+        CAMBRIDGE_13 = 'cambridge_13', 'Cambridge 13'
+        CAMBRIDGE_14 = 'cambridge_14', 'Cambridge 14'
+        CAMBRIDGE_15 = 'cambridge_15', 'Cambridge 15'
+        CAMBRIDGE_16 = 'cambridge_16', 'Cambridge 16'
+        CAMBRIDGE_17 = 'cambridge_17', 'Cambridge 17'
+        CAMBRIDGE_18 = 'cambridge_18', 'Cambridge 18'
+        CAMBRIDGE_19 = 'cambridge_19', 'Cambridge 19'
+        CAMBRIDGE_20 = 'cambridge_20', 'Cambridge 20'
+        REAL_EXAM_2024 = 'real_exam_2024', 'Real Exam 2024'
+        REAL_EXAM_2025 = 'real_exam_2025', 'Real Exam 2025'
+        REAL_EXAM_2026 = 'real_exam_2026', 'Real Exam 2026'
+        ILDIZ_ORIGINAL = 'ildiz_original', 'ILDIZ Original'
+        OTHER = 'other', 'Boshqa'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         'organizations.Organization',
@@ -87,11 +108,47 @@ class Test(models.Model):
         related_name='deleted_tests',
     )
 
+    # ETAP 16 — B2C catalog metadata
+    available_for_b2c = models.BooleanField(
+        default=False, db_index=True,
+        help_text="B2C katalogida ko'rinishi uchun belgilang.",
+    )
+    b2c_published_at = models.DateTimeField(null=True, blank=True)
+    b2c_display_name = models.CharField(max_length=200, blank=True, default='')
+    b2c_description = models.TextField(blank=True, default='')
+
+    # ETAP 16.6 — Test manbasi (Cambridge yili, Real Exam, ILDIZ Original).
+    # Catalog'da source bo'yicha filtrlash uchun ishlatiladi.
+    source = models.CharField(
+        max_length=30,
+        choices=Source.choices,
+        default=Source.OTHER,
+        db_index=True,
+    )
+    source_custom_name = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text=(
+            "source=OTHER bo'lsa, erkin nom yozish mumkin "
+            "(masalan, 'IELTS Original 2026')."
+        ),
+    )
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.name} ({self.module})'
+
+    @property
+    def b2c_name(self):
+        return self.b2c_display_name or self.name
+
+    @property
+    def source_display(self):
+        """Catalog UI uchun: OTHER + custom_name bo'lsa erkin nom, aks holda label."""
+        if self.source == self.Source.OTHER and self.source_custom_name:
+            return self.source_custom_name
+        return self.get_source_display()
 
     def soft_delete(self, user=None):
         from django.utils import timezone
@@ -414,6 +471,55 @@ class PDFTestAttempt(models.Model):
 
     def __str__(self):
         return f'{self.student} — {self.test.name}'
+
+
+class PDFImportLog(models.Model):
+    """ETAP 16.7 — Har bir PDF import urinishini audit va quota uchun logga yozadi."""
+
+    class Status(models.TextChoices):
+        PROCESSING = 'processing', 'Davom etmoqda'
+        AI_PARSED = 'ai_parsed', 'AI parse qildi'
+        SAVED = 'saved', 'Test saqlandi'
+        FAILED = 'failed', 'Xato'
+        COMPLETED_NO_AI = 'completed_no_ai', 'AI ishlatilmadi'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='pdf_imports',
+    )
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='pdf_imports',
+    )
+
+    file_name = models.CharField(max_length=255)
+    file_size_bytes = models.PositiveIntegerField(default=0)
+
+    use_ai = models.BooleanField(default=False)
+    section_type_hint = models.CharField(max_length=20, blank=True, default='')
+
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PROCESSING,
+    )
+
+    provider_name = models.CharField(max_length=50, blank=True, default='')
+    model_used = models.CharField(max_length=50, blank=True, default='')
+    tokens_used = models.PositiveIntegerField(default=0)
+    cost_usd = models.DecimalField(max_digits=10, decimal_places=6, default=0)
+
+    error_message = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'PDF import log'
+        verbose_name_plural = 'PDF import logs'
+
+    def __str__(self):
+        return f'{self.file_name} — {self.status} — {self.created_at:%Y-%m-%d %H:%M}'
 
 
 class TestClone(models.Model):

@@ -79,6 +79,64 @@ class SuperTestViewSet(viewsets.ModelViewSet):
             'practice_time_limit': test.practice_time_limit,
         })
 
+    @action(detail=True, methods=['post'], url_path='toggle-b2c')
+    def toggle_b2c(self, request, pk=None):
+        """ETAP 16 — Testni B2C katalogga publish/unpublish."""
+        test = self.get_object()
+        test.available_for_b2c = not test.available_for_b2c
+        if test.available_for_b2c and not test.b2c_published_at:
+            test.b2c_published_at = timezone.now()
+        test.save(update_fields=[
+            'available_for_b2c', 'b2c_published_at', 'updated_at',
+        ])
+        return Response({
+            'available_for_b2c': test.available_for_b2c,
+            'b2c_published_at': test.b2c_published_at,
+        })
+
+    @action(detail=True, methods=['patch'], url_path='b2c-meta')
+    def b2c_meta(self, request, pk=None):
+        """ETAP 16 — B2C catalog uchun display name, description, source tahriri."""
+        test = self.get_object()
+        update_fields: list[str] = []
+
+        if 'b2c_display_name' in request.data:
+            test.b2c_display_name = (
+                request.data.get('b2c_display_name') or ''
+            ).strip()
+            update_fields.append('b2c_display_name')
+        if 'b2c_description' in request.data:
+            test.b2c_description = (
+                request.data.get('b2c_description') or ''
+            ).strip()
+            update_fields.append('b2c_description')
+
+        # ETAP 16.6 — source va source_custom_name
+        if 'source' in request.data:
+            source = (request.data.get('source') or '').strip()
+            valid_sources = {key for key, _ in test.Source.choices}
+            if source and source not in valid_sources:
+                raise ValidationError({'source': 'Notanish manba qiymati'})
+            test.source = source or test.Source.OTHER
+            update_fields.append('source')
+        if 'source_custom_name' in request.data:
+            test.source_custom_name = (
+                request.data.get('source_custom_name') or ''
+            ).strip()[:100]
+            update_fields.append('source_custom_name')
+
+        if update_fields:
+            update_fields.append('updated_at')
+            test.save(update_fields=update_fields)
+
+        return Response({
+            'b2c_display_name': test.b2c_display_name,
+            'b2c_description': test.b2c_description,
+            'source': test.source,
+            'source_custom_name': test.source_custom_name,
+            'source_display': test.source_display,
+        })
+
     @action(detail=True, methods=['post'], url_path='add-listening-part')
     def add_listening_part(self, request, pk=None):
         test = self.get_object()

@@ -167,7 +167,7 @@ def get_getting_started(user) -> dict[str, Any]:
             'key': 'first_test',
             'label': 'Birinchi testni boshlang',
             'done': has_first_event,
-            'href': '/practice',
+            'href': '/b2c/catalog',
         },
         {
             'key': 'credits',
@@ -195,10 +195,28 @@ def get_getting_started(user) -> dict[str, Any]:
 
 
 def get_section_overview() -> list[dict[str, Any]]:
-    """Section overview — hozircha barchasi 'Soon'."""
+    """Section overview — B2C katalogdagi real testlar soni."""
+    from . import catalog as catalog_service
+    counts = catalog_service.get_section_counts()
     return [
-        {'key': 'listening', 'name': 'Listening', 'count': 0, 'accent': 'blue', 'ready': False},
-        {'key': 'reading', 'name': 'Reading', 'count': 0, 'accent': 'rose', 'ready': False},
-        {'key': 'writing', 'name': 'Writing', 'count': 0, 'accent': 'emerald', 'ready': False},
-        {'key': 'full', 'name': 'Full Mock', 'count': 0, 'accent': 'violet', 'ready': False},
+        {
+            'key': 'listening', 'name': 'Listening',
+            'count': counts['listening'], 'accent': 'blue',
+            'ready': counts['listening'] > 0,
+        },
+        {
+            'key': 'reading', 'name': 'Reading',
+            'count': counts['reading'], 'accent': 'rose',
+            'ready': counts['reading'] > 0,
+        },
+        {
+            'key': 'writing', 'name': 'Writing',
+            'count': counts['writing'], 'accent': 'emerald',
+            'ready': counts['writing'] > 0,
+        },
+        {
+            'key': 'full_mock', 'name': 'Full Mock',
+            'count': counts['full_mock'], 'accent': 'violet',
+            'ready': counts['full_mock'] > 0,
+        },
     ]

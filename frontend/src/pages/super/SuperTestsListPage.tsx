@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { FileText, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -8,6 +8,7 @@ import {
   PageShell,
   TableCard,
   adminTable,
+  btnOutline,
   btnPrimary,
 } from '@/components/admin-shell'
 import SuperAdminLayout from '@/pages/superadmin/SuperAdminLayout'
@@ -67,9 +68,14 @@ export default function SuperTestsListPage() {
           title="Global testlar"
           subtitle="Tests prepared by SuperAdmin that any center can clone"
           actions={
-            <Link to="/super/tests/wizard" className={btnPrimary}>
-              <Plus size={16} /> New test (Wizard)
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/super/tests/new/pdf-import" className={btnOutline}>
+                <FileText size={16} /> Import PDF
+              </Link>
+              <Link to="/super/tests/wizard" className={btnPrimary}>
+                <Plus size={16} /> New test (Wizard)
+              </Link>
+            </div>
           }
         />
 

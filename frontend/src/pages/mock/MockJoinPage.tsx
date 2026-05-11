@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import brandLogo from '@/assets/brand-logo.png'
 import { api } from '@/lib/api'
 
 interface Participant {
@@ -37,6 +38,25 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: 'Cancelled',
 }
 
+function BrandHeader() {
+  return (
+    <div className="mb-6 flex items-center justify-center gap-3">
+      <img
+        src={brandLogo}
+        alt="ILDIZmock"
+        width={44}
+        height={44}
+        className="h-11 w-11 object-contain"
+        draggable={false}
+      />
+      <span className="text-2xl font-extrabold tracking-tight">
+        <span className="text-brand-900">ILDIZ</span>
+        <span className="text-teal-600">mock</span>
+      </span>
+    </div>
+  )
+}
+
 export default function MockJoinPage() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
@@ -45,11 +65,9 @@ export default function MockJoinPage() {
   const [busy, setBusy] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
-  // Guest mode
   const [showGuestForm, setShowGuestForm] = useState(false)
   const [guestName, setGuestName] = useState('')
 
-  // If we already have a bsid for this code, jump straight to the session
   useEffect(() => {
     if (!code) return
     const existing = localStorage.getItem(STORAGE_KEY(code))
@@ -120,8 +138,11 @@ export default function MockJoinPage() {
   if (notFound) {
     return (
       <Center>
-        <div className="rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h1 className="mb-2 text-2xl font-bold text-red-600">Session not found</h1>
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+          <BrandHeader />
+          <h1 className="mb-2 text-2xl font-bold text-slate-900">
+            Session not found
+          </h1>
           <p className="text-slate-600">Please re-check the link.</p>
         </div>
       </Center>
@@ -136,11 +157,11 @@ export default function MockJoinPage() {
     )
   }
 
-  // Session no longer accepting joins
   if (!info.join_allowed) {
     return (
       <Center>
         <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+          <BrandHeader />
           <h1 className="mb-2 text-2xl font-bold text-slate-900">{info.name}</h1>
           <p className="mb-4 text-sm text-slate-500">{info.date}</p>
           <div className="mb-2 inline-block rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-700">
@@ -154,30 +175,35 @@ export default function MockJoinPage() {
     )
   }
 
-  // Pre-registered (hali kirmagan) participantlar
   const pending = info.participants.filter((p) => !p.has_joined && !p.is_guest)
   const joined = info.participants.filter((p) => p.has_joined)
 
   return (
     <Center>
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl">
-        {/* Header */}
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-100">
+        <BrandHeader />
+
+        {/* Session info */}
         <div className="mb-6 text-center">
-          <div className="mb-3 inline-block rounded-lg bg-red-600 px-4 py-1.5 text-sm font-bold text-white">
-            IELTS MOCK
+          <div className="eyebrow eyebrow--accent mb-3">
+            <span className="eyebrow__dot" />
+            IELTS Mock Exam
           </div>
           <h1 className="mb-1 text-2xl font-bold text-slate-900">{info.name}</h1>
           <p className="text-sm text-slate-500">
             {info.date} · Code:{' '}
-            <code className="font-mono text-red-600">{info.access_code}</code>
+            <code className="font-mono font-semibold text-brand-700">
+              {info.access_code}
+            </code>
           </p>
-          <div className="mt-3 inline-block rounded-full bg-blue-50 px-4 py-1 text-xs font-semibold text-blue-700">
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-1 text-xs font-semibold text-brand-700">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
             {STATUS_LABEL[info.status] ?? info.status}
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
             {error}
           </div>
         )}
@@ -199,9 +225,9 @@ export default function MockJoinPage() {
                   type="button"
                   disabled={busy}
                   onClick={() => claimParticipant(p.id)}
-                  className="group flex items-center gap-3 rounded-xl border-2 border-slate-200 bg-white p-3 text-left transition-all hover:border-red-400 hover:bg-red-50 disabled:opacity-50"
+                  className="group flex items-center gap-3 rounded-xl border-2 border-slate-200 bg-white p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-semibold text-slate-600 group-hover:bg-red-100 group-hover:text-red-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-semibold text-slate-600 transition-colors group-hover:bg-brand-100 group-hover:text-brand-700">
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
@@ -223,7 +249,7 @@ export default function MockJoinPage() {
         )}
 
         {pending.length === 0 && info.participants.length > 0 && (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="mb-4 rounded-xl border border-accent-100 bg-accent-50 p-4 text-sm text-accent-700">
             All pre-registered students have already joined.
           </div>
         )}
@@ -235,7 +261,7 @@ export default function MockJoinPage() {
               <button
                 type="button"
                 onClick={() => setShowGuestForm(true)}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                className="text-sm font-medium text-brand-600 hover:text-brand-700"
               >
                 I'm not on the list — enter a new name
               </button>
@@ -249,13 +275,13 @@ export default function MockJoinPage() {
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   placeholder="e.g. John Smith"
-                  className="w-full rounded-lg border-2 border-slate-200 px-4 py-3 text-base focus:border-red-500 focus:outline-none"
+                  className="w-full rounded-lg border-2 border-slate-200 px-4 py-3 text-base outline-none transition-colors focus:border-brand-500 focus:bg-brand-50/40"
                 />
                 <div className="flex gap-2">
                   <button
                     type="submit"
                     disabled={busy}
-                    className="flex-1 rounded-lg bg-red-600 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-brand-600 to-accent-500 py-2.5 font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                   >
                     {busy ? 'Joining…' : 'Join'}
                   </button>
@@ -286,7 +312,7 @@ export default function MockJoinPage() {
               {joined.map((p) => (
                 <span
                   key={p.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700"
+                  className="inline-flex items-center gap-1 rounded-full bg-accent-50 px-3 py-1 text-xs font-medium text-accent-700"
                 >
                   ✓ {p.full_name}
                 </span>
@@ -301,8 +327,27 @@ export default function MockJoinPage() {
 
 function Center({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
-      {children}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-brand-50 via-white to-accent-50 p-4">
+      {/* Soft radial glows — matches landing/hero aesthetic */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full"
+        style={{
+          background:
+            'radial-gradient(circle, var(--brand-100) 0%, transparent 60%)',
+          opacity: 0.6,
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 -right-24 h-[400px] w-[400px] rounded-full"
+        style={{
+          background:
+            'radial-gradient(circle, var(--accent-100) 0%, transparent 60%)',
+          opacity: 0.5,
+        }}
+      />
+      <div className="relative z-10 w-full max-w-2xl">{children}</div>
     </div>
   )
 }

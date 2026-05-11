@@ -98,56 +98,90 @@
   },
   "pricing": {
     "title": "Simple, Transparent Pricing",
-    "subtitle": "Practice is always free. Pay only for full mock exams.",
-    "card": {
-      "name": "Pay Per Mock",
-      "description": "For individual learners preparing for IELTS",
-      "price": "30,000",
-      "currency": "UZS",
-      "priceNote": "per full mock exam",
-      "tierAfterLabel": "Starter pack:",
-      "tierAfterPrice": "75,000 UZS",
-      "tierAfterNote": "3 mock exams — save 15,000 UZS",
-      "features": [
-        {
-          "title": "Unlimited Free Practice",
-          "description": "Reading, Listening and Writing practice — as many attempts as you want"
-        },
-        {
-          "title": "Full Mock Exams",
-          "description": "Cambridge-format timed mocks with official-style scoring"
-        },
-        {
-          "title": "Instant Scoring & Certificates",
-          "description": "Automatic band score for Listening & Reading, downloadable PDF certificate"
-        },
-        {
-          "title": "Personal Progress Tracking",
-          "description": "Your band trends over time, weak-area breakdown, history of attempts"
-        }
-      ],
-      "cta": "Create free account"
-    },
-    "questions": "Questions about pricing?",
-    "contact": "Contact us",
+    "subtitle": "Practice is always free. Choose the plan that fits your goal.",
+    "early_access": "Early-access pricing — lock in your discount before public launch.",
+    "guarantee": "Cancel anytime. No hidden fees.",
+    "plans": [
+      {
+        "key": "starter",
+        "name": "Starter",
+        "badge": "",
+        "description": "Yangi boshlovchilar yoki vaqti-vaqti bilan mashq qilmoqchi bo'lganlar uchun.",
+        "price": "49 000",
+        "old_price": "",
+        "currency": "so'm",
+        "period": "/ oy",
+        "features": [
+          "10 mock test krediti / oy",
+          "Reading, Listening, Writing mashqlari — cheksiz",
+          "Listening & Reading uchun avto baholash",
+          "Asosiy progress statistikasi",
+          "Email orqali yordam"
+        ],
+        "cta": "Starter tarifni boshlash",
+        "highlight": false
+      },
+      {
+        "key": "pro",
+        "name": "Pro",
+        "badge": "// eng mashhur",
+        "description": "Yaqin oyda imtihonga jiddiy tayyorlanayotganlar uchun.",
+        "price": "99 000",
+        "old_price": "149 000",
+        "currency": "so'm",
+        "period": "/ oy",
+        "features": [
+          "40 mock test krediti / oy",
+          "AI Writing feedback — 20 ta / oy",
+          "Batafsil ball tahlili (4 mezon)",
+          "Streak, haftalik maqsad, faollik heatmap",
+          "Speaking simulyatsiya (mock recorder)",
+          "Tezkor email yordam"
+        ],
+        "cta": "Pro tarifga o'tish",
+        "highlight": true
+      },
+      {
+        "key": "max",
+        "name": "Max",
+        "badge": "UNLIMITED",
+        "description": "Cheksiz mashq + premium GOLD materiallar bilan to'liq tayyorgarlik.",
+        "price": "199 000",
+        "old_price": "299 000",
+        "currency": "so'm",
+        "period": "/ oy",
+        "features": [
+          "Cheksiz mock test (chek yo'q)",
+          "Cheksiz AI Writing feedback",
+          "Cheksiz Speaking simulyatsiya",
+          "Premium GOLD materiallar va shablonlar",
+          "Shaxsiy haftalik o'qish rejasi",
+          "Maxsus yordam — 24 soat ichida"
+        ],
+        "cta": "Max tarifga o'tish",
+        "highlight": false
+      }
+    ],
+    "questions": "Savolingiz bormi?",
+    "contact": "Biz bilan bog'laning",
     "faq": {
-      "title": "Frequently Asked Questions",
+      "title": "Tez-tez beriladigan savollar",
       "items": [
         {
-          "q": "Is practice really free?",
-          "a": "Yes. Reading, Listening and Writing practice are completely free with unlimited attempts after you sign up."
+          "q": "Mashq sahifalari haqiqatdan ham bepulmi?",
+          "a": "Ha. Reading, Listening va Writing mashqlari ro'yxatdan o'tgandan keyin cheksiz bepul ishlatiladi. To'lov faqat to'liq mock imtihonlar uchun."
         },
         {
-          "q": "What do I pay for?",
-          "a": "Only for full timed mock exams — 30,000 UZS per mock, or 75,000 UZS for a 3-mock pack."
+          "q": "Kreditlar nima va qanday ishlaydi?",
+          "a": "Har bir to'liq mock imtihon (Listening + Reading + Writing) 1 kredit yeyadi. Starter — 10 / oy, Pro — 40 / oy, Max — cheksiz."
         },
         {
-          "q": "Do I need a subscription?",
-          "a": "No. There are no monthly fees. You buy mocks one by one (or as a pack) and use them whenever you want."
+          "q": "Obunani bekor qila olamanmi?",
+          "a": "Ha, istalgan vaqtda. Bekor qilingan oydan keyin kreditlar bekor bo'ladi, lekin natijalaringiz va sertifikatlaringiz akkauntda saqlanadi."
         },
         {
-          "q": "What do I get after a mock?",
-          "a": "An instant band score for Listening & Reading, a teacher-graded Writing result, and a downloadable certificate."
+          "q": "Tarifni keyinroq o'zgartira olamanmi?",
+          "a": "Ha. Pro yoki Max ga istalgan vaqtda o'tishingiz mumkin — eski oydagi qoldiq kreditlar yangi tarif kreditlari ustiga qo'shiladi."
         }
       ]
     }

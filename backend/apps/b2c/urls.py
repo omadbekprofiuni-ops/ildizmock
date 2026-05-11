@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    B2CCatalogDetailView,
+    B2CCatalogListView,
     B2CDashboardView,
     B2CGoogleAuthView,
     B2CLoginView,
@@ -18,4 +20,11 @@ urlpatterns = [
     path('auth/me', B2CMeView.as_view(), name='b2c-me'),
     path('profile', B2CProfileView.as_view(), name='b2c-profile'),
     path('dashboard', B2CDashboardView.as_view(), name='b2c-dashboard'),
+
+    # ETAP 16 — Catalog
+    path('catalog', B2CCatalogListView.as_view(), name='b2c-catalog'),
+    path(
+        'catalog/<uuid:pk>',
+        B2CCatalogDetailView.as_view(), name='b2c-catalog-detail',
+    ),
 ]

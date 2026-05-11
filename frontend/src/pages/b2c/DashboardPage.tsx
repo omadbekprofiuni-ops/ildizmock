@@ -3,19 +3,13 @@ import {
   CheckCircle2,
   Circle,
   Clock,
-  CreditCard,
   Flame,
-  History,
-  LayoutDashboard,
-  Library,
-  LogOut,
   Star,
   Target,
-  User as UserIcon,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
-import { toast } from '@/components/ui/toaster'
+import { B2CLayout } from '@/components/B2CLayout'
 import { api } from '@/lib/api'
 import { useAuth, type User } from '@/stores/auth'
 
@@ -64,19 +58,11 @@ interface DashboardData {
   sections: Section[]
 }
 
-const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/b2c/dashboard', enabled: true },
-  { key: 'catalog', label: 'Katalog', icon: Library, href: '#', enabled: false },
-  { key: 'history', label: 'Test History', icon: History, href: '#', enabled: false },
-  { key: 'credits', label: 'Kreditlar', icon: CreditCard, href: '#', enabled: false },
-  { key: 'profile', label: 'Profil', icon: UserIcon, href: '/b2c/profile', enabled: true },
-] as const
-
 const SECTION_STYLE: Record<Section['accent'], string> = {
-  blue: 'border-l-4 border-blue-500 bg-blue-50/40',
-  rose: 'border-l-4 border-rose-500 bg-rose-50/40',
-  emerald: 'border-l-4 border-emerald-500 bg-emerald-50/40',
-  violet: 'border-l-4 border-violet-500 bg-violet-50/40',
+  blue: 'border-l-4 border-blue-500 bg-blue-50/40 hover:bg-blue-50',
+  rose: 'border-l-4 border-rose-500 bg-rose-50/40 hover:bg-rose-50',
+  emerald: 'border-l-4 border-emerald-500 bg-emerald-50/40 hover:bg-emerald-50',
+  violet: 'border-l-4 border-violet-500 bg-violet-50/40 hover:bg-violet-50',
 }
 
 const HEAT_BAND: Record<number, string> = {
@@ -88,52 +74,6 @@ const HEAT_BAND: Record<number, string> = {
 }
 
 const WEEKDAY_LABELS = ['Du', '', 'Cho', '', 'Ju', '', 'Ya']
-
-function Sidebar({ active }: { active: 'dashboard' | 'profile' }) {
-  return (
-    <aside className="sticky top-6 hidden h-fit w-64 shrink-0 rounded-2xl border border-slate-200 bg-white p-4 lg:block">
-      <p className="mb-3 px-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-        Menyu
-      </p>
-      <nav className="space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = item.key === active
-          if (!item.enabled) {
-            return (
-              <div
-                key={item.key}
-                className="flex cursor-not-allowed items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400"
-              >
-                <span className="flex items-center gap-3">
-                  <Icon className="h-5 w-5" />
-                  {item.label}
-                </span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                  Soon
-                </span>
-              </div>
-            )
-          }
-          return (
-            <Link
-              key={item.key}
-              to={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
-    </aside>
-  )
-}
 
 function KpiTile({ label, value, suffix }: { label: string; value: string | number; suffix?: string }) {
   return (
@@ -257,155 +197,127 @@ function ActivityWidget({
 }
 
 export default function B2CDashboardPage() {
-  const navigate = useNavigate()
   const user = useAuth((s) => s.user)
-  const logout = useAuth((s) => s.logout)
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ['b2c-dashboard'],
     queryFn: async () => (await api.get<DashboardData>('/b2c/dashboard')).data,
   })
 
-  const onLogout = async () => {
-    await logout()
-    toast.success('Chiqildi')
-    navigate('/b2c/login')
-  }
-
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/b2c/dashboard" className="text-base font-extrabold tracking-tight text-slate-900">
-            ILDIZ<span className="text-brand-600">mock</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/b2c/profile"
-              className="hidden text-sm text-slate-600 hover:text-slate-900 sm:inline"
-            >
-              {user?.first_name || user?.email}
-            </Link>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="inline-flex items-center gap-1.5 rounded-xl border-2 border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:border-brand-300 hover:text-brand-700"
-            >
-              <LogOut className="h-4 w-4" /> Chiqish
-            </button>
+    <B2CLayout active="dashboard">
+      {/* Greeting + KPI */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="mb-5 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+              Salom, {user?.first_name || user?.email}!
+            </h1>
+            {user?.target_exam && (
+              <p className="mt-1 text-sm text-slate-600">
+                Maqsad: <span className="font-semibold text-slate-800">{user.target_exam}</span>
+                {user.target_band ? <> · Band <span className="font-semibold">{user.target_band}</span></> : null}
+              </p>
+            )}
           </div>
         </div>
-      </header>
-
-      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <Sidebar active="dashboard" />
-
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
-          {/* Greeting + KPI */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="mb-5 flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                  Salom, {user?.first_name || user?.email}!
-                </h1>
-                {user?.target_exam && (
-                  <p className="mt-1 text-sm text-slate-600">
-                    Maqsad: <span className="font-semibold text-slate-800">{user.target_exam}</span>
-                    {user.target_band ? <> · Band <span className="font-semibold">{user.target_band}</span></> : null}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <KpiTile label="Mashq kunlari" value={data?.kpi.practice_days ?? '—'} />
-              <KpiTile label="Yechilgan testlar" value={data?.kpi.tests_taken ?? '—'} />
-              <KpiTile label="O'rtacha ball" value={data?.kpi.avg_score ?? '—'} />
-              <KpiTile
-                label="Imtihon"
-                value={data?.kpi.exam_in_days ?? '—'}
-                suffix={data?.kpi.exam_in_days != null ? 'kun' : undefined}
-              />
-            </div>
-          </section>
-
-          {/* Section overview */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-slate-900">Bo'limlar</h2>
-              <span className="text-xs text-slate-500">Katalog tez orada ochiladi</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {data?.sections.map((s) => (
-                <div key={s.key} className={`rounded-xl p-4 ${SECTION_STYLE[s.accent]}`}>
-                  <p className="text-sm font-bold text-slate-800">{s.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {s.ready ? `${s.count} testlar` : 'Tez orada'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Getting started */}
-          {data && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="mb-1 flex items-center justify-between">
-                <h2 className="text-lg font-extrabold text-slate-900">Boshlash</h2>
-                <span className="text-sm font-bold text-slate-700">
-                  {data.getting_started.percent}%
-                </span>
-              </div>
-              <p className="mb-4 text-xs text-slate-500">
-                {data.getting_started.done_count} / {data.getting_started.total} bajarildi
-              </p>
-              <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full bg-brand-500 transition-all"
-                  style={{ width: `${data.getting_started.percent}%` }}
-                />
-              </div>
-              <ul className="divide-y divide-slate-100">
-                {data.getting_started.items.map((item) => (
-                  <Link
-                    key={item.key}
-                    to={item.href}
-                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-slate-50"
-                  >
-                    {item.done ? (
-                      <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                    ) : (
-                      <Circle className="h-6 w-6 text-slate-300" />
-                    )}
-                    <span
-                      className={`flex-1 text-sm ${
-                        item.done ? 'text-slate-400 line-through' : 'text-slate-800'
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                    <span className="text-slate-400">→</span>
-                  </Link>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Activity widget */}
-          {data && (
-            <ActivityWidget
-              streak={data.streak}
-              weekly={data.weekly}
-              heatmap={data.heatmap}
-            />
-          )}
-
-          {isLoading && !data && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
-              Yuklanmoqda…
-            </div>
-          )}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <KpiTile label="Mashq kunlari" value={data?.kpi.practice_days ?? '—'} />
+          <KpiTile label="Yechilgan testlar" value={data?.kpi.tests_taken ?? '—'} />
+          <KpiTile label="O'rtacha ball" value={data?.kpi.avg_score ?? '—'} />
+          <KpiTile
+            label="Imtihon"
+            value={data?.kpi.exam_in_days ?? '—'}
+            suffix={data?.kpi.exam_in_days != null ? 'kun' : undefined}
+          />
         </div>
-      </div>
-    </main>
+      </section>
+
+      {/* Section overview — endi katalog filter'iga clickable */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold text-slate-900">Bo'limlar</h2>
+          <Link
+            to="/b2c/catalog"
+            className="text-xs font-bold text-brand-700 hover:underline"
+          >
+            Katalogni ochish →
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {data?.sections.map((s) => (
+            <Link
+              key={s.key}
+              to={`/b2c/catalog?section=${s.key}`}
+              className={`block rounded-xl p-4 transition-colors ${SECTION_STYLE[s.accent]}`}
+            >
+              <p className="text-sm font-bold text-slate-800">{s.name}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {s.ready ? `${s.count} ta test` : 'Tez orada'}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Getting started */}
+      {data && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-slate-900">Boshlash</h2>
+            <span className="text-sm font-bold text-slate-700">
+              {data.getting_started.percent}%
+            </span>
+          </div>
+          <p className="mb-4 text-xs text-slate-500">
+            {data.getting_started.done_count} / {data.getting_started.total} bajarildi
+          </p>
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full bg-brand-500 transition-all"
+              style={{ width: `${data.getting_started.percent}%` }}
+            />
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {data.getting_started.items.map((item) => (
+              <Link
+                key={item.key}
+                to={item.href}
+                className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-slate-50"
+              >
+                {item.done ? (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                ) : (
+                  <Circle className="h-6 w-6 text-slate-300" />
+                )}
+                <span
+                  className={`flex-1 text-sm ${
+                    item.done ? 'text-slate-400 line-through' : 'text-slate-800'
+                  }`}
+                >
+                  {item.label}
+                </span>
+                <span className="text-slate-400">→</span>
+              </Link>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Activity widget */}
+      {data && (
+        <ActivityWidget
+          streak={data.streak}
+          weekly={data.weekly}
+          heatmap={data.heatmap}
+        />
+      )}
+
+      {isLoading && !data && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
+          Yuklanmoqda…
+        </div>
+      )}
+    </B2CLayout>
   )
 }

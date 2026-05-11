@@ -27,7 +27,8 @@ pdf2image==1.17.0      # PDF→PNG (HOTFIX — Brave shield iframe muammosi). po
 
 # --- Phase 2 (AI / async / rate limit) ---
 # Hozircha ishlatilmaydi, lekin ETAP 17 (AI feedback, Telegram, payments) uchun:
-anthropic>=0.39        # Writing/Speaking AI feedback
+anthropic>=0.39        # Writing/Speaking AI feedback + Claude provider
+google-genai>=0.3.0    # ETAP 16.7 — Gemini AI Studio (PDF parsing)
 celery>=5.3            # async task queue
 redis>=5.0             # Celery broker
 django-ratelimit>=4.1  # login throttling

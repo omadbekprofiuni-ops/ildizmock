@@ -1,4 +1,4 @@
-import { CheckCircle2 } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -10,9 +10,18 @@ interface FaqItem {
   a: string
 }
 
-interface PricingFeature {
-  title: string
+interface PricingPlan {
+  key: string
+  name: string
+  badge?: string
   description: string
+  price: string
+  old_price?: string
+  currency: string
+  period: string
+  features: string[]
+  cta: string
+  highlight: boolean
 }
 
 export default function PricingPage() {
@@ -22,9 +31,9 @@ export default function PricingPage() {
     document.title = 'Pricing — ILDIZmock'
   }, [])
 
-  const featuresRaw = t('pricing.card.features', { returnObjects: true })
+  const plansRaw = t('pricing.plans', { returnObjects: true })
   const faqRaw = t('pricing.faq.items', { returnObjects: true })
-  const features: PricingFeature[] = Array.isArray(featuresRaw) ? (featuresRaw as PricingFeature[]) : []
+  const plans: PricingPlan[] = Array.isArray(plansRaw) ? (plansRaw as PricingPlan[]) : []
   const faqItems: FaqItem[] = Array.isArray(faqRaw) ? (faqRaw as FaqItem[]) : []
 
   return (
@@ -43,96 +52,114 @@ export default function PricingPage() {
           <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-slate-600">
             {t('pricing.subtitle')}
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm font-semibold text-cta-600">
+            {t('pricing.early_access')}
+          </p>
         </div>
       </section>
 
-      {/* ── PRICING CARD ── */}
-      <section className="px-6 pb-20 pt-6">
-        <div className="mx-auto max-w-md">
-          <div
-            className="relative overflow-hidden rounded-[24px] text-white"
-            style={{ background: 'var(--gradient-hero)', boxShadow: 'var(--shadow-lg)' }}
-          >
-            {/* Background pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.08]"
-              style={{
-                backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)',
-                backgroundSize: '28px 28px',
-              }}
-            />
-
-            {/* Card body */}
-            <div className="relative px-7 py-9">
-              <div className="text-center">
-                <span className="mb-4 inline-block rounded-full bg-cta-500 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.04em] text-white">
-                  Individual
-                </span>
-                <div className="text-[12px] font-extrabold uppercase tracking-[0.06em] text-white/80">
-                  {t('pricing.card.name')}
-                </div>
-                <p className="mt-2 text-[14px] text-white/85">{t('pricing.card.description')}</p>
-                <div className="mt-5 flex items-baseline justify-center gap-1.5">
-                  <span className="text-[40px] font-extrabold leading-none tracking-tight text-white">
-                    {t('pricing.card.price')}
-                  </span>
-                  <span className="text-base text-white/80">{t('pricing.card.currency')}</span>
-                </div>
-                <p className="mt-1.5 text-[13px] text-white/75">{t('pricing.card.priceNote')}</p>
-              </div>
-
-              {/* Tier-after callout */}
-              <div className="mt-6 rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-white/95">
-                    {t('pricing.card.tierAfterLabel')}
-                  </span>
-                  <span className="text-lg font-extrabold text-white">
-                    {t('pricing.card.tierAfterPrice')}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-[12px] text-white/80">
-                  {t('pricing.card.tierAfterNote')}
-                </p>
-              </div>
-
-              {/* Features */}
-              <ul className="mt-6 space-y-3">
-                {features.map((feature) => (
-                  <li key={feature.title} className="flex items-start gap-2.5 text-white/95">
-                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-white/20">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                    </span>
-                    <div>
-                      <p className="text-[14px] font-bold">{feature.title}</p>
-                      <p className="mt-0.5 text-[12.5px] leading-relaxed text-white/80">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <Link
-                to="/b2c/signup"
-                className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-cta-500 px-5 py-3.5 text-[14px] font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.40)]"
+      {/* ── PRICING CARDS ── */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
+          {plans.map((plan) => {
+            const isHighlight = plan.highlight
+            return (
+              <div
+                key={plan.key}
+                className={`relative flex flex-col rounded-[20px] border bg-white p-7 transition-all ${
+                  isHighlight
+                    ? 'border-cta-500 shadow-[0_12px_32px_rgba(20,184,152,0.18)] md:-translate-y-2'
+                    : 'border-slate-200'
+                }`}
               >
-                {t('pricing.card.cta')}
-              </Link>
-            </div>
-          </div>
+                {/* Plan header */}
+                <div className="mb-4">
+                  <div className="mb-2 flex items-baseline gap-2">
+                    <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
+                      {plan.name}
+                    </h3>
+                    {plan.badge && (
+                      <span
+                        className={`text-[12px] font-bold ${
+                          isHighlight ? 'text-cta-600' : 'text-slate-500'
+                        }`}
+                      >
+                        {plan.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="min-h-[42px] text-[13.5px] leading-relaxed text-slate-600">
+                    {plan.description}
+                  </p>
+                </div>
 
-          {/* Contact link */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-slate-600">{t('pricing.questions')}</p>
-            <Link
-              to="/b2c/signup"
-              className="mt-1 inline-block text-sm font-bold text-brand-600 hover:text-brand-700"
-            >
-              {t('pricing.contact')} →
-            </Link>
-          </div>
+                {/* Price */}
+                <div className="mb-5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[32px] font-extrabold leading-none tracking-tight text-slate-900">
+                      {plan.price}
+                    </span>
+                    <span className="text-base font-bold text-slate-700">
+                      {plan.currency}
+                    </span>
+                    {plan.old_price && (
+                      <span className="text-[15px] text-slate-400 line-through">
+                        {plan.old_price} {plan.currency}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[13px] text-slate-500">{plan.period}</p>
+                </div>
+
+                <hr className="mb-5 border-slate-100" />
+
+                {/* Features */}
+                <ul className="mb-7 space-y-3">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2.5 text-[14px] text-slate-700"
+                    >
+                      <Check
+                        className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
+                          isHighlight ? 'text-cta-600' : 'text-brand-600'
+                        }`}
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Link
+                  to="/b2c/signup"
+                  className={`mt-auto inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-[14px] font-bold transition-all ${
+                    isHighlight
+                      ? 'bg-cta-500 text-white hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.30)]'
+                      : 'border-2 border-slate-200 bg-white text-slate-800 hover:border-brand-300 hover:text-brand-700'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Guarantee line */}
+        <p className="mt-8 text-center text-sm text-slate-500">
+          {t('pricing.guarantee')}
+        </p>
+
+        {/* Contact link */}
+        <div className="mt-2 text-center">
+          <p className="text-sm text-slate-600">{t('pricing.questions')}</p>
+          <Link
+            to="/b2c/signup"
+            className="mt-1 inline-block text-sm font-bold text-brand-600 hover:text-brand-700"
+          >
+            {t('pricing.contact')} →
+          </Link>
         </div>
       </section>
 

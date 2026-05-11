@@ -78,6 +78,13 @@ export function ListeningSection({
   // Submit tugagandan keyin save chaqirilmasligi uchun.
   const saveLockedRef = useRef(false)
 
+  // Tab navigatsiya — Part 1..4 orasida switch.
+  // Real IELTS uslubida: faqat bitta part ko'rinadi, audio yangi qismga
+  // o'tganda avto-almashadi, lekin talaba qo'lda ham boshqa partga
+  // qaytib ko'ra oladi (javoblari saqlanib qoladi).
+  const [activePart, setActivePart] = useState<number>(1)
+  const prevPlayingPartRef = useRef<number | null>(null)
+
   // ── Load section data ──────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
@@ -191,6 +198,20 @@ export function ListeningSection({
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [audioState])
+
+  // ── Auto-switch tab when audio crosses into a new part ────────────
+  // Faqat transition'da activePart yangilanadi — talaba qo'lda boshqa
+  // partga o'tgan bo'lsa, audio yana yangi qismga kirgunicha o'sha
+  // joyda qoladi.
+  useEffect(() => {
+    if (audioState !== 'playing' || !duration) return
+    const r = currentTime / duration
+    const p = r < 0.25 ? 1 : r < 0.50 ? 2 : r < 0.75 ? 3 : 4
+    if (prevPlayingPartRef.current !== p) {
+      prevPlayingPartRef.current = p
+      setActivePart(p)
+    }
+  }, [currentTime, duration, audioState])
 
   // ── THE SINGLE START HANDLER ──────────────────────────────────────
   // CRITICAL: audio.play() must be called SYNCHRONOUSLY inside the
@@ -440,11 +461,50 @@ export function ListeningSection({
                   )
                 })}
               </div>
-              <div className="mt-1 flex gap-1 text-[11px] text-slate-500">
-                <div className="flex-1 text-center">Part 1</div>
-                <div className="flex-1 text-center">Part 2</div>
-                <div className="flex-1 text-center">Part 3</div>
-                <div className="flex-1 text-center">Part 4</div>
+              {/* Tab navigatsiya — Part 1..4 orasida o'tish */}
+              <div className="mt-2 flex gap-1">
+                {[1, 2, 3, 4].map((p) => {
+                  const qs = questionsByPart[p] || []
+                  const firstQ = qs[0]?.question_number ?? qs[0]?.order ?? 0
+                  const lastQ =
+                    qs[qs.length - 1]?.question_number
+                    ?? qs[qs.length - 1]?.order
+                    ?? 0
+                  const isActive = activePart === p
+                  const isPlaying = currentPlayingPart === p
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setActivePart(p)}
+                      className={`group relative flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-all ${
+                        isActive
+                          ? 'bg-brand-600 text-white shadow-sm'
+                          : 'bg-white text-slate-600 hover:bg-brand-50 hover:text-brand-700'
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-1.5">
+                        Part {p}
+                        {isPlaying && (
+                          <span
+                            className={`h-1.5 w-1.5 animate-pulse rounded-full ${
+                              isActive ? 'bg-white' : 'bg-brand-500'
+                            }`}
+                          />
+                        )}
+                      </span>
+                      {qs.length > 0 && (
+                        <span
+                          className={`block text-[10px] font-normal ${
+                            isActive ? 'text-brand-100' : 'text-slate-400'
+                          }`}
+                        >
+                          Q{firstQ}–{lastQ}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
               <p className="mt-2 text-[11px] italic text-slate-500">
                 Just like real IELTS: the audio plays once continuously
@@ -507,14 +567,6 @@ export function ListeningSection({
               </div>
             )}
 
-            {/* ─── Playing banner ─── */}
-            {audioState === 'playing' && !audioInterrupted && (
-              <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-3 text-center">
-                <p className="text-sm font-semibold text-amber-800">
-                  ⚠️ Audio cannot be paused, rewound, or replayed.
-                </p>
-              </div>
-            )}
             {audioState === 'playing' && audioInterrupted && (
               <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center">
                 <p className="text-sm font-semibold text-amber-900">
@@ -551,7 +603,7 @@ export function ListeningSection({
               </div>
             )}
 
-            {/* ─── Questions: all parts stacked, all 40 visible ─── */}
+            {/* ─── Questions: faqat tanlangan part ko'rinadi ─── */}
             <div className="relative">
               {inputsLocked && (
                 <div className="mb-4 rounded-lg bg-amber-50 p-3 text-center text-sm text-amber-800">
@@ -559,23 +611,29 @@ export function ListeningSection({
                   unlock automatically.
                 </div>
               )}
-              {[1, 2, 3, 4].map((pn) => {
-                const qs = questionsByPart[pn] || []
-                if (qs.length === 0) return null
+              {(() => {
+                const qs = questionsByPart[activePart] || []
+                if (qs.length === 0) {
+                  return (
+                    <div className="rounded-2xl border bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+                      No questions in Part {activePart}.
+                    </div>
+                  )
+                }
                 const firstQ = qs[0]?.question_number ?? qs[0]?.order
-                const lastQ = qs[qs.length - 1]?.question_number
+                const lastQ =
+                  qs[qs.length - 1]?.question_number
                   ?? qs[qs.length - 1]?.order
-                const instructions = instructionsByPart[pn]
+                const instructions = instructionsByPart[activePart]
                 return (
                   <fieldset
-                    key={pn}
                     disabled={inputsLocked}
-                    className={`mb-6 rounded-2xl border bg-white p-6 shadow-sm ${
+                    className={`rounded-2xl border bg-white p-6 shadow-sm ${
                       inputsLocked ? 'opacity-50' : ''
                     }`}
                   >
                     <h2 className="text-lg font-bold">
-                      PART {pn} — Questions {firstQ}–{lastQ}
+                      PART {activePart} — Questions {firstQ}–{lastQ}
                     </h2>
                     {instructions && (
                       <p className="mb-3 mt-1 text-sm text-slate-600">
@@ -595,7 +653,30 @@ export function ListeningSection({
                     </div>
                   </fieldset>
                 )
-              })}
+              })()}
+
+              {/* Prev / Next tab navigation tugmalari */}
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActivePart((p) => Math.max(1, p - 1))}
+                  disabled={activePart <= 1}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  ← Part {Math.max(1, activePart - 1)}
+                </button>
+                <span className="text-xs text-slate-500">
+                  Part {activePart} of 4
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActivePart((p) => Math.min(4, p + 1))}
+                  disabled={activePart >= 4}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Part {Math.min(4, activePart + 1)} →
+                </button>
+              </div>
             </div>
 
             {/* ─── Submit (when audio finished, OR interrupted) ─── */}

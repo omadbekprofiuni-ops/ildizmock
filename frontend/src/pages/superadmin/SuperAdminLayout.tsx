@@ -6,6 +6,7 @@ import {
   FileText,
   Headphones,
   LayoutDashboard,
+  Library,
   LogOut,
   Settings,
 } from 'lucide-react'
@@ -13,6 +14,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
+import { AIQuotaBadge } from '@/components/AIQuotaBadge'
 import brandLogo from '@/assets/brand-logo.png'
 import { roleLabel, useAuth } from '@/stores/auth'
 import { useOrgContext } from '@/stores/orgContext'
@@ -29,6 +31,7 @@ const MAIN_NAV: NavItem[] = [
   { to: '/super/organizations', label: 'Centers', Icon: Building2 },
   { to: '/super/payments', label: 'Payments', Icon: CreditCard },
   { to: '/super/tests', label: 'Global tests', Icon: FileText },
+  { to: '/super/b2c-catalog', label: 'B2C Catalog', Icon: Library },
   { to: '/super/audio', label: 'Audio files', Icon: Headphones },
   { to: '/super/stats', label: 'Statistics', Icon: BarChart3 },
   { to: '/super/settings', label: 'Settings', Icon: Settings },
@@ -48,6 +51,7 @@ const TITLES: Record<string, string> = {
   '/super/organizations': 'Centers',
   '/super/payments': 'Billing',
   '/super/tests': 'Global tests',
+  '/super/b2c-catalog': 'B2C Catalog',
   '/super/audio': 'Audio files',
   '/super/stats': 'Statistics',
   '/super/settings': 'Settings',
@@ -159,6 +163,9 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         </nav>
 
         <div className="border-t border-white/5 p-4">
+          <div className="mb-3">
+            <AIQuotaBadge variant="dark" />
+          </div>
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-extrabold text-white"
