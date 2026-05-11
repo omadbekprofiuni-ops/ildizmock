@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  FileText,
   Headphones,
   PenLine,
   Zap,
@@ -54,6 +55,33 @@ export default function TestCreateHubPage() {
         title="Create a new test"
         subtitle="Pick a module — each one has its own form"
       />
+
+      {/* PDF Import — fastest path (ETAP 31) */}
+      <Link
+        to={`/${slug}/admin/tests/new/pdf-import`}
+        className="group mb-4 block overflow-hidden rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+      >
+        <div className="flex flex-wrap items-center gap-6 p-6">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+            <FileText className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-white">
+              ⭐ New · ~5 min
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900">
+              Import from PDF
+            </h3>
+            <p className="mt-1 text-sm text-slate-700">
+              Drag and drop a Cambridge IELTS PDF — we'll extract questions and
+              answers automatically. You review and save.
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 group-hover:underline">
+            Start <ArrowRight size={14} />
+          </div>
+        </div>
+      </Link>
 
       {/* Bulk paste — fastest "type it all" path */}
       <Link
