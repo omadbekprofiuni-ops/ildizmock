@@ -94,7 +94,7 @@ export function PublicHeader() {
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-cta-500 px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.25)]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-cta-500 px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(45,79,216,0.30)]"
               >
                 {t('common.signup')}
               </Link>

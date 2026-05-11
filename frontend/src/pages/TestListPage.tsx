@@ -208,24 +208,29 @@ export default function TestListPage() {
                     <Link
                       key={lvl.id}
                       to={`/tests/${moduleParam}?difficulty=${lvl.id}`}
-                      className="group rounded-[20px] border border-slate-100 bg-white p-7 transition-all hover:-translate-y-0.5 hover:border-brand-100"
+                      className="group rounded-[20px] border border-slate-100 bg-white p-7 transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md"
                       style={{ boxShadow: 'var(--shadow-sm)' }}
                     >
                       <div
-                        className={`icon-tile icon-tile--${lvl.tone}`}
-                        style={{ width: 44, height: 44, borderRadius: 12 }}
+                        className={`icon-tile icon-tile--${lvl.tone} inline-flex w-auto items-center justify-center px-3.5`}
+                        style={{ height: 38, borderRadius: 10, minWidth: 64 }}
                       >
-                        <span className="text-sm font-extrabold">{lvl.range}</span>
+                        <span className="whitespace-nowrap text-[13px] font-extrabold tracking-tight">
+                          {lvl.range}
+                        </span>
                       </div>
-                      <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                      <div className="mt-4 text-[11px] font-bold uppercase tracking-wide text-slate-500">
                         Band {lvl.range}
                       </div>
                       <h3 className="mt-1.5 text-xl font-extrabold text-slate-900">
                         {lvl.label}
                       </h3>
-                      <p className="mt-2 text-sm text-slate-600">{count} tests</p>
-                      <span className="mt-4 inline-block text-sm font-bold text-brand-600 transition-colors group-hover:text-brand-700">
-                        Choose →
+                      <p className="mt-2 text-sm text-slate-600">
+                        <span className="font-semibold text-slate-700">{count}</span>{' '}
+                        {count === 1 ? 'test' : 'tests'}
+                      </p>
+                      <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-600 transition-all group-hover:gap-2 group-hover:text-brand-700">
+                        Choose <span className="transition-transform group-hover:translate-x-0.5">→</span>
                       </span>
                     </Link>
                   )

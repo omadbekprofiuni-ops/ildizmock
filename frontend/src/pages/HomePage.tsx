@@ -162,29 +162,40 @@ export default function HomePage() {
       <section className="relative overflow-hidden px-8 pb-20 pt-20">
         <div className="hero-bg" />
         <div className="relative mx-auto max-w-5xl text-center">
-          <div className="eyebrow mx-auto">
+          <div className="eyebrow mx-auto hero-anim" style={{ animationDelay: '0ms' }}>
             <span className="eyebrow__dot eyebrow__dot--pulse" />
             Computer-Delivered IELTS · Instant Score
           </div>
 
           <h1 className="mt-7 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-slate-900 md:text-6xl lg:text-[78px]">
-            Prepare for the
+            <span className="hero-anim inline-block" style={{ animationDelay: '120ms' }}>
+              Prepare for the
+            </span>
             <br />
             <span className="mt-4 inline-flex flex-wrap items-center justify-center gap-2.5">
               <span
-                className="inline-block rounded-2xl px-4 py-1.5 text-white"
-                style={{ background: 'var(--gradient-brand)' }}
+                className="hero-anim-left inline-block rounded-2xl px-4 py-1.5 text-white"
+                style={{
+                  background: 'var(--gradient-brand)',
+                  animationDelay: '320ms',
+                }}
               >
                 IELTS
               </span>
-              <span className="inline-block rounded-2xl bg-slate-900 px-4 py-1.5 text-white">
+              <span
+                className="hero-anim-right inline-block rounded-2xl bg-slate-900 px-4 py-1.5 text-white"
+                style={{ animationDelay: '420ms' }}
+              >
                 Exam
               </span>
             </span>
           </h1>
 
           {/* Accent underline — adds visual identity */}
-          <div className="mt-6 flex items-center justify-center gap-3">
+          <div
+            className="hero-anim-grow mt-6 flex items-center justify-center gap-3"
+            style={{ animationDelay: '600ms' }}
+          >
             <span
               className="h-1.5 w-20 rounded-full"
               style={{ background: 'var(--gradient-brand)' }}
@@ -198,7 +209,10 @@ export default function HomePage() {
             />
           </div>
 
-          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-[19px]">
+          <p
+            className="hero-anim mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-[19px]"
+            style={{ animationDelay: '750ms' }}
+          >
             Take a Mock Test and get your IELTS Score for{' '}
             <span className="font-extrabold text-slate-900">FREE</span> within{' '}
             <span
@@ -210,10 +224,13 @@ export default function HomePage() {
             . Authentic Cambridge format with real timing and instant scoring.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5">
+          <div
+            className="hero-anim mt-10 flex flex-wrap items-center justify-center gap-3.5"
+            style={{ animationDelay: '900ms' }}
+          >
             <Link
               to={user ? '/practice' : '/tests/reading'}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(242,85,64,0.35)]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_10px_24px_rgba(255,107,92,0.40)]"
             >
               <Play className="h-5 w-5" />
               {t('home.hero.cta') || 'Start Practice Test'}
@@ -227,7 +244,10 @@ export default function HomePage() {
           </div>
 
           {/* Trust signals row */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-500">
+          <div
+            className="hero-anim mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-500"
+            style={{ animationDelay: '1050ms' }}
+          >
             {TRUST.map((label) => (
               <span key={label} className="inline-flex items-center gap-2">
                 <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-teal-50 text-teal-600">
@@ -242,8 +262,11 @@ export default function HomePage() {
 
           {/* Trusted by pill — bottom of hero */}
           <div
-            className="mx-auto mt-10 inline-flex flex-col gap-1 rounded-2xl border border-slate-100 bg-white px-5 py-3 text-left"
-            style={{ boxShadow: 'var(--shadow-md)' }}
+            className="hero-anim mx-auto mt-10 inline-flex flex-col gap-1 rounded-2xl border border-slate-100 bg-white px-5 py-3 text-left"
+            style={{
+              boxShadow: 'var(--shadow-md)',
+              animationDelay: '1200ms',
+            }}
           >
             <p className="text-sm font-semibold text-slate-700">
               Trusted by{' '}

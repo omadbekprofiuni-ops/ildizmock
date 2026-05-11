@@ -28,13 +28,14 @@
     --accent-600: #0F9C80;   /* ← deep teal */
     --accent-700: #0B7A66;
 
-    /* CTA — vibrant coral-red (energetic, not dusty) */
-    --cta-50:  #FEF1EE;
-    --cta-100: #FBDAD2;
-    --cta-400: #FB7E68;
-    --cta-500: #F25540;   /* ← vibrant tomato-coral (CTA buttons) */
-    --cta-600: #DC3E2A;
-    --cta-700: #B82E1D;
+    /* CTA — logo coral'ning jonli (warm) versiyasi. Pure blue sovuq edi,
+       teal yetarli warm emas. Coral logo'da bor + warmth & energy beradi. */
+    --cta-50:  #FFF1EE;
+    --cta-100: #FFDAD2;
+    --cta-400: #FF8A78;
+    --cta-500: #FF6B5C;   /* ← vibrant warm coral (jonli, sovuq emas) */
+    --cta-600: #E54D3D;   /* ← deeper coral on hover */
+    --cta-700: #C03A2C;
 
     /* Slate */
     --slate-50: #F8FAFC;
@@ -62,7 +63,7 @@
     --gradient-brand: linear-gradient(135deg, #1F3FAB 0%, #2D4FD8 50%, #14B898 100%);
     --gradient-hero: linear-gradient(135deg, #122158 0%, #1F3FAB 40%, #14B898 100%);
     --gradient-brand-soft: linear-gradient(135deg, #DAE2F6 0%, #BFF3E1 100%);
-    --gradient-cta: linear-gradient(135deg, #F25540 0%, #DC3E2A 100%);
+    --gradient-cta: linear-gradient(135deg, #2D4FD8 0%, #14B898 100%);
 
     --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -222,10 +223,10 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--cta-500);
+    background: var(--accent-500);
   }
   .eyebrow__dot--accent {
-    background: var(--accent-500);
+    background: var(--brand-500);
   }
   .eyebrow__dot--pulse {
     animation: pulse-soft 2s ease-in-out infinite;
@@ -243,6 +244,47 @@
     -webkit-background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* ─── Hero entrance animations ─── */
+  .hero-anim {
+    opacity: 0;
+    animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-anim-left {
+    opacity: 0;
+    animation: hero-slide-left 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-anim-right {
+    opacity: 0;
+    animation: hero-slide-right 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-anim-grow {
+    transform-origin: center;
+    animation: hero-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes hero-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes hero-slide-left {
+    from { opacity: 0; transform: translateX(-30px) scale(0.92); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes hero-slide-right {
+    from { opacity: 0; transform: translateX(30px) scale(0.92); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes hero-grow {
+    from { transform: scaleX(0); opacity: 0; }
+    to   { transform: scaleX(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-anim, .hero-anim-left, .hero-anim-right, .hero-anim-grow {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* Hero radial bg */

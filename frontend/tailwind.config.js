@@ -39,14 +39,15 @@ export default {
           600: '#0F9C80',  // ← deep teal
           700: '#0B7A66',
         },
-        // CTA — vibrant coral-red (energetic, not dusty)
+        // CTA — vibrant warm coral (logo coral, with energy). Pure blue
+        // sovuq edi; coral logo'da bor + warmth/jon beradi.
         cta: {
-          50: '#FEF1EE',
-          100: '#FBDAD2',
-          400: '#FB7E68',
-          500: '#F25540',  // ← vibrant tomato-coral (CTA buttons)
-          600: '#DC3E2A',
-          700: '#B82E1D',
+          50: '#FFF1EE',
+          100: '#FFDAD2',
+          400: '#FF8A78',
+          500: '#FF6B5C',  // ← vibrant warm coral
+          600: '#E54D3D',  // ← deeper coral on hover
+          700: '#C03A2C',
         },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
