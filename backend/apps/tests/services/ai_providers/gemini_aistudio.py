@@ -15,8 +15,6 @@ import json
 import logging
 from typing import Optional
 
-from django.conf import settings
-
 from .base import (
     SYSTEM_PROMPT,
     AIProvider,
@@ -111,18 +109,17 @@ IELTS_SCHEMA = {
 class GeminiAIStudioProvider(AIProvider):
     """Gemini 2.5 Flash via Google AI Studio API."""
 
-    MODEL_NAME = 'gemini-2.5-flash'
+    DEFAULT_MODEL = 'gemini-2.5-flash'
 
     # Gemini 2.5 Flash paid-tier narxlari ($/M token)
     INPUT_USD_PER_M = 0.30
     OUTPUT_USD_PER_M = 2.50
 
-    def __init__(self) -> None:
-        api_key = getattr(settings, 'GEMINI_API_KEY', '') or ''
+    def __init__(self, api_key: str = '', model_name: str = '') -> None:
         if not api_key:
-            raise ValueError("GEMINI_API_KEY .env'da o'rnatilmagan")
-        # Lazy import — `google-genai` ixtiyoriy bog'liqlik, fallback chaqirilmasa
-        # import qilinmaydi.
+            raise ValueError("Gemini API key kerak (DB yoki .env'da o'rnating)")
+        self.model_name = model_name or self.DEFAULT_MODEL
+        # Lazy import — `google-genai` ixtiyoriy bog'liqlik.
         from google import genai
 
         self._genai = genai
@@ -142,7 +139,7 @@ class GeminiAIStudioProvider(AIProvider):
 
         try:
             response = self.client.models.generate_content(
-                model=self.MODEL_NAME,
+                model=self.model_name,
                 contents=[
                     types.Part.from_bytes(
                         data=pdf_bytes, mime_type='application/pdf',
@@ -162,7 +159,7 @@ class GeminiAIStudioProvider(AIProvider):
             return ParseResult(
                 success=False,
                 error_message=f'Gemini API xatosi: {exc}',
-                model_used=self.MODEL_NAME,
+                model_used=self.model_name,
             )
 
         usage = getattr(response, 'usage_metadata', None)
@@ -186,7 +183,7 @@ class GeminiAIStudioProvider(AIProvider):
                 success=False,
                 error_message=f"AI noto'g'ri JSON qaytardi: {exc}",
                 tokens_used=total_tokens,
-                model_used=self.MODEL_NAME,
+                model_used=self.model_name,
                 cost_usd=cost,
                 raw_response=raw_text[:2000],
             )
@@ -195,14 +192,14 @@ class GeminiAIStudioProvider(AIProvider):
             success=True,
             data=data,
             tokens_used=total_tokens,
-            model_used=self.MODEL_NAME,
+            model_used=self.model_name,
             cost_usd=cost,
         )
 
     def info(self) -> ProviderInfo:
         return ProviderInfo(
             name='Gemini AI Studio',
-            model=self.MODEL_NAME,
+            model=self.model_name,
             supports_pdf_direct=True,
             free_tier_available=True,
             daily_quota=250,

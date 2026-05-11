@@ -15,8 +15,6 @@ import json
 import logging
 from typing import Optional
 
-from django.conf import settings
-
 from .base import (
     IELTS_RESPONSE_SHAPE,
     SYSTEM_PROMPT,
@@ -38,17 +36,17 @@ CLAUDE_SYSTEM_PROMPT = (
 class ClaudeAnthropicProvider(AIProvider):
     """Claude Sonnet 4.6 — Anthropic SDK orqali PDF document blocks."""
 
-    MODEL_NAME = 'claude-sonnet-4-6'
+    DEFAULT_MODEL = 'claude-sonnet-4-6'
 
     # Claude Sonnet 4.6 paid-tier narxlari ($/M token)
     INPUT_USD_PER_M = 3.00
     OUTPUT_USD_PER_M = 15.00
 
-    def __init__(self) -> None:
-        api_key = getattr(settings, 'ANTHROPIC_API_KEY', '') or ''
+    def __init__(self, api_key: str = '', model_name: str = '') -> None:
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY .env'da o'rnatilmagan")
-        import anthropic  # noqa: PLC0415 — provider boshqa joyda ishlatilmasa, import qilmaymiz
+            raise ValueError("Claude API key kerak (DB yoki .env'da o'rnating)")
+        self.model_name = model_name or self.DEFAULT_MODEL
+        import anthropic  # noqa: PLC0415 — lazy import
 
         self._anthropic = anthropic
         self.client = anthropic.Anthropic(api_key=api_key)

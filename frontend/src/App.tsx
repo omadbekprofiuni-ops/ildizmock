@@ -63,6 +63,7 @@ import SuperAdminB2CCatalogPage from './pages/superadmin/SuperAdminB2CCatalogPag
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
 import SuperAdminPdfImportPage from './pages/superadmin/SuperAdminPdfImportPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import SuperAdminAIProvidersPage from './pages/superadmin/SuperAdminAIProvidersPage'
 import SuperAdminLayout from './pages/superadmin/SuperAdminLayout'
 import SuperAdminOrgsPage from './pages/superadmin/SuperAdminOrgsPage'
 import SuperAdminSettingsPage from './pages/superadmin/SuperAdminSettingsPage'
@@ -349,6 +350,15 @@ function AppRoutes() {
             element={
               <SuperAdminRoute>
                 <SuperAdminSettingsPage />
+              </SuperAdminRoute>
+            }
+          />
+          {/* ETAP 16.8 — AI Provider admin panel */}
+          <Route
+            path="/super/settings/ai-providers"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminAIProvidersPage />
               </SuperAdminRoute>
             }
           />

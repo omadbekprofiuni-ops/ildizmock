@@ -282,92 +282,250 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Floating preview screenshot */}
-        <div className="relative mx-auto mt-16 max-w-5xl">
-          <div
-            className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
-            style={{ boxShadow: 'var(--shadow-xl)' }}
-          >
-            {/* Browser chrome */}
-            <div className="flex h-9 items-center gap-2 border-b border-slate-200 bg-slate-100 px-4">
-              <div className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
+        {/* Floating preview screenshots — Reading + Listening side by side */}
+        <div className="relative mx-auto mt-16 max-w-7xl">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+            {/* ─── READING SCREEN ─── */}
+            <div
+              className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white"
+              style={{ boxShadow: 'var(--shadow-xl)' }}
+            >
+              {/* Browser chrome */}
+              <div className="flex h-10 items-center gap-2 border-b border-slate-200 bg-slate-100 px-4">
+                <div className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
+                </div>
+                <div
+                  className="ml-3 rounded bg-white px-3 py-1 text-[11px] text-slate-500"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  ildizmock.uz/tests/reading/practice
+                </div>
               </div>
+
+              {/* Mock test runner — passage / questions */}
+              <div className="grid min-h-[460px] grid-cols-1 md:grid-cols-2">
+                <div className="border-b border-slate-100 p-7 md:border-b-0 md:border-r">
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-600">
+                    Reading · Passage 1
+                  </div>
+                  <h3 className="mb-3.5 text-[22px] font-extrabold leading-tight text-slate-900">
+                    The History of Glass-making in Uzbekistan
+                  </h3>
+                  <p className="mb-2.5 text-[13.5px] leading-relaxed text-slate-600">
+                    Glass-making has a long and storied history in Central Asia, stretching back over a millennium. Archaeological excavations near Khwarazm have uncovered{' '}
+                    <span style={{ background: 'var(--accent-100)' }}>fragments of glass vessels</span> dating from the 9th century, demonstrating the sophistication of medieval Uzbek artisans.
+                  </p>
+                  <p className="text-[13.5px] leading-relaxed text-slate-600">
+                    By the time of the Timurid dynasty, glass-blowing workshops in Samarkand were producing pieces of remarkable...
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-7">
+                  <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                    Questions 1–5
+                  </div>
+                  <div className="mb-2.5 rounded-xl border-2 border-brand-500 bg-white p-4">
+                    <div className="mb-2.5 text-[13px] font-bold">
+                      1. Glass-making in Uzbekistan dates back to the…
+                    </div>
+                    {['9th century', '12th century', '15th century', '17th century'].map((opt, i) => (
+                      <label key={opt} className="flex items-center gap-2 py-1.5 text-[13px] text-slate-700">
+                        <input
+                          type="radio"
+                          name="hp-q1"
+                          defaultChecked={i === 0}
+                          style={{ accentColor: 'var(--brand-600)' }}
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-white p-4">
+                    <div className="text-[13px] font-bold text-slate-500">
+                      2. Workshops in Samarkand were known for…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating timer chip — inside Reading frame, top right */}
               <div
-                className="ml-3 rounded bg-white px-3 py-1 text-[11px] text-slate-500"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                className="absolute right-3 top-14 hidden items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 md:flex"
+                style={{ boxShadow: 'var(--shadow-lg)' }}
               >
-                ildizmock.uz/tests/reading/practice
+                <span className="icon-tile icon-tile--cta" style={{ width: 38, height: 38, borderRadius: 12, marginBottom: 0 }}>
+                  <Clock className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-500">TIME REMAINING</div>
+                  <div className="text-lg font-bold text-slate-900" style={{ fontFamily: 'var(--font-mono)' }}>
+                    52:14
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Mock test runner */}
-            <div className="grid min-h-[380px] grid-cols-1 md:grid-cols-2">
-              <div className="border-b border-slate-100 p-8 md:border-b-0 md:border-r">
-                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-600">
-                  Reading · Passage 1
+            {/* ─── LISTENING SCREEN ─── */}
+            <div
+              className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white"
+              style={{ boxShadow: 'var(--shadow-xl)' }}
+            >
+              {/* Browser chrome */}
+              <div className="flex h-10 items-center gap-2 border-b border-slate-200 bg-slate-100 px-4">
+                <div className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
                 </div>
-                <h3 className="mb-3.5 text-[22px] font-extrabold text-slate-900">
-                  The History of Glass-making in Uzbekistan
-                </h3>
-                <p className="mb-2.5 text-[13.5px] leading-relaxed text-slate-600">
-                  Glass-making has a long and storied history in Central Asia, stretching back over a millennium. Archaeological excavations near Khwarazm have uncovered{' '}
-                  <span style={{ background: 'var(--accent-100)' }}>fragments of glass vessels</span> dating from the 9th century, demonstrating the sophistication of medieval Uzbek artisans.
-                </p>
-                <p className="text-[13.5px] leading-relaxed text-slate-600">
-                  By the time of the Timurid dynasty, glass-blowing workshops in Samarkand were producing pieces of remarkable...
-                </p>
+                <div
+                  className="ml-3 rounded bg-white px-3 py-1 text-[11px] text-slate-500"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  ildizmock.uz/tests/listening/practice
+                </div>
               </div>
-              <div className="bg-slate-50 p-8">
-                <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                  Questions 1–5
-                </div>
-                <div className="mb-2.5 rounded-xl border-2 border-brand-500 bg-white p-4">
-                  <div className="mb-2.5 text-[13px] font-bold">
-                    1. Glass-making in Uzbekistan dates back to the…
+
+              {/* Mock test runner — audio player / questions */}
+              <div className="grid min-h-[460px] grid-cols-1 md:grid-cols-2">
+                <div className="border-b border-slate-100 p-7 md:border-b-0 md:border-r">
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-teal-600">
+                    Listening · Section 1
                   </div>
-                  {['9th century', '12th century', '15th century', '17th century'].map((opt, i) => (
-                    <label key={opt} className="flex items-center gap-2 py-1.5 text-[13px] text-slate-700">
-                      <input
-                        type="radio"
-                        name="hp-q1"
-                        defaultChecked={i === 0}
-                        style={{ accentColor: 'var(--brand-600)' }}
+                  <h3 className="mb-4 text-[22px] font-extrabold leading-tight text-slate-900">
+                    Booking a Conference Room
+                  </h3>
+
+                  {/* Audio player */}
+                  <div className="mb-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4">
+                    <div className="mb-2.5 flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+                        style={{ background: 'var(--gradient-brand)' }}
+                      >
+                        <Play className="h-4 w-4" fill="white" />
+                      </button>
+                      <div className="flex-1">
+                        <div className="text-[12px] font-bold text-slate-900">
+                          Section 1 · Cambridge 19
+                        </div>
+                        <div className="text-[10.5px] text-slate-500">
+                          Plays once · auto-advances
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-teal-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-teal-700">
+                        ▶ Playing
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[10.5px] font-bold text-slate-500"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                      >
+                        01:42
+                      </span>
+                      <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-full"
+                          style={{ width: '38%', background: 'var(--gradient-brand)' }}
+                        />
+                      </div>
+                      <span
+                        className="text-[10.5px] font-bold text-slate-400"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                      >
+                        04:30
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Audio waveform mock */}
+                  <div className="flex h-10 items-end gap-[2px]">
+                    {[6, 12, 8, 16, 22, 18, 28, 14, 20, 26, 32, 22, 18, 24, 30, 20, 14, 8, 16, 22, 28, 18, 12, 22, 30, 24, 16, 10].map((h, i) => (
+                      <div
+                        key={i}
+                        className="w-1 rounded-full"
+                        style={{
+                          height: `${h}px`,
+                          background: i < 11 ? 'var(--brand-500)' : '#CBD5E1',
+                        }}
                       />
-                      {opt}
-                    </label>
-                  ))}
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[12px] leading-relaxed text-slate-500">
+                    Listen carefully and answer the questions on the right. The recording will not be repeated.
+                  </p>
                 </div>
-                <div className="rounded-xl border border-slate-100 bg-white p-4">
-                  <div className="text-[13px] font-bold text-slate-500">
-                    2. Workshops in Samarkand were known for…
+
+                <div className="bg-slate-50 p-7">
+                  <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                    Questions 1–5 · Form Completion
+                  </div>
+                  <div className="mb-2.5 rounded-xl border-2 border-teal-500 bg-white p-4">
+                    <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-slate-500">
+                      Booking form
+                    </div>
+                    <div className="mb-2 flex items-center justify-between text-[13px]">
+                      <span className="text-slate-600">Date:</span>
+                      <span className="font-bold text-slate-900">12 March</span>
+                    </div>
+                    <div className="mb-2 flex items-center justify-between text-[13px]">
+                      <span className="text-slate-600">Room number:</span>
+                      <div
+                        className="rounded border-2 border-teal-500 bg-teal-50 px-2 py-0.5 text-[12px] font-bold text-teal-700"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                      >
+                        2&nbsp;1&nbsp;4
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[13px]">
+                      <span className="text-slate-600">Capacity:</span>
+                      <span
+                        className="rounded border border-dashed border-slate-300 px-3 py-0.5 text-[12px] text-slate-400"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                      >
+                        ____
+                      </span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-white p-4">
+                    <div className="text-[13px] font-bold text-slate-500">
+                      3. Equipment requested includes…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating headphones chip — inside Listening frame, top right */}
+              <div
+                className="absolute right-3 top-14 hidden items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 md:flex"
+                style={{ boxShadow: 'var(--shadow-lg)' }}
+              >
+                <span
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+                  style={{ background: 'var(--gradient-brand)' }}
+                >
+                  <AudioLines className="h-4 w-4" />
+                </span>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-500">AUDIO</div>
+                  <div
+                    className="text-[13px] font-bold text-slate-900"
+                    style={{ fontFamily: 'var(--font-mono)' }}
+                  >
+                    01:42 / 04:30
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Floating timer chip */}
+          {/* Floating score chip — under the whole grid, anchored bottom-left */}
           <div
-            className="absolute -right-3 top-[60px] hidden items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 md:flex"
-            style={{ boxShadow: 'var(--shadow-lg)' }}
-          >
-            <span className="icon-tile icon-tile--cta" style={{ width: 40, height: 40, borderRadius: 12, marginBottom: 0 }}>
-              <Clock className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="text-[11px] font-bold text-slate-500">TIME REMAINING</div>
-              <div className="text-lg font-bold text-slate-900" style={{ fontFamily: 'var(--font-mono)' }}>
-                52:14
-              </div>
-            </div>
-          </div>
-
-          {/* Floating score chip */}
-          <div
-            className="absolute -left-4 bottom-8 hidden items-center gap-3.5 rounded-2xl border border-slate-100 bg-white p-4 md:flex"
+            className="absolute -left-4 -bottom-6 hidden items-center gap-3.5 rounded-2xl border border-slate-100 bg-white p-4 md:flex"
             style={{ boxShadow: 'var(--shadow-lg)' }}
           >
             <div

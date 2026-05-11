@@ -31,6 +31,13 @@ from .views_answer_sheet import AnswerSheetPreviewView
 from .views_audio_health import AudioHealthCheckView
 from .views_available_for_mock import AvailableTestsForMockView
 from .views_html_content import HtmlContentPreviewView
+from .views_ai_providers import (
+    AIProviderActivateView,
+    AIProviderAuditLogView,
+    AIProviderListView,
+    AIProviderTestView,
+    AIProviderUpdateView,
+)
 from .views_pdf_import import (
     AIQuotaStatsView,
     PDFImportConfirmView,
@@ -104,6 +111,20 @@ urlpatterns = [
     # ETAP 16.7 — AI quota / usage stats
     path('admin/tests/ai-quota/', AIQuotaStatsView.as_view(),
          name='pdf-import-ai-quota'),
+
+    # ETAP 16.8 — Superadmin AI Provider admin panel
+    path('super/ai-providers/', AIProviderListView.as_view(),
+         name='super-ai-providers-list'),
+    path('super/ai-providers/audit-log/', AIProviderAuditLogView.as_view(),
+         name='super-ai-providers-audit-log'),
+    path('super/ai-providers/<int:pk>/', AIProviderUpdateView.as_view(),
+         name='super-ai-providers-update'),
+    path('super/ai-providers/<int:pk>/activate/',
+         AIProviderActivateView.as_view(),
+         name='super-ai-providers-activate'),
+    path('super/ai-providers/<int:pk>/test/',
+         AIProviderTestView.as_view(),
+         name='super-ai-providers-test'),
 
     # HOTFIX — Mock session test dropdown'i uchun yagona endpoint
     # (org-owned + library testlarni birlashtirib qaytaradi)

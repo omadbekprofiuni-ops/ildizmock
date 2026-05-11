@@ -15,8 +15,15 @@ ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 # ETAP 16.7 — AI provider abstraction for PDF parsing.
 # 'gemini_aistudio' (default) yoki 'claude_anthropic'. Provider tanlash uchun
 # tegishli API key (.env'da GEMINI_API_KEY yoki ANTHROPIC_API_KEY) bo'lishi kerak.
+# ETAP 16.8 dan keyin: aktiv provider/API key DB'da (AIProviderConfig) — bu
+# qiymatlar faqat birinchi seed va fallback uchun ishlatiladi.
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 AI_PROVIDER = config('AI_PROVIDER', default='gemini_aistudio')
+
+# ETAP 16.8 — AI provider API key encryption (Fernet symmetric).
+# Yarating: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# va .env'ga AI_PROVIDER_ENCRYPTION_KEY=... qilib qo'ying.
+AI_PROVIDER_ENCRYPTION_KEY = config('AI_PROVIDER_ENCRYPTION_KEY', default='')
 
 # ETAP 15 — Google OAuth (B2C "Sign in with Google").
 # Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
