@@ -264,7 +264,7 @@ export default function FeaturesPage() {
               </p>
               <Link
                 to="/tests/reading"
-                className="mt-9 inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-8 py-[18px] text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]"
+                className="mt-9 inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-8 py-[18px] text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.40)]"
               >
                 <Play className="h-5 w-5" />
                 {t('featuresPage.cta.button')}

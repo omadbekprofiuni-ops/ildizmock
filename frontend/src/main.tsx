@@ -24,24 +24,11 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// Hide the brand splash once React has mounted. Bulletproof: hard-removes
-// after a timeout even if `transitionend` doesn't fire.
-function hideBrandSplash() {
-  const splash = document.getElementById('brand-splash')
-  if (!splash) return
-  splash.classList.add('is-hidden')
-  // Hard fallback — fire after the CSS transition (300ms) regardless.
-  window.setTimeout(() => splash.remove(), 400)
-}
-
-// Trigger as soon as React paints (next frame).
+// Splash CSS animation 1.4s'da o'z-o'zidan o'chadi (index.html). Bu yerda
+// React mount bo'lganda ertaroq (250ms) dismiss qilamiz.
 requestAnimationFrame(() => {
-  // Brief flash so the logo is actually visible on fast loads.
-  window.setTimeout(hideBrandSplash, 300)
-})
-
-// Belt-and-suspenders: in case the rAF path fails for any reason
-// (e.g. hard error, cached load), force-remove on full window load.
-window.addEventListener('load', () => {
-  window.setTimeout(hideBrandSplash, 800)
+  window.setTimeout(() => {
+    const hide = (window as { __hideBrandSplash?: () => void }).__hideBrandSplash
+    if (typeof hide === 'function') hide()
+  }, 250)
 })

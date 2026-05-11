@@ -228,7 +228,7 @@ export default function MockResultDetailPage() {
                   type="button"
                   onClick={() => downloadMutation.mutate()}
                   disabled={downloadMutation.isPending}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.25)] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cta-500 px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.30)] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {downloadMutation.isPending ? (
                     <>

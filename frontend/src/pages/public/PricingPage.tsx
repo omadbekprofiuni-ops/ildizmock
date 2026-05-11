@@ -117,7 +117,7 @@ export default function PricingPage() {
               {/* CTA */}
               <Link
                 to="/login"
-                className="mt-9 inline-flex w-full items-center justify-center rounded-2xl bg-cta-500 px-6 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]"
+                className="mt-9 inline-flex w-full items-center justify-center rounded-2xl bg-cta-500 px-6 py-4 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.40)]"
               >
                 {t('pricing.card.cta')}
               </Link>

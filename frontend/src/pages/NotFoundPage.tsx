@@ -67,7 +67,7 @@ export default function NotFoundPage() {
       </p>
       <Link
         to={to}
-        className="mt-2 inline-flex items-center justify-center rounded-2xl bg-cta-500 px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.25)]"
+        className="mt-2 inline-flex items-center justify-center rounded-2xl bg-cta-500 px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.30)]"
       >
         {label}
       </Link>

@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ILDIZmock</title>
     <style>
-      /* Minimal first-paint splash — barely visible, hidden by main.tsx
-         once React mounts. Bosh diqqat hero matn animatsiyasiga. */
+      /* CSS-only splash — JS yuklanmasa ham 1.2s'da o'z-o'zidan o'chadi.
+         Bu eng bulletproof yechim: animation engine browser'ning core
+         qismi, JS error/network/HMR'ga bog'liq emas. */
       #brand-splash {
         position: fixed;
         inset: 0;
@@ -16,11 +17,15 @@
         align-items: center;
         justify-content: center;
         background: #ffffff;
-        transition: opacity 0.3s ease;
+        animation: brand-splash-auto-hide 0.4s ease 1.0s forwards;
       }
+      /* JS tomondan ertaroq dismiss qilish uchun. */
       #brand-splash.is-hidden {
+        animation: none;
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0s linear 0.3s;
       }
       #brand-splash__logo {
         width: 64px;
@@ -29,6 +34,10 @@
         mix-blend-mode: multiply;
         opacity: 0.7;
       }
+      @keyframes brand-splash-auto-hide {
+        from { opacity: 1; visibility: visible; }
+        to   { opacity: 0; visibility: hidden; }
+      }
     </style>
   </head>
   <body>
@@ -36,6 +45,30 @@
       <img id="brand-splash__logo" src="/ildizmock-logo.png" alt="ILDIZmock" />
     </div>
     <div id="root"></div>
+    <script>
+      // CSS allaqachon 1.4s'da splash'ni invisible qiladi (animation +
+      // forwards fill). Bu inline JS — ertaroq dismiss qilish + DOM
+      // tozalash uchun. Hech qanday narsa muvaffaqiyatsiz bo'lsa ham
+      // CSS animation bajariladi.
+      (function () {
+        var splash = document.getElementById('brand-splash');
+        if (!splash) return;
+        var removed = false;
+        function dismiss() {
+          if (removed) return;
+          removed = true;
+          splash.classList.add('is-hidden');
+          window.setTimeout(function () {
+            if (splash && splash.parentNode) {
+              splash.parentNode.removeChild(splash);
+            }
+          }, 400);
+        }
+        window.__hideBrandSplash = dismiss;
+        // 2s'dan keyin garantiyalangan DOM tozalash.
+        window.setTimeout(dismiss, 2000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

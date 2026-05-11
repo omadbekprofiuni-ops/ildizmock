@@ -344,7 +344,7 @@ export default function PDFTestTaking() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="mt-6 w-full rounded-xl bg-cta-500 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(239,68,68,0.25)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+            className="mt-6 w-full rounded-xl bg-cta-500 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.30)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
           >
             {submitting ? 'Submitting…' : 'Submit Test'}
           </button>
