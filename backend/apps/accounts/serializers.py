@@ -57,6 +57,13 @@ class LoginSerializer(serializers.Serializer):
                 },
             )
 
+        # ETAP 14 — B2C foydalanuvchi bu yerga emas, /b2c/auth/login orqali
+        # kirishi kerak.
+        if user.role == 'b2c_user':
+            raise serializers.ValidationError(
+                {'detail': 'Individual foydalanuvchilar /b2c/login orqali kiradi.'},
+            )
+
         attrs['user'] = user
         return attrs
 

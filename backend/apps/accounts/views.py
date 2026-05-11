@@ -91,9 +91,18 @@ class RefreshView(APIView):
 
 class MeView(APIView):
     def get(self, request):
+        # ETAP 14 — B2C user uchun B2C profile bilan boyitilgan serializer.
+        if getattr(request.user, 'role', None) == 'b2c_user':
+            from apps.b2c.serializers import B2CUserSerializer
+            return Response(B2CUserSerializer(request.user).data)
         return Response(UserSerializer(request.user).data)
 
     def patch(self, request):
+        if getattr(request.user, 'role', None) == 'b2c_user':
+            return Response(
+                {'detail': 'B2C foydalanuvchi /b2c/profile orqali yangilashi kerak.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

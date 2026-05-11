@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 
 import { AdminRoute } from '@/components/AdminRoute'
+import { B2CRoute } from '@/components/B2CRoute'
 import { ConfirmProvider } from '@/components/ConfirmDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -71,6 +72,10 @@ import HomePage from './pages/HomePage'
 import FeaturesPage from './pages/public/FeaturesPage'
 import PricingPage from './pages/public/PricingPage'
 import LoginPage from './pages/auth/LoginPage'
+import B2CSignupPage from './pages/b2c/SignupPage'
+import B2CLoginPage from './pages/b2c/LoginPage'
+import B2CDashboardPage from './pages/b2c/DashboardPage'
+import B2CProfilePage from './pages/b2c/ProfilePage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
@@ -118,6 +123,13 @@ function AppRoutes() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/login" element={<LoginPage />} />
+
+          {/* ETAP 14 — B2C (individual user) flow */}
+          <Route path="/b2c/signup" element={<B2CSignupPage />} />
+          <Route path="/b2c/login" element={<B2CLoginPage />} />
+          <Route path="/b2c/dashboard" element={<B2CRoute><B2CDashboardPage /></B2CRoute>} />
+          <Route path="/b2c/profile" element={<B2CRoute><B2CProfilePage /></B2CRoute>} />
+
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
           <Route path="/take/:attemptId" element={<TakeTestPage />} />

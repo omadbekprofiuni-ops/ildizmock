@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.mock',
     'apps.billing',
     'apps.attendance',  # mahalliy: center/urls.py attendance.urls import qiladi
+    'apps.b2c',  # ETAP 14 — Individual (B2C) foydalanuvchi
     'apps._startup',  # heal_schema management command + AutoMigrateMiddleware
 ]
 

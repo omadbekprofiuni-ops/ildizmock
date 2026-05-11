@@ -98,60 +98,56 @@
   },
   "pricing": {
     "title": "Simple, Transparent Pricing",
-    "subtitle": "Pay only for mock exams. Practice is always free.",
+    "subtitle": "Practice is always free. Pay only for full mock exams.",
     "card": {
-      "name": "Pay Per Test",
-      "description": "Perfect for students and education centers",
+      "name": "Pay Per Mock",
+      "description": "For individual learners preparing for IELTS",
       "price": "30,000",
       "currency": "UZS",
-      "priceNote": "per mock test (first 100 tests)",
-      "tierAfterLabel": "After 100 tests:",
-      "tierAfterPrice": "50,000 UZS",
-      "tierAfterNote": "Premium pricing for high-volume users",
+      "priceNote": "per full mock exam",
+      "tierAfterLabel": "Starter pack:",
+      "tierAfterPrice": "75,000 UZS",
+      "tierAfterNote": "3 mock exams — save 15,000 UZS",
       "features": [
         {
           "title": "Unlimited Free Practice",
-          "description": "Practice all modules (Listening, Reading, Writing, Speaking) as many times as you want"
+          "description": "Reading, Listening and Writing practice — as many attempts as you want"
         },
         {
-          "title": "Pay Only for Mock Exams",
-          "description": "Teacher-supervised full mock exams with official certificates"
+          "title": "Full Mock Exams",
+          "description": "Cambridge-format timed mocks with official-style scoring"
         },
         {
           "title": "Instant Scoring & Certificates",
-          "description": "Automatic grading for Listening/Reading, professional certificates with PDF download"
+          "description": "Automatic band score for Listening & Reading, downloadable PDF certificate"
         },
         {
-          "title": "Progress Tracking",
-          "description": "Track your improvement over time with detailed analytics"
-        },
-        {
-          "title": "Student Management",
-          "description": "For centers — add students, track attendance, manage groups, create custom tests"
+          "title": "Personal Progress Tracking",
+          "description": "Your band trends over time, weak-area breakdown, history of attempts"
         }
       ],
-      "cta": "Get Started"
+      "cta": "Create free account"
     },
     "questions": "Questions about pricing?",
-    "contact": "Contact Us",
+    "contact": "Contact us",
     "faq": {
       "title": "Frequently Asked Questions",
       "items": [
         {
-          "q": "Is practice always free?",
-          "a": "Yes. Practice tests for Reading, Listening, and Writing modules are completely free with unlimited attempts. You only pay for proctored mock exams."
+          "q": "Is practice really free?",
+          "a": "Yes. Reading, Listening and Writing practice are completely free with unlimited attempts after you sign up."
         },
         {
-          "q": "What does the Pay Per Test plan include?",
-          "a": "You get instant scoring, progress tracking, and unlimited free practice. Pay only when your students take a real mock exam — 30,000 UZS per test for the first 100, then 50,000 UZS each."
+          "q": "What do I pay for?",
+          "a": "Only for full timed mock exams — 30,000 UZS per mock, or 75,000 UZS for a 3-mock pack."
         },
         {
-          "q": "Are there any monthly subscriptions?",
-          "a": "No. We offer a single Pay Per Test model — there are no monthly fees or hidden charges. You only pay when a mock test is taken."
+          "q": "Do I need a subscription?",
+          "a": "No. There are no monthly fees. You buy mocks one by one (or as a pack) and use them whenever you want."
         },
         {
-          "q": "Do students pay separately?",
-          "a": "No. Each mock test is charged to the center's account. Students join with a code and don't need to make a separate payment."
+          "q": "What do I get after a mock?",
+          "a": "An instant band score for Listening & Reading, a teacher-graded Writing result, and a downloadable certificate."
         }
       ]
     }
