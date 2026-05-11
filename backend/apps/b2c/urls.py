@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    B2CDashboardView,
     B2CGoogleAuthView,
     B2CLoginView,
     B2CLogoutView,
@@ -16,4 +17,5 @@ urlpatterns = [
     path('auth/logout', B2CLogoutView.as_view(), name='b2c-logout'),
     path('auth/me', B2CMeView.as_view(), name='b2c-me'),
     path('profile', B2CProfileView.as_view(), name='b2c-profile'),
+    path('dashboard', B2CDashboardView.as_view(), name='b2c-dashboard'),
 ]

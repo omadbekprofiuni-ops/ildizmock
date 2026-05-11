@@ -14,6 +14,10 @@ const schema = z.object({
   phone_number: z.string().optional(),
   preferred_language: z.enum(['uz', 'ru', 'en']),
   target_exam: z.string().optional(),
+  target_band: z.string().optional(),
+  exam_date: z.string().optional(),
+  // String sifatida saqlanadi, onSubmit'da int'ga aylantiriladi.
+  weekly_goal_sessions: z.string().optional(),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -44,6 +48,9 @@ export default function B2CProfilePage() {
       phone_number: '',
       preferred_language: 'uz',
       target_exam: '',
+      target_band: '',
+      exam_date: '',
+      weekly_goal_sessions: '5',
     },
   })
 
@@ -55,13 +62,26 @@ export default function B2CProfilePage() {
         phone_number: user.phone_number ?? '',
         preferred_language: (user.preferred_language as 'uz' | 'ru' | 'en') ?? 'uz',
         target_exam: user.target_exam ?? '',
+        target_band: user.target_band != null ? String(user.target_band) : '',
+        exam_date: user.exam_date ?? '',
+        weekly_goal_sessions: String(user.weekly_goal_sessions ?? 5),
       })
     }
   }, [user, form])
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await updateB2CProfile(values)
+      // Bo'sh stringlarni `null`/o'tkazib yuboramiz — backend partial update.
+      await updateB2CProfile({
+        first_name: values.first_name,
+        last_name: values.last_name,
+        phone_number: values.phone_number ?? '',
+        preferred_language: values.preferred_language,
+        target_exam: values.target_exam ?? '',
+        weekly_goal_sessions: Number(values.weekly_goal_sessions) || 5,
+        target_band: values.target_band ? values.target_band : null,
+        exam_date: values.exam_date ? values.exam_date : null,
+      })
       toast.success('Profil yangilandi')
     } catch (err) {
       const e = err as { response?: { data?: Record<string, unknown> } }
@@ -174,6 +194,49 @@ export default function B2CProfilePage() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="target_band" className="mb-2 block text-[13px] font-bold text-slate-700">
+                  Maqsadli ball (0–9)
+                </label>
+                <input
+                  id="target_band"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="9"
+                  placeholder="masalan, 7.5"
+                  {...form.register('target_band')}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-[15px] focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100"
+                />
+              </div>
+              <div>
+                <label htmlFor="exam_date" className="mb-2 block text-[13px] font-bold text-slate-700">
+                  Imtihon sanasi
+                </label>
+                <input
+                  id="exam_date"
+                  type="date"
+                  {...form.register('exam_date')}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-[15px] focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="weekly_goal_sessions" className="mb-2 block text-[13px] font-bold text-slate-700">
+                Haftalik maqsad (sessiyalar soni)
+              </label>
+              <input
+                id="weekly_goal_sessions"
+                type="number"
+                min="1"
+                max="14"
+                {...form.register('weekly_goal_sessions')}
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-[15px] focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100"
+              />
             </div>
 
             <button

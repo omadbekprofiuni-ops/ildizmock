@@ -51,6 +51,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.organizations.middleware.OrganizationContextMiddleware',
+    # ETAP 14 — B2B/B2C URL isolation (defense-in-depth)
+    'apps.b2c.middleware.UserTypeRouteMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

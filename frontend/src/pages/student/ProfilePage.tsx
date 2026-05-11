@@ -15,14 +15,16 @@ const LANGUAGES = [
 export default function ProfilePage() {
   const user = useAuth((s) => s.user)
   const updateProfile = useAuth((s) => s.updateProfile)
-  const [target, setTarget] = useState<string>(user?.target_band ?? '')
+  const [target, setTarget] = useState<string>(
+    user?.target_band != null ? String(user.target_band) : '',
+  )
   const [lang, setLang] = useState<string>(user?.language ?? 'uz')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     document.title = 'ILDIZmock — Profile'
     if (user) {
-      setTarget(user.target_band ?? '')
+      setTarget(user.target_band != null ? String(user.target_band) : '')
       setLang(user.language ?? 'uz')
     }
   }, [user])

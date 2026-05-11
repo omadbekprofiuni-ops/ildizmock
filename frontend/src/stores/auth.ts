@@ -11,7 +11,8 @@ export type User = {
   role: 'student' | 'teacher' | 'org_admin' | 'superadmin'
     | 'b2c_user'  // ETAP 14 — individual (B2C) user
     | 'admin' | 'super_admin'  // legacy
-  target_band: string | null
+  // `target_band` ikkala B2B (legacy) va B2C (ETAP 14) uchun ishlatiladi.
+  target_band: string | number | null
   language: 'uz' | 'ru' | 'en'
   must_change_password: boolean
   created_at: string
@@ -21,6 +22,8 @@ export type User = {
   phone_number?: string
   preferred_language?: 'uz' | 'ru' | 'en'
   target_exam?: string
+  exam_date?: string | null
+  weekly_goal_sessions?: number
   has_completed_onboarding?: boolean
 }
 
@@ -55,6 +58,9 @@ export type B2CProfileUpdate = Partial<{
   phone_number: string
   preferred_language: 'uz' | 'ru' | 'en'
   target_exam: string
+  target_band: string | number | null
+  exam_date: string | null
+  weekly_goal_sessions: number
   has_completed_onboarding: boolean
 }>
 

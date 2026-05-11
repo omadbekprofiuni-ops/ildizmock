@@ -122,3 +122,26 @@ class B2CProfileView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response(B2CUserSerializer(user).data)
+
+
+class B2CDashboardView(APIView):
+    """GET /api/v1/b2c/dashboard — KPI + streak + heatmap + getting started."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'b2c_user':
+            return Response(
+                {'detail': 'Faqat individual foydalanuvchilar uchun.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        from .services import activity as activity_service
+        user = request.user
+        return Response({
+            'user': B2CUserSerializer(user).data,
+            'kpi': activity_service.get_kpi_stats(user),
+            'streak': activity_service.get_streak_stats(user),
+            'weekly': activity_service.get_weekly_progress(user),
+            'heatmap': activity_service.get_heatmap_data(user, weeks=12),
+            'getting_started': activity_service.get_getting_started(user),
+            'sections': activity_service.get_section_overview(),
+        })

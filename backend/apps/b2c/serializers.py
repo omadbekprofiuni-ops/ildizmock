@@ -176,6 +176,16 @@ class B2CUserSerializer(serializers.ModelSerializer):
     target_exam = serializers.CharField(
         source='b2c_profile.target_exam', read_only=True,
     )
+    target_band = serializers.DecimalField(
+        source='b2c_profile.target_band', max_digits=3, decimal_places=1,
+        read_only=True,
+    )
+    exam_date = serializers.DateField(
+        source='b2c_profile.exam_date', read_only=True,
+    )
+    weekly_goal_sessions = serializers.IntegerField(
+        source='b2c_profile.weekly_goal_sessions', read_only=True,
+    )
     has_completed_onboarding = serializers.BooleanField(
         source='b2c_profile.has_completed_onboarding', read_only=True,
     )
@@ -187,7 +197,8 @@ class B2CUserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'role',
-            'phone_number', 'preferred_language', 'target_exam',
+            'phone_number', 'preferred_language',
+            'target_exam', 'target_band', 'exam_date', 'weekly_goal_sessions',
             'has_completed_onboarding', 'signup_source', 'created_at',
         ]
         read_only_fields = fields
@@ -206,6 +217,13 @@ class B2CProfileUpdateSerializer(serializers.Serializer):
     target_exam = serializers.CharField(
         max_length=50, allow_blank=True, required=False,
     )
+    target_band = serializers.DecimalField(
+        max_digits=3, decimal_places=1, required=False, allow_null=True,
+    )
+    exam_date = serializers.DateField(required=False, allow_null=True)
+    weekly_goal_sessions = serializers.IntegerField(
+        required=False, min_value=1, max_value=14,
+    )
     has_completed_onboarding = serializers.BooleanField(required=False)
 
     def update(self, instance: 'User', validated_data):  # type: ignore[name-defined]
@@ -213,6 +231,7 @@ class B2CProfileUpdateSerializer(serializers.Serializer):
         user_fields = ('first_name', 'last_name')
         profile_fields = (
             'phone_number', 'preferred_language', 'target_exam',
+            'target_band', 'exam_date', 'weekly_goal_sessions',
             'has_completed_onboarding',
         )
         user_dirty = []
