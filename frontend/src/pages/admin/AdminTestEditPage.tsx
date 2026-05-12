@@ -454,6 +454,20 @@ export default function AdminTestEditPage({
   }
   const accent = moduleAccents[draft.module]
 
+  // ETAP 19 — agar test wizard'da yaratilgan bo'lsa (passages bo'sh, lekin
+  // question_count > 0), simple editor savollarni ko'rsata olmaydi. Foydalanuvchini
+  // wizard'ga yo'naltirish uchun banner.
+  const wizardCandidate =
+    !isNew &&
+    !query.isLoading &&
+    query.data &&
+    draft.passages.length === 0 &&
+    ((query.data as { question_count?: number }).question_count ?? 0) > 0
+
+  const switchToWizardPath = basePath.startsWith('/')
+    ? `${basePath}/wizard/${testId}`
+    : '#'
+
   return (
     <Layout>
       <div className="mx-auto max-w-5xl p-6 lg:p-10">
@@ -463,6 +477,29 @@ export default function AdminTestEditPage({
           <span>/</span>
           <span className="text-slate-900">{isNew ? 'New' : 'Edit'}</span>
         </div>
+
+        {/* ETAP 19 — Wizard test ogohlantirish */}
+        {wizardCandidate && basePath.startsWith('/') && (
+          <div className="mb-5 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-sm">
+                <p className="font-bold text-amber-900">
+                  Bu test Wizard yordamida yaratilgan
+                </p>
+                <p className="mt-1 text-amber-800">
+                  Savollar va passage'lar Wizard formatida saqlangan. Oddiy editor
+                  ularni ko'rsata olmaydi. Wizard'ga o'tib savollarni tahrirlang.
+                </p>
+              </div>
+              <Link
+                to={switchToWizardPath}
+                className="shrink-0 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700"
+              >
+                Wizard'ga o'tish →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
