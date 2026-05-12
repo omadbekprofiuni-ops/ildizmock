@@ -283,6 +283,11 @@ def section_data_view(request, browser_session_id):
         payload['writing_tasks'] = StudentWritingTaskSerializer(
             test.writing_tasks.all(), many=True, context=ctx,
         ).data
+        # Refresh-safety: avval autosave qilingan draftlarni qaytaramiz.
+        payload['drafts'] = {
+            'task1': participant.writing_task1_text or '',
+            'task2': participant.writing_task2_text or '',
+        }
     elif session.status == 'speaking':
         # Speaking test prompt'larini writing_tasks shablonida yuboramiz
         # (har task — bitta savol/cue card)
@@ -487,13 +492,56 @@ def submit_reading(request, browser_session_id):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
-def submit_writing(request, browser_session_id):
+def save_writing_draft(request, browser_session_id):
+    """Writing draft autosave (refresh-safe).
+
+    Body: `{"task1": "...", "task2": "..."}` — bir yoki ikkala maydon. Faqat
+    yuborilgan maydonlar yangilanadi. Submission belgisi qo'yilmaydi —
+    talaba "Submit"'ni bosgan vaqtgacha yoki sessiya bo'lim yopilganda
+    auto-commit bo'lguncha "draft" holatida qoladi.
+    """
     participant = get_object_or_404(
         MockParticipant, browser_session_id=browser_session_id,
     )
-    err = _check_section(participant, 'writing')
-    if err:
-        return err
+    if participant.writing_submitted_at:
+        return Response({'detail': 'Already submitted.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+    if participant.session.status != 'writing':
+        return Response({'detail': 'Session is not in the writing stage.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    fields = []
+    if 'task1' in request.data:
+        participant.writing_task1_text = (request.data.get('task1') or '')
+        fields.append('writing_task1_text')
+    if 'task2' in request.data:
+        participant.writing_task2_text = (request.data.get('task2') or '')
+        fields.append('writing_task2_text')
+    if fields:
+        participant.save(update_fields=fields)
+    return Response({'saved': True, 'fields': fields})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def submit_writing(request, browser_session_id):
+    """Writing yakuniy submission.
+
+    `_check_section` o'rniga yumshoqroq tekshiruv: sessiya yopilmagan
+    (`finished`/`cancelled` emas) va session writing testi biriktirilgan
+    bo'lsa kech submit qilishga ham ruxsat beramiz — admin "advance"
+    bosib o'tib ketgan bo'lsa ham, talaba ulgurmagan yozuvi yo'qolmasin.
+    """
+    participant = get_object_or_404(
+        MockParticipant, browser_session_id=browser_session_id,
+    )
+    session = participant.session
+    if session.status in ('cancelled',):
+        return Response({'detail': 'Session has been cancelled.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+    if not session.writing_test_id:
+        return Response({'detail': 'No Writing test attached.'},
+                        status=status.HTTP_400_BAD_REQUEST)
     if participant.writing_submitted_at:
         return Response({'detail': 'Already submitted.'},
                         status=status.HTTP_400_BAD_REQUEST)

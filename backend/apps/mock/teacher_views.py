@@ -47,21 +47,25 @@ def _scope(user):
 
 
 def _participant_payload(p: MockParticipant) -> dict:
+    """ETAP 21 — Anonim grading: ism/email teacher'ga ko'rinmaydi, faqat
+    exam_taker_id. Listening/Reading ballari ham yashiriladi — teacher
+    Writing/Speaking baholashda boshqa modul natijalariga qaramasin."""
     s = p.session
     return {
         'id': p.id,
-        'full_name': p.full_name,
+        'exam_taker_id': p.exam_taker_id,
+        # Maxsus: `full_name` o'rniga exam_taker_id ko'rsatiladi —
+        # frontend eski kodga moslash uchun field qoladi, lekin ID bilan
+        # to'ldiriladi (teacher orqali ism aslo ko'rinmaydi).
+        'full_name': p.exam_taker_id,
         'session': {
             'id': s.id,
             'name': s.name,
             'date': s.date.isoformat(),
             'status': s.status,
         },
-        'listening_score': str(p.listening_score) if p.listening_score is not None else None,
-        'reading_score': str(p.reading_score) if p.reading_score is not None else None,
         'writing_score': str(p.writing_score) if p.writing_score is not None else None,
         'speaking_score': str(p.speaking_score) if p.speaking_score is not None else None,
-        'overall_band_score': str(p.overall_band_score) if p.overall_band_score is not None else None,
         'writing_status': p.writing_status,
         'speaking_status': p.speaking_status,
         'writing_submitted_at': p.writing_submitted_at,
@@ -77,6 +81,10 @@ def _participant_payload(p: MockParticipant) -> dict:
             f: str(getattr(p, f)) if getattr(p, f) is not None else None
             for f in SPEAKING_FIELDS
         },
+        # ETAP 21 — teacher Listening/Reading/Overall ko'rmaydi (anonim).
+        # Admin override va Overall ballini faqat admin uchun ko'rsatadigan
+        # alohida endpoint'lar bor (admin_views.py).
+        'anonymous_grading': True,
     }
 
 
@@ -88,10 +96,19 @@ class TeacherMockViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def dashboard(self, request):
         scope = _scope(request.user)
+        # ETAP 21 — submitted bo'lganlar (yoki session yopilganda
+        # avtomatik commit qilinganlar) baholash navbatiga tushadi.
         writing_pending = scope.filter(
             writing_status='pending',
-        ).exclude(writing_task1_text='', writing_task2_text='').count()
-        speaking_pending = scope.filter(speaking_status='pending').count()
+            writing_submitted_at__isnull=False,
+        ).count()
+        # Speaking — face-to-face baholanadi (audio shart emas). Sessiyada
+        # speaking testi bo'lsa, har bir participant teacher navbatiga
+        # tushadi (audio yuklangan/yuklanmaganidan qat'i nazar).
+        speaking_pending = scope.filter(
+            speaking_status='pending',
+            session__speaking_test__isnull=False,
+        ).count()
 
         recent_window = timezone.now() - timedelta(days=7)
         my_writings_recent = scope.filter(
@@ -112,21 +129,24 @@ class TeacherMockViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'], url_path='writing/queue')
     def writing_queue(self, request):
+        # ETAP 21 — Anonim grading: teacher exam_taker_id orqali ko'radi.
+        # Navbat: submitted (yoki auto-committed) — text bo'sh bo'lsa ham
+        # teacher ko'rishi kerak (talaba kelmagan/yozmagan deb belgilash uchun).
         qs = _scope(request.user).filter(
             writing_status='pending',
-        ).exclude(writing_task1_text='', writing_task2_text='').order_by(
-            'session__date', 'full_name',
+            writing_submitted_at__isnull=False,
+        ).order_by(
+            'session__date', 'exam_taker_id',
         )
         return Response([
             {
                 'id': p.id,
-                'full_name': p.full_name,
+                'exam_taker_id': p.exam_taker_id,
+                'full_name': p.exam_taker_id,
                 'session': p.session.name,
                 'session_date': p.session.date.isoformat(),
-                'listening_score': str(p.listening_score) if p.listening_score is not None else None,
-                'reading_score': str(p.reading_score) if p.reading_score is not None else None,
-                'speaking_score': str(p.speaking_score) if p.speaking_score is not None else None,
                 'submitted_at': p.writing_submitted_at,
+                'anonymous_grading': True,
             }
             for p in qs
         ])
@@ -184,8 +204,10 @@ class TeacherMockViewSet(viewsets.ViewSet):
 
         # Keyingi navbatdagini ham qaytaramiz (auto-advance UX)
         next_p = _scope(request.user).filter(
-            writing_status='pending', id__gt=p.id,
-        ).exclude(writing_task1_text='', writing_task2_text='').order_by('id').first()
+            writing_status='pending',
+            writing_submitted_at__isnull=False,
+            id__gt=p.id,
+        ).order_by('id').first()
 
         return Response({
             'participant': _participant_payload(p),
@@ -194,18 +216,22 @@ class TeacherMockViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'], url_path='speaking/queue')
     def speaking_queue(self, request):
+        # ETAP 21 — Anonim grading. Speaking face-to-face baholanadi
+        # (audio platformaga yuklanishi shart emas), shuning uchun sessiyada
+        # speaking testi biriktirilgan bo'lsa, hamma participantlar
+        # navbatga tushadi.
         qs = _scope(request.user).filter(
             speaking_status='pending',
-        ).order_by('session__date', 'full_name')
+            session__speaking_test__isnull=False,
+        ).order_by('session__date', 'exam_taker_id')
         return Response([
             {
                 'id': p.id,
-                'full_name': p.full_name,
+                'exam_taker_id': p.exam_taker_id,
+                'full_name': p.exam_taker_id,
                 'session': p.session.name,
                 'session_date': p.session.date.isoformat(),
-                'listening_score': str(p.listening_score) if p.listening_score is not None else None,
-                'reading_score': str(p.reading_score) if p.reading_score is not None else None,
-                'writing_score': str(p.writing_score) if p.writing_score is not None else None,
+                'anonymous_grading': True,
             }
             for p in qs
         ])

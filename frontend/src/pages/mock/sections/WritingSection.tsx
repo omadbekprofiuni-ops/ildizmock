@@ -15,6 +15,8 @@ interface WritingTask {
   requirements: string
 }
 
+type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length
 
 export function WritingSection({
@@ -34,14 +36,59 @@ export function WritingSection({
   const [task2, setTask2] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [saveState, setSaveState] = useState<SaveState>('idle')
   const submittedRef = useRef(false)
+  const task1Ref = useRef('')
+  const task2Ref = useRef('')
+  const lastSavedRef = useRef({ task1: '', task2: '' })
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     api
       .get(`/mock/section/${bsid}/`)
-      .then((r) => setTasks(r.data.writing_tasks || []))
+      .then((r) => {
+        setTasks(r.data.writing_tasks || [])
+        // Refresh-safe — backend draftlarini tiklaymiz.
+        const drafts = r.data.drafts || {}
+        const t1 = drafts.task1 || ''
+        const t2 = drafts.task2 || ''
+        setTask1(t1)
+        setTask2(t2)
+        task1Ref.current = t1
+        task2Ref.current = t2
+        lastSavedRef.current = { task1: t1, task2: t2 }
+      })
       .finally(() => setLoading(false))
   }, [bsid])
+
+  // Debounced autosave — har 1.2s'da yangilangan task'larni backendga yuboramiz.
+  useEffect(() => {
+    task1Ref.current = task1
+    task2Ref.current = task2
+    if (loading) return
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(async () => {
+      const last = lastSavedRef.current
+      const payload: { task1?: string; task2?: string } = {}
+      if (task1Ref.current !== last.task1) payload.task1 = task1Ref.current
+      if (task2Ref.current !== last.task2) payload.task2 = task2Ref.current
+      if (!Object.keys(payload).length) return
+      try {
+        setSaveState('saving')
+        await api.post(`/mock/writing-draft/${bsid}/`, payload)
+        lastSavedRef.current = {
+          task1: task1Ref.current,
+          task2: task2Ref.current,
+        }
+        setSaveState('saved')
+      } catch {
+        setSaveState('error')
+      }
+    }, 1200)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [task1, task2, loading, bsid])
 
   const submit = async () => {
     if (submittedRef.current) return
@@ -143,7 +190,25 @@ export function WritingSection({
             >
               {wc} / {active.min_words} words
             </span>
-            <span className="text-slate-400">Auto-save (not in browser memory)</span>
+            <span
+              className={
+                saveState === 'error'
+                  ? 'text-rose-600'
+                  : saveState === 'saving'
+                    ? 'text-slate-500'
+                    : saveState === 'saved'
+                      ? 'text-emerald-600'
+                      : 'text-slate-400'
+              }
+            >
+              {saveState === 'saving'
+                ? 'Saving…'
+                : saveState === 'saved'
+                  ? '✓ Auto-saved'
+                  : saveState === 'error'
+                    ? 'Save failed — keep typing, will retry'
+                    : 'Auto-save active'}
+            </span>
           </div>
         </div>
       </div>
