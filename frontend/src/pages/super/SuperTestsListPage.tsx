@@ -1,4 +1,4 @@
-import { FileText, Plus } from 'lucide-react'
+import { FileText, Pencil, Plus, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -72,8 +72,11 @@ export default function SuperTestsListPage() {
               <Link to="/super/tests/new/pdf-import" className={btnOutline}>
                 <FileText size={16} /> Import PDF
               </Link>
+              <Link to="/super/tests/new" className={btnOutline}>
+                <Plus size={16} /> New (Simple)
+              </Link>
               <Link to="/super/tests/wizard" className={btnPrimary}>
-                <Plus size={16} /> New test (Wizard)
+                <Sparkles size={16} /> New (Wizard)
               </Link>
             </div>
           }
@@ -145,10 +148,18 @@ export default function SuperTestsListPage() {
                     <td className={adminTable.td + ' text-right'}>
                       <div className="inline-flex items-center gap-1">
                         <Link
-                          to={`/super/tests/wizard/${t.id}`}
+                          to={`/super/tests/${t.id}/edit`}
+                          title="Oddiy editor — tezroq, savollarni qatorma-qator qo‘shish"
                           className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
-                          Edit
+                          <Pencil size={12} /> Edit
+                        </Link>
+                        <Link
+                          to={`/super/tests/wizard/${t.id}`}
+                          title="Step-by-step wizard"
+                          className="inline-flex items-center gap-1 rounded-xl border border-brand-200 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                        >
+                          <Sparkles size={12} /> Wizard
                         </Link>
                         <button
                           type="button"
