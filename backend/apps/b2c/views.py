@@ -234,3 +234,169 @@ class B2CCatalogDetailView(APIView):
             return forbidden
         test = get_object_or_404(catalog_service.get_published_tests(), pk=pk)
         return Response(B2CCatalogTestDetailSerializer(test).data)
+
+
+class B2CStartTestView(APIView):
+    """POST /api/v1/b2c/catalog/<uuid:pk>/start
+
+    B2C testni boshlash. Atomic:
+    1. Test catalog'da available_for_b2c bo'lishi shart
+    2. Kreditni ushlab turish (deduct)
+    3. Attempt yaratish (status=in_progress)
+    4. Attempt id'sini qaytarish — frontend /take/<id>'ga o'tkazadi
+
+    Kredit yetarli emas bo'lsa — 402 Payment Required.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+        from django.db import transaction as db_tx
+        from apps.attempts.models import Attempt
+        from .models import CreditTransaction
+        from .services.credits import InsufficientCreditsError, deduct_credits
+
+        test = get_object_or_404(catalog_service.get_published_tests(), pk=pk)
+
+        # ETAP 19 default cost — har test 1 credit (b2c_credits_cost field
+        # ETAP 17 ga qo'shilganda undan o'qiladi)
+        cost = getattr(test, 'b2c_credits_cost', None) or 1
+
+        try:
+            with db_tx.atomic():
+                tx = deduct_credits(
+                    user=request.user, amount=cost,
+                    kind=CreditTransaction.Kind.SPEND,
+                    note=f'Test boshlash: {test.name}',
+                )
+                attempt = Attempt.objects.create(
+                    user=request.user, test=test,
+                    status='in_progress',
+                )
+        except InsufficientCreditsError as e:
+            return Response({'detail': str(e), 'code': 'insufficient_credits'}, status=402)
+
+        return Response({
+            'attempt_id': str(attempt.id),
+            'credits_spent': cost,
+            'new_balance': tx.balance_after,
+        }, status=status.HTTP_201_CREATED)
+
+
+class B2CCancelAttemptView(APIView):
+    """POST /api/v1/b2c/attempts/<uuid>/cancel
+
+    Foydalanuvchi Test rules gate'da Cancel bossa, attempt boshlanmagan
+    (started_at IS NULL) holatda kreditni qaytarib beradi.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+        from django.db import transaction as db_tx
+        from apps.attempts.models import Attempt
+        from .models import CreditTransaction
+        from .services.credits import grant_credits
+
+        try:
+            attempt = Attempt.objects.get(pk=pk, user=request.user)
+        except Attempt.DoesNotExist:
+            return Response({'detail': 'Attempt topilmadi.'}, status=404)
+
+        # Faqat boshlanmagan attempt'larni bekor qilish mumkin
+        if attempt.started_at is not None:
+            return Response(
+                {'detail': 'Test allaqachon boshlangan, bekor qilib bo‘lmaydi.'},
+                status=400,
+            )
+        if attempt.status not in ('in_progress',):
+            return Response({'detail': 'Bu attempt allaqachon yopilgan.'}, status=400)
+
+        # SPEND tranzaksiyasini topib, REFUND beramiz
+        spend_tx = (
+            CreditTransaction.objects
+            .filter(
+                user=request.user, kind=CreditTransaction.Kind.SPEND,
+                note__icontains=f'Test boshlash: {attempt.test.name}',
+            )
+            .order_by('-created_at').first()
+        )
+        refunded = 0
+        if spend_tx and spend_tx.amount < 0:
+            refunded = abs(spend_tx.amount)
+
+        with db_tx.atomic():
+            attempt.status = 'expired'
+            attempt.save(update_fields=['status'])
+            if refunded > 0:
+                grant_credits(
+                    user=request.user, amount=refunded,
+                    kind=CreditTransaction.Kind.REFUND,
+                    note=f'Test bekor qilindi: {attempt.test.name}',
+                )
+
+        return Response({
+            'refunded': refunded,
+            'attempt_id': str(attempt.id),
+        })
+
+
+class B2CRedeemPromoCodeView(APIView):
+    """POST /api/v1/b2c/credits/redeem-promo
+
+    Body: {code: "ABC123"}
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+        from .services.promo_codes import PromoCodeError, redeem_promo_code
+
+        try:
+            result = redeem_promo_code(request.user, request.data.get('code') or '')
+        except PromoCodeError as e:
+            return Response({'detail': str(e)}, status=400)
+        return Response(result)
+
+
+class B2CCreditsView(APIView):
+    """GET /api/v1/b2c/credits — joriy balans + oxirgi 100 ta tranzaksiya.
+
+    ETAP 19 — B2C user o'z kredit tarixini ko'rishi uchun.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        forbidden = _ensure_b2c(request)
+        if forbidden:
+            return forbidden
+        from .models import CreditTransaction
+        from .services.credits import get_or_create_balance
+
+        balance = get_or_create_balance(request.user)
+        txs = (
+            CreditTransaction.objects
+            .filter(user=request.user)
+            .order_by('-created_at')[:100]
+        )
+        return Response({
+            'balance': balance.balance,
+            'transactions': [
+                {
+                    'id': t.id,
+                    'kind': t.kind,
+                    'kind_display': t.get_kind_display(),
+                    'amount': t.amount,
+                    'balance_after': t.balance_after,
+                    'note': t.note,
+                    'created_at': t.created_at,
+                }
+                for t in txs
+            ],
+        })

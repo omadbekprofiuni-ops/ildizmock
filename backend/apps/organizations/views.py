@@ -134,6 +134,46 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
             return OrganizationDetailSerializer
         return OrganizationListSerializer
 
+    def get_queryset(self):
+        # ETAP 19 — qidiruv (q), holat filtri (status_filter), include_deleted
+        qs = Organization.objects.select_related('plan').all()
+
+        # `list` da soft-deleted yashirin (faqat status_filter=deleted bo'lganda chiqadi)
+        status_filter = self.request.query_params.get('status_filter', 'all')
+        if status_filter == 'active':
+            qs = qs.filter(is_suspended=False, deleted_at__isnull=True)
+        elif status_filter == 'suspended':
+            qs = qs.filter(is_suspended=True, deleted_at__isnull=True)
+        elif status_filter == 'deleted':
+            qs = qs.filter(deleted_at__isnull=False)
+        elif status_filter == 'all':
+            # 'all' = aktiv + suspended (deleted'lar yashirin)
+            qs = qs.filter(deleted_at__isnull=True)
+
+        q = (self.request.query_params.get('q') or '').strip()
+        if q:
+            from django.db.models import Q
+            qs = qs.filter(Q(name__icontains=q) | Q(slug__icontains=q))
+        return qs
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """ETAP 19 — Centers list yuqorisidagi KPI uchun."""
+        total = Organization.objects.filter(deleted_at__isnull=True).count()
+        active = Organization.objects.filter(
+            is_suspended=False, deleted_at__isnull=True,
+        ).count()
+        suspended = Organization.objects.filter(
+            is_suspended=True, deleted_at__isnull=True,
+        ).count()
+        deleted = Organization.objects.filter(deleted_at__isnull=False).count()
+        return Response({
+            'total': total,
+            'active': active,
+            'suspended': suspended,
+            'deleted': deleted,
+        })
+
     def create(self, request, *args, **kwargs):
         ser = OrganizationCreateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -214,6 +254,173 @@ class SuperAdminOrganizationViewSet(viewsets.ModelViewSet):
         org.status = 'blocked' if org.status != 'blocked' else 'active'
         org.save(update_fields=['status'])
         return Response(OrganizationDetailSerializer(org).data)
+
+    # ETAP 19 — suspend / activate / soft_delete / reassign_admin
+    @action(detail=True, methods=['post'])
+    def suspend(self, request, pk=None):
+        """Markazni vaqtinchalik to'xtatish. Sabab majburiy."""
+        org = self.get_object()
+        if org.deleted_at is not None:
+            return Response({'detail': 'O‘chirilgan markazni to‘xtatib bo‘lmaydi.'}, status=400)
+        reason = (request.data.get('reason') or '').strip()
+        if not reason:
+            return Response({'reason': 'Sabab kiritish majburiy.'}, status=400)
+        org.is_suspended = True
+        org.suspended_at = timezone.now()
+        org.suspended_by = request.user
+        org.suspended_reason = reason
+        org.save(update_fields=[
+            'is_suspended', 'suspended_at', 'suspended_by', 'suspended_reason',
+        ])
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        """To‘xtatilgan markazni qaytarish."""
+        org = self.get_object()
+        if org.deleted_at is not None:
+            return Response({'detail': 'O‘chirilgan markazni faollashtirib bo‘lmaydi.'}, status=400)
+        org.is_suspended = False
+        org.suspended_at = None
+        org.suspended_by = None
+        org.suspended_reason = ''
+        org.save(update_fields=[
+            'is_suspended', 'suspended_at', 'suspended_by', 'suspended_reason',
+        ])
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['post'], url_path='soft-delete')
+    def soft_delete(self, request, pk=None):
+        """Markazni arxivga olish. Tasdiqlash uchun markaz nomi mos kelishi shart."""
+        org = self.get_object()
+        confirm = (request.data.get('confirm_text') or '').strip()
+        if confirm != org.name:
+            return Response(
+                {'confirm_text': f'Tasdiqlash matni mos kelmadi. Aniq tering: "{org.name}"'},
+                status=400,
+            )
+        org.deleted_at = timezone.now()
+        org.deleted_by = request.user
+        org.save(update_fields=['deleted_at', 'deleted_by'])
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['post'], url_path='restore')
+    def restore(self, request, pk=None):
+        """Arxivdan qaytarish."""
+        org = self.get_object()
+        if org.deleted_at is None:
+            return Response({'detail': 'Markaz o‘chirilmagan.'}, status=400)
+        org.deleted_at = None
+        org.deleted_by = None
+        org.save(update_fields=['deleted_at', 'deleted_by'])
+        return Response(OrganizationDetailSerializer(org).data)
+
+    @action(detail=True, methods=['post'], url_path='reassign-admin')
+    def reassign_admin(self, request, pk=None):
+        """Mavjud admin'ni almashtirish: berilgan username yangi admin bo'ladi.
+
+        Eski adminlar saqlanadi (yo'q qilinmaydi) — markazda bir nechta admin bo'lishi
+        mumkin. Bu shunchaki yangi adminni qo'shadi yoki mavjud user rolini
+        org_admin'ga o'zgartiradi.
+        """
+        from apps.accounts.serializers import _validate_username_format
+        from django.db import transaction as db_tx
+
+        org = self.get_object()
+        username = (request.data.get('username') or '').strip().lower()
+        if not username:
+            return Response({'username': 'Username kiriting.'}, status=400)
+        try:
+            username = _validate_username_format(username)
+        except Exception as e:
+            return Response({'username': str(e)}, status=400)
+
+        with db_tx.atomic():
+            try:
+                target = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({'username': 'Bunday foydalanuvchi topilmadi.'}, status=404)
+
+            # Faqat boshqa B2B markazlarga aloqador bo'lmagan yoki shu markazning
+            # a'zosini admin qilish mumkin
+            if target.role == 'superadmin':
+                return Response(
+                    {'detail': 'Super-admin ni markaz adminiga aylantirib bo‘lmaydi.'},
+                    status=400,
+                )
+            if target.role == 'b2c_user':
+                return Response(
+                    {'detail': 'B2C foydalanuvchini markaz adminiga aylantirib bo‘lmaydi.'},
+                    status=400,
+                )
+            if (
+                target.organization_id is not None
+                and target.organization_id != org.id
+            ):
+                return Response(
+                    {'detail': f'Bu foydalanuvchi boshqa markazga tegishli: {target.organization.name}'},
+                    status=400,
+                )
+
+            target.organization = org
+            target.role = 'org_admin'
+            target.is_active = True
+            target.save(update_fields=['organization', 'role', 'is_active'])
+            OrganizationMembership.objects.get_or_create(
+                user=target, organization=org, role='admin',
+            )
+
+        return Response({
+            'message': f'{target.username} endi {org.name} markazining admini.',
+            'admin': {
+                'id': target.id,
+                'username': target.username,
+                'first_name': target.first_name,
+                'last_name': target.last_name,
+            },
+        })
+
+    @action(detail=True, methods=['get'], url_path='trend')
+    def trend(self, request, pk=None):
+        """Oxirgi 6 oy: yangi talabalar va attempts soni."""
+        from collections import defaultdict
+        from datetime import date
+
+        org = self.get_object()
+        today = date.today()
+        six_months_ago = today.replace(day=1)
+        for _ in range(5):
+            prev = six_months_ago - timedelta(days=1)
+            six_months_ago = prev.replace(day=1)
+
+        # Oxirgi 6 oy label'lari (ASC)
+        months: list[str] = []
+        cursor = today.replace(day=1)
+        for _ in range(6):
+            months.insert(0, cursor.strftime('%Y-%m'))
+            prev = cursor - timedelta(days=1)
+            cursor = prev.replace(day=1)
+
+        new_students = User.objects.filter(
+            role='student', organization=org,
+            created_at__date__gte=six_months_ago,
+        ).values_list('created_at', flat=True)
+        students_by_month: dict[str, int] = defaultdict(int)
+        for dt in new_students:
+            students_by_month[dt.strftime('%Y-%m')] += 1
+
+        attempts = Attempt.objects.filter(
+            organization=org, started_at__date__gte=six_months_ago,
+        ).values_list('started_at', flat=True)
+        attempts_by_month: dict[str, int] = defaultdict(int)
+        for dt in attempts:
+            attempts_by_month[dt.strftime('%Y-%m')] += 1
+
+        return Response({
+            'months': months,
+            'new_students': [students_by_month.get(m, 0) for m in months],
+            'attempts': [attempts_by_month.get(m, 0) for m in months],
+        })
 
     @action(
         detail=True, methods=['post', 'delete'], url_path='logo',

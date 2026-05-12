@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 import { z } from 'zod'
 
+import { B2CLayout } from '@/components/B2CLayout'
 import { toast } from '@/components/ui/toaster'
 import { useAuth } from '@/stores/auth'
 
@@ -97,33 +96,28 @@ export default function B2CProfilePage() {
   const errors = form.formState.errors
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <Link
-            to="/b2c/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 hover:text-brand-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> Dashboard
-          </Link>
-          <span className="text-sm font-extrabold text-slate-900">Profil</span>
-          <span />
+    <B2CLayout active="profile">
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Profil</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Shaxsiy ma‘lumotlar, til va maqsadli imtihon sozlamalari
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-lg font-extrabold text-brand-700">
+            {(user?.first_name || user?.email || '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-bold text-slate-900">
+              {user?.first_name || user?.email}
+            </p>
+            <p className="truncate text-xs text-slate-500">{user?.email ?? '—'}</p>
+          </div>
         </div>
-      </header>
 
-      <section className="mx-auto max-w-3xl px-6 pb-24 pt-12">
-        <div
-          className="rounded-[20px] border border-slate-100 bg-white p-8"
-          style={{ boxShadow: 'var(--shadow-sm)' }}
-        >
-          <h1 className="text-[22px] font-extrabold tracking-tight text-slate-900">
-            Profilni tahrirlash
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Email: <span className="font-semibold text-slate-800">{user?.email ?? '—'}</span>
-          </p>
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="first_name" className="mb-2 block text-[13px] font-bold text-slate-700">
@@ -239,16 +233,15 @@ export default function B2CProfilePage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 w-full rounded-xl bg-cta-500 px-6 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-cta-600 hover:shadow-[0_8px_20px_rgba(20,184,152,0.30)] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
-            >
-              {loading ? 'Saqlanmoqda…' : 'Saqlash'}
-            </button>
-          </form>
-        </div>
-      </section>
-    </main>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-2 w-full rounded-xl bg-cta-500 px-6 py-3.5 text-sm font-bold text-white transition-all hover:bg-cta-600 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {loading ? 'Saqlanmoqda…' : 'Saqlash'}
+          </button>
+        </form>
+      </div>
+    </B2CLayout>
   )
 }

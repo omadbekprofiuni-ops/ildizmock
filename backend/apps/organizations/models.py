@@ -66,6 +66,24 @@ class Organization(models.Model):
         help_text='N ta counted violation bo\'lsa attempt avtomatik submit. 0 = auto-submit o\'chiq',
     )
 
+    # ETAP 19 — Super-admin tomonidan to'xtatish/soft-delete
+    is_suspended = models.BooleanField(default=False, db_index=True)
+    suspended_at = models.DateTimeField(null=True, blank=True)
+    suspended_reason = models.TextField(blank=True, default='')
+    suspended_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='suspended_organizations',
+    )
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='deleted_organizations',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -77,6 +95,21 @@ class Organization(models.Model):
     @property
     def is_active(self) -> bool:
         return self.status == 'active' and self.plan_expires_at > timezone.now()
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+
+    @property
+    def operational_status(self) -> str:
+        """ETAP 19 — admin panelida ko'rsatish uchun yaxlit holat."""
+        if self.deleted_at is not None:
+            return 'deleted'
+        if self.is_suspended:
+            return 'suspended'
+        if self.status == 'blocked':
+            return 'blocked'
+        return 'active'
 
     @property
     def days_remaining(self) -> int:

@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Clock, FileText, Layers } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Clock, FileText, Layers, Zap } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { B2CLayout } from '@/components/B2CLayout'
+import { B2CLayout, useB2CBalance } from '@/components/B2CLayout'
+import { toast } from '@/components/ui/toaster'
 import { api } from '@/lib/api'
 
 interface CatalogTestDetail {
@@ -41,15 +42,46 @@ const DIFFICULTY_LABEL: Record<string, { label: string; cls: string }> = {
   expert: { label: 'Mahoratli', cls: 'text-rose-700' },
 }
 
+// ETAP 19 — test cost'i hali backend'da emas; default 1 credit ishlatamiz
+const DEFAULT_TEST_COST = 1
+
 export default function B2CCatalogDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
   const [showStartModal, setShowStartModal] = useState(false)
+  const balanceQ = useB2CBalance()
+  const balance = balanceQ.data?.balance ?? 0
+  const cost = DEFAULT_TEST_COST
+  const hasEnough = balance >= cost
 
   const { data, isLoading, isError } = useQuery<CatalogTestDetail>({
     queryKey: ['b2c-catalog-detail', id],
     queryFn: async () =>
       (await api.get<CatalogTestDetail>(`/b2c/catalog/${id}`)).data,
     enabled: !!id,
+  })
+
+  const startM = useMutation({
+    mutationFn: async () =>
+      (
+        await api.post<{
+          attempt_id: string
+          credits_spent: number
+          new_balance: number
+        }>(`/b2c/catalog/${id}/start`)
+      ).data,
+    onSuccess: (resp) => {
+      toast.success(`Test boshlandi. −${resp.credits_spent} credit (qoldi: ⚡ ${resp.new_balance})`)
+      qc.invalidateQueries({ queryKey: ['b2c-credits-balance'] })
+      qc.invalidateQueries({ queryKey: ['b2c-credits-page'] })
+      setShowStartModal(false)
+      navigate(`/take/${resp.attempt_id}`)
+    },
+    onError: (err: unknown) => {
+      const respData = (err as { response?: { data?: { detail?: string } } })?.response?.data
+      toast.error(respData?.detail || 'Test boshlanmadi')
+    },
   })
 
   return (
@@ -148,16 +180,47 @@ export default function B2CCatalogDetailPage() {
                 </div>
               )}
 
+              <div className="mt-6 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+                    Boshlash narxi
+                  </p>
+                  <p className="mt-0.5 flex items-center gap-1 text-lg font-extrabold text-slate-900">
+                    <Zap className="h-5 w-5 text-amber-500" /> {cost} credit
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-slate-500">Sizning balansingiz</p>
+                  <p
+                    className={`text-lg font-extrabold ${
+                      hasEnough ? 'text-emerald-700' : 'text-cta-600'
+                    }`}
+                  >
+                    ⚡ {balance}
+                  </p>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setShowStartModal(true)}
-                className="mt-6 w-full rounded-xl bg-brand-600 py-3 font-bold text-white transition-colors hover:bg-brand-700"
+                disabled={!hasEnough}
+                className={`mt-3 w-full rounded-xl py-3 font-bold text-white transition-colors ${
+                  hasEnough
+                    ? 'bg-brand-600 hover:bg-brand-700'
+                    : 'cursor-not-allowed bg-slate-300'
+                }`}
               >
-                Testni boshlash
+                {hasEnough ? 'Testni boshlash' : 'Yetarli kredit yo‘q'}
               </button>
-              <p className="mt-3 text-center text-xs text-slate-400">
-                Hozir bepul ro'yxatdan o'ting va kredit tizimi ochilganda birinchilardan bo'ling
-              </p>
+              {!hasEnough && (
+                <p className="mt-3 text-center text-xs text-slate-500">
+                  <Link to="/b2c/credits" className="font-semibold text-brand-600 underline">
+                    Kreditlar
+                  </Link>{' '}
+                  sahifasida balansingizni to‘ldiring.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -171,25 +234,42 @@ export default function B2CCatalogDetailPage() {
               className="w-full max-w-sm rounded-2xl bg-white p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
-                ⏳
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-2xl">
+                ⚡
               </div>
               <h3 className="text-lg font-extrabold text-slate-900">
-                Kredit tizimi tez orada
+                Test boshlash
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                Testlarni boshlash uchun kreditlar kerak bo'ladi. Kredit tizimi va
-                to'lov integratsiyasi yaqin orada ishga tushadi. Ro'yxatdan
-                o'tganligingiz uchun rahmat — birinchilardan bo'lib xabardor
-                bo'lasiz.
+                Testni boshlash uchun <b>{cost} credit</b> ishlatiladi. Boshlagandan keyin
+                vaqt sanagich ishlaydi va kreditni qaytarib bo‘lmaydi.
               </p>
-              <button
-                type="button"
-                onClick={() => setShowStartModal(false)}
-                className="mt-4 w-full rounded-xl bg-slate-100 py-2 font-bold text-slate-700 hover:bg-slate-200"
-              >
-                Tushunarli
-              </button>
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                <span className="text-slate-600">Hozirgi balans</span>
+                <span className="font-bold text-slate-900">⚡ {balance}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                <span className="text-slate-600">Boshlagandan keyin</span>
+                <span className="font-bold text-emerald-700">⚡ {balance - cost}</span>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowStartModal(false)}
+                  disabled={startM.isPending}
+                  className="flex-1 rounded-xl bg-slate-100 py-2 font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startM.mutate()}
+                  disabled={startM.isPending || !hasEnough}
+                  className="flex-1 rounded-xl bg-brand-600 py-2 font-bold text-white hover:bg-brand-700 disabled:opacity-50"
+                >
+                  {startM.isPending ? 'Boshlanmoqda…' : `Boshlash · −${cost} ⚡`}
+                </button>
+              </div>
             </div>
           </div>
         )}

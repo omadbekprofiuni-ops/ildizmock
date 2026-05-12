@@ -1,5 +1,20 @@
+import secrets
+import string
+
 from django.conf import settings
 from django.db import models
+
+
+# ETAP 17/19 — B2C credit system uchun default'lar
+B2C_SIGNUP_BONUS_CREDITS = 3
+
+
+def generate_promo_code(length: int = 8) -> str:
+    """Adashtiruvchi belgilarsiz (O/0, I/1, l) tasodifiy promo kod."""
+    alphabet = (string.ascii_uppercase + string.digits)
+    for bad in ('O', '0', 'I', '1', 'L'):
+        alphabet = alphabet.replace(bad, '')
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 class B2CProfile(models.Model):
@@ -89,3 +104,145 @@ class B2CActivityEvent(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user.email or self.user.username} — {self.section} — {self.activity_date}'
+
+
+class CreditBalance(models.Model):
+    """B2C foydalanuvchining hozirgi balansi.
+
+    Denormalized cache. Source of truth — CreditTransaction.
+    Har bir spend/grant CreditTransaction yaratadi va shu balansni atomic ravishda yangilaydi.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='credit_balance',
+    )
+    balance = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Credit balance'
+        verbose_name_plural = 'Credit balances'
+
+    def __str__(self) -> str:
+        return f'{self.user.username}: {self.balance} credits'
+
+
+class CreditTransaction(models.Model):
+    """Har bir credit harakati — immutable audit log."""
+
+    class Kind(models.TextChoices):
+        SIGNUP_BONUS = 'signup_bonus', 'Ro‘yxatdan o‘tish bonusi'
+        ADMIN_GRANT = 'admin_grant', 'Admin grant'
+        ADMIN_DEDUCT = 'admin_deduct', 'Admin deduct'
+        PURCHASE = 'purchase', 'Sotib olish'
+        SPEND = 'spend', 'Test uchun foydalanish'
+        REFUND = 'refund', 'Refund'
+        PROMO_CODE = 'promo_code', 'Promo kod'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='credit_transactions',
+    )
+    kind = models.CharField(max_length=20, choices=Kind.choices, db_index=True)
+    # Musbat = balansga qo'shildi, manfiy = ayirildi
+    amount = models.IntegerField()
+    balance_after = models.PositiveIntegerField()
+    note = models.TextField(blank=True, default='')
+
+    # Tegishli ma'lumotlar (FK lar — ETAP 17/18 da qo'shiladi: package, attempt, promo)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='created_credit_transactions',
+        help_text='Admin grant uchun — kim qildi',
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['user', '-created_at'])]
+        verbose_name = 'Credit transaction'
+        verbose_name_plural = 'Credit transactions'
+
+    def __str__(self) -> str:
+        sign = '+' if self.amount >= 0 else ''
+        return f'{self.user.username} {sign}{self.amount} ({self.get_kind_display()})'
+
+
+class CreditPromoCode(models.Model):
+    """Bepul kredit promo kodlari.
+
+    Super-admin yaratadi; B2C user qabul qilib kredit oladi.
+    Bir user bitta promo kodni faqat bir marta ishlatishi mumkin
+    (CreditPromoCodeRedemption.unique_together orqali).
+    """
+    code = models.CharField(max_length=20, unique=True, db_index=True)
+    description = models.CharField(max_length=200, blank=True, default='')
+    credits_amount = models.PositiveIntegerField()
+
+    max_uses = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Bo‘sh qoldirilsa cheksiz',
+    )
+    uses_count = models.PositiveIntegerField(default=0)
+
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='created_promo_codes',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Credit promo code'
+        verbose_name_plural = 'Credit promo codes'
+
+    def __str__(self) -> str:
+        return f'{self.code} (+{self.credits_amount})'
+
+    @property
+    def is_redeemable(self) -> bool:
+        from django.utils import timezone
+        if not self.is_active:
+            return False
+        now = timezone.now()
+        if self.valid_from and now < self.valid_from:
+            return False
+        if self.valid_until and now > self.valid_until:
+            return False
+        if self.max_uses is not None and self.uses_count >= self.max_uses:
+            return False
+        return True
+
+
+class CreditPromoCodeRedemption(models.Model):
+    """Promo kod ishlatilishi (har user — bir marta)."""
+    promo_code = models.ForeignKey(
+        CreditPromoCode, on_delete=models.CASCADE, related_name='redemptions',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='promo_redemptions',
+    )
+    credit_transaction = models.ForeignKey(
+        CreditTransaction,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+    redeemed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('promo_code', 'user')]
+        ordering = ['-redeemed_at']
