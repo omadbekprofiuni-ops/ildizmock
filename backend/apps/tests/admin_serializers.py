@@ -123,7 +123,11 @@ class AdminTestSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_question_count(self, obj):
-        return Question.objects.filter(passage__test=obj).count()
+        # ETAP 19 — wizard yaratgan listening_parts/writing_tasks ham hisobga olinadi
+        from django.db.models import Q
+        return Question.objects.filter(
+            Q(passage__test=obj) | Q(listening_part__test=obj),
+        ).count()
 
     def get_attempt_count(self, obj):
         return obj.attempts.count()
