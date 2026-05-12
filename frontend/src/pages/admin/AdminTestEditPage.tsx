@@ -454,9 +454,9 @@ export default function AdminTestEditPage({
   }
   const accent = moduleAccents[draft.module]
 
-  // ETAP 19 — agar test wizard'da yaratilgan bo'lsa (passages bo'sh, lekin
-  // question_count > 0), simple editor savollarni ko'rsata olmaydi. Foydalanuvchini
-  // wizard'ga yo'naltirish uchun banner.
+  // ETAP 19 — Listening testlar uchun backend listening_parts'ni passages
+  // sifatida qaytaradi; agar shunga qaramay 0 passage va > 0 savol bo'lsa,
+  // foydalanuvchini wizard'ga yo'naltiramiz (writing/speaking format'lar).
   const wizardCandidate =
     !isNew &&
     !query.isLoading &&
@@ -478,17 +478,18 @@ export default function AdminTestEditPage({
           <span className="text-slate-900">{isNew ? 'New' : 'Edit'}</span>
         </div>
 
-        {/* ETAP 19 — Wizard test ogohlantirish */}
+        {/* Listening edit shu yerda ham ishlaydi — banner faqat writing/speaking
+            kabi qo'llab-quvvatlanmaydigan formatlar uchun ko'rinadi */}
         {wizardCandidate && basePath.startsWith('/') && (
           <div className="mb-5 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="text-sm">
                 <p className="font-bold text-amber-900">
-                  Bu test Wizard yordamida yaratilgan
+                  Bu test formati simple editor'da tahrirlanmaydi
                 </p>
                 <p className="mt-1 text-amber-800">
-                  Savollar va passage'lar Wizard formatida saqlangan. Oddiy editor
-                  ularni ko'rsata olmaydi. Wizard'ga o'tib savollarni tahrirlang.
+                  Bu modul (writing/speaking) maxsus Wizard'da yaratilgan.
+                  Savollarni tahrirlash uchun Wizard'ga o'ting.
                 </p>
               </div>
               <Link

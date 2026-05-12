@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import Passage, Question, Test
+from .models import ListeningPart, Passage, Question, Test
 
 
 class AdminQuestionSerializer(serializers.ModelSerializer):
@@ -132,6 +132,76 @@ class AdminTestSerializer(serializers.ModelSerializer):
     def get_attempt_count(self, obj):
         return obj.attempts.count()
 
+    def to_representation(self, instance):
+        # ETAP 19 — Listening testlar uchun listening_parts'larni passages sifatida
+        # ko'rsatamiz. Simple editor (AdminTestEditPage) ushbu ma'lumotni
+        # ko'rsatadi va PATCH orqali to'g'ri yangilanadi.
+        data = super().to_representation(instance)
+        if instance.module == 'listening':
+            data['passages'] = self._serialize_listening_parts(instance)
+        return data
+
+    def _serialize_listening_parts(self, test):
+        parts = []
+        request = self.context.get('request')
+        for lp in test.listening_parts.order_by('part_number').prefetch_related('questions'):
+            audio_url = None
+            audio_path = None
+            if lp.audio_file:
+                try:
+                    audio_url = lp.audio_file.url
+                    if request is not None:
+                        audio_url = request.build_absolute_uri(audio_url)
+                    audio_path = lp.audio_file.name
+                except (ValueError, AttributeError):
+                    pass
+            questions = []
+            for q in lp.questions.all().order_by('order'):
+                q_image_url = None
+                q_image_path = None
+                if q.image:
+                    try:
+                        q_image_url = q.image.url
+                        if request is not None:
+                            q_image_url = request.build_absolute_uri(q_image_url)
+                        q_image_path = q.image.name
+                    except (ValueError, AttributeError):
+                        pass
+                questions.append({
+                    'id': q.id,
+                    'listening_part': lp.id,
+                    'order': q.order,
+                    'question_type': q.question_type,
+                    'text': q.text,
+                    'options': q.options or [],
+                    'correct_answer': q.correct_answer,
+                    'acceptable_answers': q.acceptable_answers or [],
+                    'group_id': q.group_id,
+                    'instruction': q.instruction,
+                    'points': q.points,
+                    'image': q_image_url,
+                    'image_path': q_image_path,
+                    'payload': q.payload or {},
+                    'answer_key': q.answer_key or {},
+                })
+            parts.append({
+                'id': lp.id,
+                'test': test.id,
+                'part_number': lp.part_number,
+                # ListeningPart'da title yo'q — instructions ishlatamiz; bo'sh
+                # bo'lsa standart "Part N" formatida.
+                'title': lp.instructions[:120] if lp.instructions else f'Part {lp.part_number}',
+                'content': lp.transcript or lp.instructions or '',
+                'audio_file': audio_url,
+                'audio_file_path': audio_path,
+                'audio_duration_seconds': lp.audio_duration_seconds,
+                'min_words': None,
+                'order': lp.part_number,
+                'questions': questions,
+                '_is_listening_part': True,
+            })
+        return parts
+
     @transaction.atomic
     def create(self, validated_data):
         passages_data = validated_data.pop('passages_input', [])
@@ -146,8 +216,79 @@ class AdminTestSerializer(serializers.ModelSerializer):
             setattr(instance, key, value)
         instance.save()
         if passages_data is not None:
-            self._upsert_passages(instance, passages_data)
+            if instance.module == 'listening':
+                # ETAP 19 — Listening testlarda passages_input'ni listening_parts'ga
+                # yo'naltiramiz; Question'lar passage o'rniga listening_part bilan
+                # bog'lanadi.
+                self._upsert_listening_parts(instance, passages_data)
+            else:
+                self._upsert_passages(instance, passages_data)
         return instance
+
+    def _upsert_listening_parts(self, test, parts_data):
+        """ETAP 19 — Listening uchun: passages_input → ListeningPart yangilanishi."""
+        existing = {lp.part_number: lp for lp in test.listening_parts.all()}
+        seen_ids: set[int] = set()
+
+        for p_data in parts_data:
+            data = dict(p_data)
+            questions_data = data.pop('questions', [])
+            audio_path = data.pop('audio_file_path', None)
+            part_number = data.get('part_number')
+
+            lp = existing.get(part_number)
+            content = data.get('content') or ''
+            instructions = data.get('title') or ''
+            if lp is None:
+                lp = ListeningPart.objects.create(
+                    test=test,
+                    part_number=part_number,
+                    instructions=instructions,
+                    transcript=content,
+                )
+            else:
+                # title -> instructions, content -> transcript
+                lp.instructions = instructions
+                lp.transcript = content
+                lp.save(update_fields=['instructions', 'transcript'])
+            seen_ids.add(lp.id)
+
+            if audio_path is not None:
+                normalised = _normalize_audio_path(audio_path) if audio_path else ''
+                if (lp.audio_file.name or '') != normalised:
+                    lp.audio_file.name = normalised
+                    lp.save(update_fields=['audio_file'])
+
+            self._upsert_listening_questions(lp, questions_data)
+
+        # Eski listening_parts'ni o'chiramiz (Question'lar cascade orqali ketadi)
+        test.listening_parts.exclude(id__in=seen_ids).delete()
+
+    def _upsert_listening_questions(self, listening_part, questions_data):
+        existing = {q.order: q for q in listening_part.questions.all()}
+        seen_q_ids: set[int] = set()
+
+        for q_data in questions_data:
+            data = dict(q_data)
+            image_path = data.pop('image_path', None)
+            order = data.get('order')
+            q = existing.get(order)
+
+            if q is None:
+                q = Question.objects.create(listening_part=listening_part, **data)
+            else:
+                for k, v in data.items():
+                    setattr(q, k, v)
+                q.save()
+            seen_q_ids.add(q.id)
+
+            if image_path is not None:
+                normalised = _normalize_media_path(image_path) if image_path else ''
+                if (q.image.name or '') != normalised:
+                    q.image.name = normalised
+                    q.save(update_fields=['image'])
+
+        listening_part.questions.exclude(id__in=seen_q_ids).delete()
 
     def _rebuild_passages(self, test, passages_data):
         """Used on create — no existing rows to preserve."""
