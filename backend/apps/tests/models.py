@@ -522,6 +522,113 @@ class PDFImportLog(models.Model):
         return f'{self.file_name} — {self.status} — {self.created_at:%Y-%m-%d %H:%M}'
 
 
+class AIProviderConfig(models.Model):
+    """ETAP 16.8 — Har AI provider uchun konfiguratsiya.
+
+    API key Fernet (`services/encryption.py`) bilan shifrlanib saqlanadi —
+    plain matn DB'da hech qachon yo'q. UI faqat oxirgi 4 belgini ko'rsatadi.
+    Faqat bir nechta provider'dan bittasi `is_active=True` bo'la oladi.
+    """
+
+    class Provider(models.TextChoices):
+        GEMINI_AISTUDIO = 'gemini_aistudio', 'Gemini AI Studio'
+        CLAUDE_ANTHROPIC = 'claude_anthropic', 'Claude (Anthropic)'
+
+    provider = models.CharField(
+        max_length=30, choices=Provider.choices, unique=True,
+    )
+    model_name = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text='masalan: gemini-2.5-flash, claude-sonnet-4-6',
+    )
+    encrypted_api_key = models.TextField(
+        blank=True, default='',
+        help_text='Fernet bilan shifrlangan API key. Hech qachon plain matn emas.',
+    )
+    api_key_last4 = models.CharField(
+        max_length=4, blank=True, default='',
+        help_text='UI da ko\'rsatish uchun oxirgi 4 belgi (encrypted emas).',
+    )
+    is_active = models.BooleanField(
+        default=False,
+        help_text='True bo\'lsa, get_ai_provider() shu provider\'ni qaytaradi.',
+    )
+
+    last_test_at = models.DateTimeField(null=True, blank=True)
+    last_test_success = models.BooleanField(null=True, blank=True)
+    last_test_error = models.TextField(blank=True, default='')
+    last_test_latency_ms = models.PositiveIntegerField(null=True, blank=True)
+
+    last_updated_at = models.DateTimeField(auto_now=True)
+    last_updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='updated_ai_configs',
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['provider']
+        verbose_name = 'AI Provider Config'
+        verbose_name_plural = 'AI Provider Configs'
+
+    def __str__(self):
+        suffix = 'active' if self.is_active else 'inactive'
+        return f'{self.get_provider_display()} ({suffix})'
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.encrypted_api_key)
+
+    @property
+    def masked_key(self) -> str:
+        if not self.api_key_last4:
+            return ''
+        return '•' * 8 + self.api_key_last4
+
+
+class AIProviderAuditLog(models.Model):
+    """ETAP 16.8 — Har bir provider o'zgartirishini logga yozadi."""
+
+    class Action(models.TextChoices):
+        KEY_SET = 'key_set', "API key o'rnatildi"
+        KEY_UPDATED = 'key_updated', 'API key yangilandi'
+        KEY_CLEARED = 'key_cleared', "API key o'chirildi"
+        MODEL_CHANGED = 'model_changed', "Model o'zgartirildi"
+        ACTIVATED = 'activated', 'Aktiv qilindi'
+        DEACTIVATED = 'deactivated', 'Deaktiv qilindi'
+        TEST_CONNECTION = 'test_connection', "Sinov o'tkazildi"
+
+    config = models.ForeignKey(
+        AIProviderConfig,
+        on_delete=models.CASCADE, related_name='audit_logs',
+    )
+    action = models.CharField(max_length=30, choices=Action.choices)
+
+    old_value = models.CharField(max_length=200, blank=True, default='')
+    new_value = models.CharField(max_length=200, blank=True, default='')
+
+    test_success = models.BooleanField(null=True, blank=True)
+    test_error = models.TextField(blank=True, default='')
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='ai_audit_logs',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'AI provider audit log'
+        verbose_name_plural = 'AI provider audit logs'
+
+    def __str__(self):
+        who = self.performed_by.username if self.performed_by else 'system'
+        return f'{who} · {self.get_action_display()} · {self.created_at:%Y-%m-%d %H:%M}'
+
+
 class TestClone(models.Model):
     """Center qaysi global testni nusxalaganini kuzatish (audit)."""
 

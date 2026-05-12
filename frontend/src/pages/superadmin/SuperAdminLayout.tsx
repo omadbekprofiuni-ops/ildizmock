@@ -9,6 +9,7 @@ import {
   Library,
   LogOut,
   Settings,
+  Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -34,7 +35,8 @@ const MAIN_NAV: NavItem[] = [
   { to: '/super/b2c-catalog', label: 'B2C Catalog', Icon: Library },
   { to: '/super/audio', label: 'Audio files', Icon: Headphones },
   { to: '/super/stats', label: 'Statistics', Icon: BarChart3 },
-  { to: '/super/settings', label: 'Settings', Icon: Settings },
+  { to: '/super/settings/ai-providers', label: 'AI Providers', Icon: Sparkles },
+  { to: '/super/settings', label: 'Settings', Icon: Settings, end: true },
 ]
 
 const ORG_CONTEXT_NAV: NavItem[] = [
@@ -55,6 +57,7 @@ const TITLES: Record<string, string> = {
   '/super/audio': 'Audio files',
   '/super/stats': 'Statistics',
   '/super/settings': 'Settings',
+  '/super/settings/ai-providers': 'AI Providers',
 }
 
 function BrandMark({ size = 36 }: { size?: number }) {

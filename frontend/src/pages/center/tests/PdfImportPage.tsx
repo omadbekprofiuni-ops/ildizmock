@@ -367,9 +367,13 @@ export default function PdfImportPage({
             <div className="mt-2 flex items-center gap-2">
               <label className="text-xs font-medium text-slate-600">Answer</label>
               <input
-                value={q.answer || ''}
+                value={q.answer ?? q.suggested_answer ?? ''}
                 onChange={(e) => updateQuestion(idx, { answer: e.target.value })}
-                placeholder="Enter correct answer"
+                placeholder={
+                  q.suggested_answer
+                    ? `AI taklifi: ${q.suggested_answer}`
+                    : 'Enter correct answer'
+                }
                 className="flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm"
               />
             </div>
