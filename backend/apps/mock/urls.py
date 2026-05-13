@@ -85,6 +85,11 @@ urlpatterns = [
         name='mock-submit-writing',
     ),
     path(
+        'mock/writing-draft/<str:browser_session_id>/',
+        student_views.save_writing_draft,
+        name='mock-save-writing-draft',
+    ),
+    path(
         'mock/submit/speaking/<str:browser_session_id>/',
         student_views.submit_speaking,
         name='mock-submit-speaking',

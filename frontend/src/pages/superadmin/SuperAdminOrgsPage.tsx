@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, Eye, LogIn, MoreVertical, Plus } from 'lucide-react'
+import { Check, Copy, Eye, LogIn, MoreVertical, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -7,6 +7,7 @@ import {
   Chip,
   PageHeader,
   PageShell,
+  StatCard,
   TableCard,
   adminTable,
   btnOutline,
@@ -48,17 +49,41 @@ type Org = {
   plan_code: string; plan_name: string; status: string
   students_count: number; max_students: number
   days_remaining: number; plan_expires_at: string
+  is_suspended: boolean
+  is_deleted: boolean
+  operational_status: 'active' | 'suspended' | 'deleted' | 'blocked'
+  suspended_reason: string | null
 }
+
+type SummaryStats = {
+  total: number
+  active: number
+  suspended: number
+  deleted: number
+}
+
+type StatusFilter = 'all' | 'active' | 'suspended' | 'deleted'
 
 export default function SuperAdminOrgsPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const setContext = useOrgContext((s) => s.setContext)
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+
+  const summary = useQuery({
+    queryKey: ['super-orgs-summary'],
+    queryFn: async () => (await api.get<SummaryStats>('/superadmin/organizations/summary/')).data,
+  })
 
   const orgs = useQuery({
-    queryKey: ['super-orgs'],
-    queryFn: async () => (await api.get<Org[]>('/superadmin/organizations/')).data,
+    queryKey: ['super-orgs', { query, statusFilter }],
+    queryFn: async () => {
+      const params: Record<string, string> = { status_filter: statusFilter }
+      if (query.trim()) params.q = query.trim()
+      return (await api.get<Org[]>('/superadmin/organizations/', { params })).data
+    },
   })
 
   const plans = useQuery({
@@ -76,26 +101,79 @@ export default function SuperAdminOrgsPage() {
     <SuperAdminLayout>
       <PageShell>
         <PageHeader
-          title="Centers"
-          subtitle={`${orgs.data?.length ?? 0} centers`}
+          title="Markazlar"
+          subtitle="O‘quv markazlari ro‘yxati, faolligi va boshqaruvi"
           actions={
             <button type="button" onClick={() => setOpen(true)} className={btnPrimary}>
-              <Plus size={16} /> Add new center
+              <Plus size={16} /> Yangi markaz
             </button>
           }
         />
 
-        {orgs.isLoading && <p className="text-slate-500">Loading…</p>}
+        {/* ETAP 19 — Summary KPI */}
+        {summary.data && (
+          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <StatCard tone="indigo" label="Jami" value={summary.data.total} hint="O‘chirilmagan" />
+            <StatCard tone="emerald" label="Faol" value={summary.data.active} hint="Ishlamoqda" />
+            <StatCard
+              tone="amber" label="To‘xtatilgan" value={summary.data.suspended}
+              hint="Vaqtinchalik bloklangan"
+            />
+            <StatCard tone="slate" label="Arxivga olingan" value={summary.data.deleted} hint="Soft delete" />
+          </div>
+        )}
+
+        {/* ETAP 19 — qidiruv + status filter */}
+        <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-slate-100 bg-white p-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Markaz nomi yoki slug…"
+              className="h-9 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-brand-500"
+            />
+          </div>
+          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs font-semibold">
+            {(['all', 'active', 'suspended', 'deleted'] as StatusFilter[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-md px-3 py-1.5 transition-colors ${
+                  statusFilter === s
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {s === 'all' && 'Barchasi'}
+                {s === 'active' && 'Faol'}
+                {s === 'suspended' && 'To‘xtatilgan'}
+                {s === 'deleted' && 'Arxiv'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {orgs.isLoading && <p className="text-slate-500">Yuklanmoqda…</p>}
+        {orgs.data && orgs.data.length === 0 && (
+          <TableCard>
+            <div className="py-12 text-center text-sm text-slate-500">
+              Bu filtr bo‘yicha markazlar topilmadi.
+            </div>
+          </TableCard>
+        )}
         {orgs.data && orgs.data.length > 0 && (
           <TableCard>
             <table className={adminTable.table}>
               <thead className={adminTable.thead}>
                 <tr>
-                  <th className={adminTable.th}>Name</th>
-                  <th className={adminTable.th}>Plan</th>
-                  <th className={adminTable.th}>Students</th>
-                  <th className={adminTable.th}>Status</th>
-                  <th className={adminTable.th}>Expires</th>
+                  <th className={adminTable.th}>Nomi</th>
+                  <th className={adminTable.th}>Tarif</th>
+                  <th className={adminTable.th}>Talabalar</th>
+                  <th className={adminTable.th}>Holat</th>
+                  <th className={adminTable.th}>Muddati</th>
                   <th className={adminTable.th + ' text-right'}></th>
                 </tr>
               </thead>
@@ -120,10 +198,10 @@ export default function SuperAdminOrgsPage() {
                       {o.max_students > 0 ? ` / ${o.max_students}` : ' / ∞'}
                     </td>
                     <td className={adminTable.td}>
-                      <StatusBadge status={o.status} />
+                      <OperationalBadge org={o} />
                     </td>
                     <td className={adminTable.td + ' text-xs text-slate-500'}>
-                      {o.days_remaining > 0 ? `${o.days_remaining} days` : '—'}
+                      {o.days_remaining > 0 ? `${o.days_remaining} kun` : '—'}
                     </td>
                     <td className={adminTable.td + ' text-right'}>
                       <div className="inline-flex items-center gap-1">
@@ -131,15 +209,17 @@ export default function SuperAdminOrgsPage() {
                           to={`/super/organizations/${o.id}`}
                           className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
-                          <Eye size={14} /> View
+                          <Eye size={14} /> Ko‘rish
                         </Link>
-                        <button
-                          type="button"
-                          onClick={() => enterOrgContext(o)}
-                          className="inline-flex items-center gap-1 rounded-xl bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100"
-                        >
-                          <LogIn size={14} /> Enter
-                        </button>
+                        {!o.is_deleted && (
+                          <button
+                            type="button"
+                            onClick={() => enterOrgContext(o)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100"
+                          >
+                            <LogIn size={14} /> Kirish
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"
@@ -166,11 +246,21 @@ export default function SuperAdminOrgsPage() {
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'active') return <Chip tone="emerald">● Active</Chip>
-  if (status === 'trial') return <Chip tone="amber">● Trial</Chip>
-  if (status === 'expired') return <Chip tone="rose">⚠ Expired</Chip>
-  return <Chip>● Blocked</Chip>
+function OperationalBadge({ org }: { org: Org }) {
+  // ETAP 19 — operational_status orqali yaxlit holat ko'rsatamiz, agar yo'q bo'lsa
+  // eski status field'iga qaytamiz.
+  if (org.is_deleted) return <Chip tone="slate">● Arxiv</Chip>
+  if (org.is_suspended) {
+    return (
+      <span title={org.suspended_reason ?? ''}>
+        <Chip tone="amber">● To‘xtatilgan</Chip>
+      </span>
+    )
+  }
+  if (org.status === 'blocked') return <Chip>● Bloklangan</Chip>
+  if (org.status === 'expired') return <Chip tone="rose">⚠ Muddati o‘tgan</Chip>
+  if (org.status === 'trial') return <Chip tone="amber">● Trial</Chip>
+  return <Chip tone="emerald">● Faol</Chip>
 }
 
 void btnOutline

@@ -40,7 +40,7 @@ class MockSessionListSerializer(serializers.ModelSerializer):
             'created_at', 'participants_count',
             'listening_test', 'reading_test', 'writing_test', 'speaking_test',
             'allow_late_join', 'allow_guests', 'link_expires_at',
-            'is_archived', 'archived_at',
+            'is_archived', 'archived_at', 'is_official_exam',
         ]
 
 
@@ -55,6 +55,7 @@ class MockSessionCreateSerializer(serializers.ModelSerializer):
             'listening_duration', 'reading_duration', 'writing_duration',
             'speaking_duration',
             'allow_late_join', 'allow_guests', 'link_expires_at',
+            'is_official_exam',
             'active_skills',
         ]
         read_only_fields = ['active_skills']
@@ -108,18 +109,47 @@ class MockParticipantListSerializer(serializers.ModelSerializer):
     is_guest = serializers.BooleanField(read_only=True)
     user_id = serializers.IntegerField(source='user.id', read_only=True, allow_null=True)
     certificate = serializers.SerializerMethodField()
+    # ETAP 21 — Override audit (admin uchun ko'rinadi)
+    writing_overridden_by_name = serializers.SerializerMethodField()
+    speaking_overridden_by_name = serializers.SerializerMethodField()
+    effective_writing_score = serializers.SerializerMethodField()
+    effective_speaking_score = serializers.SerializerMethodField()
 
     class Meta:
         model = MockParticipant
         fields = [
-            'id', 'full_name', 'joined_at',
+            'id', 'full_name', 'exam_taker_id', 'joined_at',
             'has_joined', 'claimed_at', 'is_guest', 'user_id',
             'listening_score', 'reading_score', 'writing_score',
             'speaking_score', 'overall_band_score',
             'writing_status', 'speaking_status',
             'listening_submitted_at', 'reading_submitted_at', 'writing_submitted_at',
             'certificate',
+            # ETAP 21 — override audit
+            'writing_override_band', 'writing_override_reason',
+            'writing_overridden_by_name', 'writing_overridden_at',
+            'speaking_override_band', 'speaking_override_reason',
+            'speaking_overridden_by_name', 'speaking_overridden_at',
+            'effective_writing_score', 'effective_speaking_score',
         ]
+
+    def _user_display(self, user):
+        if not user:
+            return None
+        full = f'{user.first_name or ""} {user.last_name or ""}'.strip()
+        return full or user.username
+
+    def get_writing_overridden_by_name(self, obj):
+        return self._user_display(obj.writing_overridden_by)
+
+    def get_speaking_overridden_by_name(self, obj):
+        return self._user_display(obj.speaking_overridden_by)
+
+    def get_effective_writing_score(self, obj):
+        return str(obj.effective_writing_score) if obj.effective_writing_score is not None else None
+
+    def get_effective_speaking_score(self, obj):
+        return str(obj.effective_speaking_score) if obj.effective_speaking_score is not None else None
 
     def get_certificate(self, obj):
         cert = getattr(obj, 'certificate', None)
@@ -151,6 +181,7 @@ class MockSessionDetailSerializer(serializers.ModelSerializer):
             'listening_duration', 'reading_duration', 'writing_duration',
             'speaking_duration',
             'allow_late_join', 'allow_guests', 'link_expires_at',
+            'is_official_exam',
             'participants', 'active_skills',
         ]
 

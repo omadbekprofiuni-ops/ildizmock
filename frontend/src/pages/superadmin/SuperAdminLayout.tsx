@@ -4,12 +4,15 @@ import {
   Building2,
   CreditCard,
   FileText,
+  Gift,
   Headphones,
   LayoutDashboard,
   Library,
   LogOut,
   Settings,
   Sparkles,
+  Users,
+  Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -25,19 +28,52 @@ type NavItem = {
   label: string
   Icon: LucideIcon
   end?: boolean
+  soon?: boolean
 }
 
-const MAIN_NAV: NavItem[] = [
-  { to: '/super', label: 'Dashboard', Icon: LayoutDashboard, end: true },
-  { to: '/super/organizations', label: 'Centers', Icon: Building2 },
-  { to: '/super/payments', label: 'Payments', Icon: CreditCard },
-  { to: '/super/tests', label: 'Global tests', Icon: FileText },
-  { to: '/super/b2c-catalog', label: 'B2C Catalog', Icon: Library },
-  { to: '/super/audio', label: 'Audio files', Icon: Headphones },
-  { to: '/super/stats', label: 'Statistics', Icon: BarChart3 },
-  { to: '/super/settings/ai-providers', label: 'AI Providers', Icon: Sparkles },
-  { to: '/super/settings', label: 'Settings', Icon: Settings, end: true },
+type NavGroup = {
+  label: string | null
+  items: NavItem[]
+}
+
+// ETAP 19 — 5 ta kategoriyaga guruhlangan sidebar.
+const MAIN_NAV_GROUPS: NavGroup[] = [
+  {
+    label: null,
+    items: [{ to: '/super', label: 'Dashboard', Icon: LayoutDashboard, end: true }],
+  },
+  {
+    label: 'Tashkilotlar',
+    items: [
+      { to: '/super/organizations', label: 'Markazlar', Icon: Building2 },
+      { to: '/super/payments', label: 'To‘lovlar', Icon: CreditCard },
+      { to: '/super/stats', label: 'Statistika', Icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'B2C',
+    items: [
+      { to: '/super/b2c-users', label: 'Foydalanuvchilar', Icon: Users },
+      { to: '/super/b2c-catalog', label: 'Katalog', Icon: Library },
+      { to: '/super/credits', label: 'Kreditlar', Icon: Zap },
+      { to: '/super/promo-codes', label: 'Promo kodlar', Icon: Gift },
+    ],
+  },
+  {
+    label: 'Testlar',
+    items: [{ to: '/super/tests', label: 'Global testlar', Icon: FileText }],
+  },
+  {
+    label: 'Tizim',
+    items: [
+      { to: '/super/settings/ai-providers', label: 'AI Providers', Icon: Sparkles },
+      { to: '/super/audio', label: 'Audio fayllar', Icon: Headphones },
+      { to: '/super/settings', label: 'Sozlamalar', Icon: Settings, end: true },
+    ],
+  },
 ]
+
+const MAIN_NAV_FLAT: NavItem[] = MAIN_NAV_GROUPS.flatMap((g) => g.items)
 
 const ORG_CONTEXT_NAV: NavItem[] = [
   { to: '/super/org/dashboard', label: 'Home', Icon: LayoutDashboard, end: true },
@@ -50,14 +86,41 @@ const ORG_CONTEXT_NAV: NavItem[] = [
 
 const TITLES: Record<string, string> = {
   '/super': 'Dashboard',
-  '/super/organizations': 'Centers',
-  '/super/payments': 'Billing',
-  '/super/tests': 'Global tests',
-  '/super/b2c-catalog': 'B2C Catalog',
-  '/super/audio': 'Audio files',
-  '/super/stats': 'Statistics',
-  '/super/settings': 'Settings',
+  '/super/organizations': 'Markazlar',
+  '/super/payments': 'To‘lovlar',
+  '/super/tests': 'Global testlar',
+  '/super/b2c-users': 'B2C foydalanuvchilar',
+  '/super/b2c-catalog': 'B2C Katalog',
+  '/super/credits': 'Kreditlar',
+  '/super/promo-codes': 'Promo kodlar',
+  '/super/audio': 'Audio fayllar',
+  '/super/stats': 'Statistika',
+  '/super/settings': 'Sozlamalar',
   '/super/settings/ai-providers': 'AI Providers',
+}
+
+function NavItemLink({ to, label, Icon, end, soon }: NavItem) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        `flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors ${
+          isActive
+            ? 'bg-white/10 text-white'
+            : 'text-white/70 hover:bg-white/5 hover:text-white'
+        }`
+      }
+    >
+      <Icon size={18} className="opacity-90" />
+      <span>{label}</span>
+      {soon && (
+        <span className="ml-auto rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-300">
+          Soon
+        </span>
+      )}
+    </NavLink>
+  )
 }
 
 function BrandMark({ size = 36 }: { size?: number }) {
@@ -87,7 +150,6 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   const setContext = useOrgContext((s) => s.setContext)
 
   const inOrgContext = !!orgName
-  const NAV = inOrgContext ? ORG_CONTEXT_NAV : MAIN_NAV
 
   const onLogout = async () => {
     setContext(null, null)
@@ -100,8 +162,10 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     navigate('/super', { replace: true })
   }
 
+  const lookupItems = inOrgContext ? ORG_CONTEXT_NAV : MAIN_NAV_FLAT
   const currentTitle =
-    NAV.slice()
+    lookupItems
+      .slice()
       .sort((a, b) => b.to.length - a.to.length)
       .find((it) =>
         it.end ? location.pathname === it.to : location.pathname.startsWith(it.to),
@@ -145,24 +209,25 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
           </div>
         )}
 
-        <nav className="flex-1 space-y-0.5 px-3 py-5">
-          {NAV.map(({ to, label, Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors ${
-                  isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`
-              }
-            >
-              <Icon size={18} className="opacity-90" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 space-y-2 overflow-y-auto px-3 py-5">
+          {inOrgContext
+            ? ORG_CONTEXT_NAV.map((item) => (
+                <NavItemLink key={item.to} {...item} />
+              ))
+            : MAIN_NAV_GROUPS.map((group, gi) => (
+                <div key={`g-${gi}`} className={gi > 0 ? 'pt-2' : ''}>
+                  {group.label && (
+                    <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white/40">
+                      {group.label}
+                    </p>
+                  )}
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <NavItemLink key={item.to} {...item} />
+                    ))}
+                  </div>
+                </div>
+              ))}
         </nav>
 
         <div className="border-t border-white/5 p-4">

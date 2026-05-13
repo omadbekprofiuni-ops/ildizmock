@@ -34,6 +34,8 @@ class OrganizationListSerializer(serializers.ModelSerializer):
     admins_count = serializers.IntegerField(read_only=True)
     days_remaining = serializers.IntegerField(read_only=True)
     max_students = serializers.IntegerField(source='plan.max_students', read_only=True)
+    operational_status = serializers.CharField(read_only=True)
+    is_deleted = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Organization
@@ -43,6 +45,9 @@ class OrganizationListSerializer(serializers.ModelSerializer):
             'plan_starts_at', 'plan_expires_at',
             'students_count', 'teachers_count', 'admins_count', 'max_students',
             'days_remaining', 'created_at',
+            # ETAP 19
+            'is_suspended', 'is_deleted', 'operational_status',
+            'suspended_at', 'suspended_reason',
         ]
 
 

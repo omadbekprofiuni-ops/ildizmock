@@ -68,7 +68,7 @@ export function TestStartDialog({ open, module, onConfirm, onCancel }: Props) {
           <Button
             onClick={onConfirm}
             disabled={!agreed}
-            className="bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]"
+            className="bg-brand-600 font-bold text-white hover:bg-brand-700 disabled:bg-slate-300 disabled:text-white"
           >
             Start →
           </Button>

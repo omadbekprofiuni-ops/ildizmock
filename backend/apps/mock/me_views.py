@@ -14,7 +14,12 @@ from .models import Certificate, MockParticipant
 
 
 def _student_qs(user):
-    """Login qilingan student'ning natijalari (user FK orqali yoki ism mosi)."""
+    """Login qilingan student'ning natijalari (user FK orqali yoki ism mosi).
+
+    ETAP 21 — Rasmiy mock imtihon (is_official_exam=True) sessiyalari
+    bu yerga umuman tushmaydi. Talaba o'z imtihon natijasini
+    platformada ko'ra olmaydi — markaz Excel orqali e'lon qiladi.
+    """
     from django.db.models import Q
 
     full_name = (
@@ -23,6 +28,7 @@ def _student_qs(user):
 
     qs = MockParticipant.objects.select_related('session').filter(
         session__organization=user.organization,
+        session__is_official_exam=False,
     )
     cond = Q(user=user)
     if full_name:
@@ -125,10 +131,17 @@ def my_mock_certificate(request, participant_id):
 
 
 def _student_certificates_qs(user):
-    """Login qilgan talabaning sertifikatlari (revoked emas)."""
+    """Login qilgan talabaning sertifikatlari (revoked emas).
+
+    ETAP 21 — Rasmiy mock imtihon sessiyalari uchun sertifikat
+    talabaga ko'rinmaydi.
+    """
     qs = Certificate.objects.select_related(
         'participant', 'participant__session', 'issued_by',
-    ).filter(is_revoked=False)
+    ).filter(
+        is_revoked=False,
+        participant__session__is_official_exam=False,
+    )
     # Student bilan bog'liqlik: participant.user yoki ism mosi
     from django.db.models import Q
     full_name = (

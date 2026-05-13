@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+
 import { api } from '@/lib/api'
 
 import { FullscreenGate } from './FullscreenGate'
@@ -129,15 +130,39 @@ export function ReadingSection({
       </div>
 
       <footer className="border-t bg-white p-3">
-        <div className="mx-auto flex max-w-7xl justify-end">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
           <button
             type="button"
-            disabled={submitting}
-            onClick={submit}
-            className="rounded-full bg-green-600 px-8 py-2 text-base font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+            disabled={activeIdx === 0}
+            onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
+            className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
           >
-            {submitting ? 'Submitting…' : 'Finish and submit'}
+            ← Previous passage
           </button>
+          {activeIdx < passages.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setActiveIdx((i) => Math.min(passages.length - 1, i + 1))}
+              className="rounded-full bg-slate-900 px-8 py-2 text-base font-semibold text-white hover:bg-slate-800"
+            >
+              Next passage →
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                if (window.confirm(
+                  'Are you sure you want to submit Reading? Once submitted you cannot make any more changes.',
+                )) {
+                  submit()
+                }
+              }}
+              className="rounded-full bg-green-600 px-8 py-2 text-base font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              {submitting ? 'Submitting…' : 'Finish and submit'}
+            </button>
+          )}
         </div>
       </footer>
     </div>

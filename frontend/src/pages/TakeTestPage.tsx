@@ -45,6 +45,7 @@ import { useStrictTestMode } from '@/hooks/useStrictTestMode'
 import { api } from '@/lib/api'
 import { guestAttempts } from '@/lib/guest-attempts'
 import { ieltsRules } from '@/lib/ielts-rules'
+import { useAuth } from '@/stores/auth'
 
 type Passage = {
   id: number
@@ -352,6 +353,8 @@ function LiveAttemptView({
   listeningAudio?: ListeningAudioProps
 }) {
   const navigate = useNavigate()
+  const userRole = useAuth((s) => s.user?.role)
+  const isB2C = userRole === 'b2c_user'
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({})
   const [currentQId, setCurrentQId] = useState<number | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -400,7 +403,12 @@ function LiveAttemptView({
     mutationFn: async () => api.post(`/attempts/${attempt.id}/submit/`),
     onSuccess: () => {
       try { guestAttempts.update(attempt.id, { status: 'graded' }) } catch { /* not a guest record */ }
-      navigate(`/result/${attempt.id}`, { replace: true })
+      // ETAP 19 — B2C foydalanuvchini o'z dashboard'iga, boshqalarni — result sahifasiga
+      if (isB2C) {
+        navigate('/b2c/dashboard', { replace: true })
+      } else {
+        navigate(`/result/${attempt.id}`, { replace: true })
+      }
     },
     onError: () => toast.error('Submitda xatolik'),
   })
@@ -601,7 +609,7 @@ function LiveAttemptView({
       />
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-6 text-white">
         <div className="flex items-center gap-3">
-          <a href="/home" title="Home">
+          <a href={isB2C ? '/b2c/dashboard' : '/home'} title="Home">
             <Button
               variant="ghost"
               size="sm"
@@ -960,6 +968,11 @@ export default function TakeTestPage() {
     )
   }
   if (attemptQuery.data.status !== 'in_progress') {
+    // ETAP 19 — B2C foydalanuvchini result o'rniga dashboard'iga
+    const userRole = useAuth.getState().user?.role
+    if (userRole === 'b2c_user') {
+      return <Navigate to="/b2c/dashboard" replace />
+    }
     return <Navigate to={`/result/${attemptId}`} replace />
   }
   return <TestGate attempt={attemptQuery.data} />
@@ -972,6 +985,28 @@ type GatePhase = 'rules' | 'preloading' | 'starting' | 'started'
 function TestGate({ attempt }: { attempt: Attempt }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const isB2C = useAuth((s) => s.user?.role) === 'b2c_user'
+
+  // ETAP 19 — B2C user gate'da Cancel bossa, kreditni refund qilib b2c dashboard'ga o'tkazamiz
+  const handleCancel = async () => {
+    if (isB2C) {
+      try {
+        const resp = await api.post<{ refunded: number }>(
+          `/b2c/attempts/${attempt.id}/cancel`,
+        )
+        if (resp.data.refunded > 0) {
+          toast.success(`Bekor qilindi. +${resp.data.refunded} credit qaytarildi`)
+        }
+        queryClient.invalidateQueries({ queryKey: ['b2c-credits-balance'] })
+        queryClient.invalidateQueries({ queryKey: ['b2c-credits-page'] })
+        navigate('/b2c/dashboard', { replace: true })
+        return
+      } catch {
+        // fall back to default
+      }
+    }
+    navigate(-1)
+  }
 
   const isListening = attempt.test.module === 'listening'
 
@@ -1072,7 +1107,7 @@ function TestGate({ attempt }: { attempt: Attempt }) {
           open
           module={attempt.test.module}
           onConfirm={onAcceptRules}
-          onCancel={() => navigate(-1)}
+          onCancel={handleCancel}
         />
       </>
     )
@@ -1143,6 +1178,7 @@ function getWordCount(text: string): number {
 
 function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const navigate = useNavigate()
+  const isB2C = useAuth((s) => s.user?.role) === 'b2c_user'
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [isFullscreen, setIsFullscreen] = useState(() => ieltsRules.isFullscreen())
@@ -1211,7 +1247,15 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
   const submitMutation = useMutation({
     mutationFn: async () =>
       api.post(`/attempts/${attempt.id}/submit-writing/`, { essay_text: combinedEssay }),
-    onSuccess: () => navigate('/writing/sent', { replace: true }),
+    onSuccess: () => {
+      // ETAP 19 — B2C foydalanuvchini o'z dashboard'iga olib boramiz
+      const userRole = useAuth.getState().user?.role
+      if (userRole === 'b2c_user') {
+        navigate('/b2c/dashboard', { replace: true })
+      } else {
+        navigate('/writing/sent', { replace: true })
+      }
+    },
     onError: (err) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       toast.error(detail || 'Submitda xatolik')
@@ -1331,7 +1375,7 @@ function WriteAttemptView({ attempt }: { attempt: Attempt }) {
     <div className="test-app flex h-screen flex-col bg-slate-50">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-6 text-white">
         <div className="flex items-center gap-3">
-          <a href="/home" title="Home">
+          <a href={isB2C ? '/b2c/dashboard' : '/home'} title="Home">
             <Button
               variant="ghost"
               size="sm"

@@ -20,6 +20,32 @@ def generate_verification_code() -> str:
     return secrets.token_urlsafe(32)
 
 
+def generate_exam_taker_id(date) -> str:
+    """ETAP 21 — Exam Taker ID: `IELTS-YYYY-NNNN`.
+
+    Yil bo'yicha global counter — shu yilda yaratilgan barcha
+    MockParticipant'lar ichida eng oxirgi raqam topiladi va +1 qilinadi.
+    Race condition'dan saqlash uchun bu funksiya `transaction.atomic()`
+    ichida chaqirilishi kerak (Participant.save() chaqirgan joyda).
+    """
+    year = date.year
+    prefix = f'IELTS-{year}-'
+    last = (
+        MockParticipant.objects
+        .filter(exam_taker_id__startswith=prefix)
+        .order_by('-exam_taker_id')
+        .values_list('exam_taker_id', flat=True)
+        .first()
+    )
+    next_num = 1
+    if last:
+        try:
+            next_num = int(last.split('-')[-1]) + 1
+        except (ValueError, IndexError):
+            next_num = 1
+    return f'{prefix}{next_num:04d}'
+
+
 class MockSession(models.Model):
     """Center admini yaratadigan sinxron mock sessiya."""
 
@@ -115,6 +141,14 @@ class MockSession(models.Model):
     is_archived = models.BooleanField(default=False, db_index=True)
     archived_at = models.DateTimeField(null=True, blank=True)
 
+    # ETAP 21 — Rasmiy imtihon rejimi: talaba o'z natijasini hech qaerda
+    # ko'ra olmaydi (my_mock_results, my_mock_detail, certificate). Markaz
+    # natijalarni Excel orqali eksport qilib, qo'lda e'lon qiladi.
+    is_official_exam = models.BooleanField(
+        default=False, db_index=True,
+        help_text='Rasmiy mock imtihon — talabaga natija ko\'rinmaydi',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -207,6 +241,12 @@ class MockParticipant(models.Model):
         MockSession, on_delete=models.CASCADE, related_name='participants',
     )
     full_name = models.CharField(max_length=200)
+    # ETAP 21 — Anonim grading uchun Exam Taker ID (`IELTS-YYYY-NNNN`).
+    # Participant create vaqtida avtomatik beriladi. Teacher writing/speaking
+    # baholaganda ism o'rniga shu ko'rinadi.
+    exam_taker_id = models.CharField(
+        max_length=30, blank=True, default='', db_index=True,
+    )
     browser_session_id = models.CharField(
         max_length=64, unique=True, default=generate_browser_session_id,
     )
@@ -366,18 +406,61 @@ class MockParticipant(models.Model):
         help_text='IELTS Overall: (L+R+W+S)/4, rounded to 0.5',
     )
 
+    # ETAP 21 — Admin override (writing/speaking bahosini o'zgartirish).
+    # Teacher bahosi `writing_score` / `speaking_score`'da qoladi, admin
+    # override `override_band` field'iga yoziladi. Effective ball
+    # `override_band or writing_score`.
+    writing_override_band = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Admin override (writing) — asl bahoga ustunlik',
+    )
+    writing_override_reason = models.TextField(blank=True, default='')
+    writing_overridden_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='mock_writing_overrides',
+    )
+    writing_overridden_at = models.DateTimeField(null=True, blank=True)
+
+    speaking_override_band = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True,
+        help_text='Admin override (speaking) — asl bahoga ustunlik',
+    )
+    speaking_override_reason = models.TextField(blank=True, default='')
+    speaking_overridden_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='mock_speaking_overrides',
+    )
+    speaking_overridden_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = 'mock_participants'
         unique_together = [('session', 'full_name')]
         ordering = ['joined_at']
 
     def __str__(self):
+        if self.exam_taker_id:
+            return f'{self.exam_taker_id} — {self.full_name}'
         return f'{self.full_name} @ {self.session.access_code}'
+
+    def save(self, *args, **kwargs):
+        # ETAP 21 — Exam Taker ID avtomatik berish (faqat yangi yozuvlarda).
+        if not self.exam_taker_id and self.session_id:
+            self.exam_taker_id = generate_exam_taker_id(self.session.date)
+        super().save(*args, **kwargs)
 
     @property
     def is_guest(self) -> bool:
         """ETAP 19 — Login akkauntiga bog'lanmagan participant."""
         return self.user_id is None
+
+    @property
+    def effective_writing_score(self):
+        """ETAP 21 — Admin override bo'lsa, override band, aks holda teacher bahosi."""
+        return self.writing_override_band if self.writing_override_band is not None else self.writing_score
+
+    @property
+    def effective_speaking_score(self):
+        return self.speaking_override_band if self.speaking_override_band is not None else self.speaking_score
 
     def get_display_name(self) -> str:
         """ETAP 19 — Ism (linked user nomi yoki guest full_name)."""
@@ -422,13 +505,17 @@ class MockParticipant(models.Model):
         return self.writing_score
 
     def calculate_overall_band_score(self):
-        """Overall = (L+R+W+S)/4, 0.5 stepda yaxlitlanadi (IELTS rule)."""
+        """Overall = (L+R+W+S)/4, 0.5 stepda yaxlitlanadi (IELTS rule).
+
+        ETAP 21 — Writing/Speaking uchun admin override bo'lsa, override
+        ball ishlatiladi (effective_*).
+        """
         from decimal import Decimal
         scores = [
             self.listening_score,
             self.reading_score,
-            self.writing_score,
-            self.speaking_score,
+            self.effective_writing_score,
+            self.effective_speaking_score,
         ]
         valid = [float(s) for s in scores if s is not None]
         if len(valid) == 4:

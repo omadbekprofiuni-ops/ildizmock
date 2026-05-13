@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import {
   CreditCard,
   History,
@@ -5,11 +6,13 @@ import {
   Library,
   LogOut,
   User as UserIcon,
+  Zap,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { toast } from '@/components/ui/toaster'
+import { api } from '@/lib/api'
 import { useAuth } from '@/stores/auth'
 
 export type B2CNavKey = 'dashboard' | 'catalog' | 'history' | 'credits' | 'profile'
@@ -24,9 +27,19 @@ const NAV_ITEMS: Array<{
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/b2c/dashboard', enabled: true },
   { key: 'catalog', label: 'Katalog', icon: Library, href: '/b2c/catalog', enabled: true },
   { key: 'history', label: 'Test History', icon: History, href: '#', enabled: false },
-  { key: 'credits', label: 'Kreditlar', icon: CreditCard, href: '#', enabled: false },
+  { key: 'credits', label: 'Kreditlar', icon: CreditCard, href: '/b2c/credits', enabled: true },
   { key: 'profile', label: 'Profil', icon: UserIcon, href: '/b2c/profile', enabled: true },
 ]
+
+type CreditsBalance = { balance: number }
+
+export function useB2CBalance() {
+  return useQuery({
+    queryKey: ['b2c-credits-balance'],
+    queryFn: async () => (await api.get<CreditsBalance>('/b2c/credits')).data,
+    staleTime: 30_000,
+  })
+}
 
 function B2CSidebar({ active }: { active: B2CNavKey }) {
   return (
@@ -74,6 +87,30 @@ function B2CSidebar({ active }: { active: B2CNavKey }) {
   )
 }
 
+function BalanceBadge() {
+  const { data, isLoading } = useB2CBalance()
+  if (isLoading) {
+    return (
+      <Link
+        to="/b2c/credits"
+        className="inline-flex items-center gap-1.5 rounded-xl border-2 border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700"
+      >
+        <Zap className="h-4 w-4" /> …
+      </Link>
+    )
+  }
+  const balance = data?.balance ?? 0
+  return (
+    <Link
+      to="/b2c/credits"
+      className="inline-flex items-center gap-1.5 rounded-xl border-2 border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100"
+      title="Kreditlar sahifasi"
+    >
+      <Zap className="h-4 w-4" /> {balance} credit
+    </Link>
+  )
+}
+
 function B2CHeader() {
   const navigate = useNavigate()
   const user = useAuth((s) => s.user)
@@ -95,6 +132,7 @@ function B2CHeader() {
           ILDIZ<span className="text-brand-600">mock</span>
         </Link>
         <div className="flex items-center gap-3">
+          <BalanceBadge />
           <Link
             to="/b2c/profile"
             className="hidden text-sm text-slate-600 hover:text-slate-900 sm:inline"

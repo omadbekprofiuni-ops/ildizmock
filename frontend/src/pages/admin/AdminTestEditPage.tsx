@@ -454,6 +454,20 @@ export default function AdminTestEditPage({
   }
   const accent = moduleAccents[draft.module]
 
+  // ETAP 19 — Listening testlar uchun backend listening_parts'ni passages
+  // sifatida qaytaradi; agar shunga qaramay 0 passage va > 0 savol bo'lsa,
+  // foydalanuvchini wizard'ga yo'naltiramiz (writing/speaking format'lar).
+  const wizardCandidate =
+    !isNew &&
+    !query.isLoading &&
+    query.data &&
+    draft.passages.length === 0 &&
+    ((query.data as { question_count?: number }).question_count ?? 0) > 0
+
+  const switchToWizardPath = basePath.startsWith('/')
+    ? `${basePath}/wizard/${testId}`
+    : '#'
+
   return (
     <Layout>
       <div className="mx-auto max-w-5xl p-6 lg:p-10">
@@ -463,6 +477,30 @@ export default function AdminTestEditPage({
           <span>/</span>
           <span className="text-slate-900">{isNew ? 'New' : 'Edit'}</span>
         </div>
+
+        {/* Listening edit shu yerda ham ishlaydi — banner faqat writing/speaking
+            kabi qo'llab-quvvatlanmaydigan formatlar uchun ko'rinadi */}
+        {wizardCandidate && basePath.startsWith('/') && (
+          <div className="mb-5 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-sm">
+                <p className="font-bold text-amber-900">
+                  Bu test formati simple editor'da tahrirlanmaydi
+                </p>
+                <p className="mt-1 text-amber-800">
+                  Bu modul (writing/speaking) maxsus Wizard'da yaratilgan.
+                  Savollarni tahrirlash uchun Wizard'ga o'ting.
+                </p>
+              </div>
+              <Link
+                to={switchToWizardPath}
+                className="shrink-0 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700"
+              >
+                Wizard'ga o'tish →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

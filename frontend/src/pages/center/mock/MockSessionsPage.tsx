@@ -26,6 +26,7 @@ interface SessionRow {
   created_at: string
   is_archived?: boolean
   archived_at?: string | null
+  is_official_exam?: boolean
 }
 
 type Tab = 'active' | 'archive'
@@ -224,7 +225,14 @@ export default function MockSessionsPage() {
                 sessions.map((s) => (
                   <tr key={s.id} className={adminTable.trHover}>
                     <td className={adminTable.td + ' font-semibold text-slate-900'}>
-                      {s.name}
+                      <div className="flex items-center gap-2">
+                        <span>{s.name}</span>
+                        {s.is_official_exam && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                            🔒 EXAM
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className={adminTable.td + ' text-slate-600'}>{s.date}</td>
                     <td className={adminTable.td + ' font-mono text-xs'}>
@@ -351,6 +359,7 @@ function CreateSessionDialog({
     listening_duration: 30,
     reading_duration: 60,
     writing_duration: 60,
+    is_official_exam: false,
   })
 
   useEffect(() => {
@@ -419,6 +428,7 @@ function CreateSessionDialog({
         listening_duration: Number(form.listening_duration),
         reading_duration: Number(form.reading_duration),
         writing_duration: Number(form.writing_duration),
+        is_official_exam: form.is_official_exam,
       })
       onCreated()
     } catch (e: unknown) {
@@ -505,6 +515,27 @@ function CreateSessionDialog({
               onChange={(v) => setForm({ ...form, writing_test: v })}
               tests={tests.writing}
             />
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <input
+                type="checkbox"
+                checked={form.is_official_exam}
+                onChange={(e) =>
+                  setForm({ ...form, is_official_exam: e.target.checked })
+                }
+                className="mt-0.5 h-4 w-4 cursor-pointer accent-amber-600"
+              />
+              <div>
+                <div className="text-sm font-semibold text-amber-900">
+                  Rasmiy mock imtihon
+                </div>
+                <div className="text-xs text-amber-800">
+                  Talabaga natija ko'rinmaydi (dashboard, history, certificate hech qaerda).
+                  Markaz natijani Excel orqali eksport qilib, qo'lda e'lon qiladi.
+                  Teacher Writing/Speaking'ni anonim baholaydi (faqat Exam Taker ID).
+                </div>
+              </div>
+            </label>
 
             {/* HOTFIX — kamida 1 ta test tanlanmasa, foydalanuvchini
                 ogohlantirish hint'i (form.name va date to'ldirilganda) */}

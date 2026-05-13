@@ -6,3 +6,7 @@ class B2cConfig(AppConfig):
     name = 'apps.b2c'
     label = 'b2c'
     verbose_name = 'B2C (Individual users)'
+
+    def ready(self):
+        # ETAP 19 — signup bonus signal'ini import qilamiz
+        from . import signals  # noqa: F401

@@ -60,7 +60,12 @@ import OrgTestsPage from './pages/superadmin/OrgTestsPage'
 import OrgWritingsPage from './pages/superadmin/OrgWritingsPage'
 import SuperAdminAudioPage from './pages/superadmin/SuperAdminAudioPage'
 import SuperAdminB2CCatalogPage from './pages/superadmin/SuperAdminB2CCatalogPage'
+import SuperAdminB2CUserDetailPage from './pages/superadmin/SuperAdminB2CUserDetailPage'
+import SuperAdminB2CUsersPage from './pages/superadmin/SuperAdminB2CUsersPage'
+import SuperAdminCreditsPage from './pages/superadmin/SuperAdminCreditsPage'
+import SuperAdminPromoCodesPage from './pages/superadmin/SuperAdminPromoCodesPage'
 import SuperAdminBillingPage from './pages/superadmin/SuperAdminBillingPage'
+import SuperAdminComingSoonPage from './pages/superadmin/SuperAdminComingSoonPage'
 import SuperAdminPdfImportPage from './pages/superadmin/SuperAdminPdfImportPage'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SuperAdminAIProvidersPage from './pages/superadmin/SuperAdminAIProvidersPage'
@@ -84,6 +89,7 @@ import B2CDashboardPage from './pages/b2c/DashboardPage'
 import B2CProfilePage from './pages/b2c/ProfilePage'
 import B2CCatalogPage from './pages/b2c/CatalogPage'
 import B2CCatalogDetailPage from './pages/b2c/CatalogDetailPage'
+import B2CCreditsPage from './pages/b2c/CreditsPage'
 import MyWritingsPage from './pages/MyWritingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OrgLandingPage from './pages/OrgLandingPage'
@@ -140,6 +146,8 @@ function AppRoutes() {
           {/* ETAP 16 — B2C catalog */}
           <Route path="/b2c/catalog" element={<B2CRoute><B2CCatalogPage /></B2CRoute>} />
           <Route path="/b2c/catalog/:id" element={<B2CRoute><B2CCatalogDetailPage /></B2CRoute>} />
+          {/* ETAP 19 — B2C kreditlar sahifasi */}
+          <Route path="/b2c/credits" element={<B2CRoute><B2CCreditsPage /></B2CRoute>} />
 
           <Route path="/tests/speaking" element={<SpeakingComingSoonPage />} />
           <Route path="/tests/:module" element={<TestListPage />} />
@@ -359,6 +367,40 @@ function AppRoutes() {
             element={
               <SuperAdminRoute>
                 <SuperAdminAIProvidersPage />
+              </SuperAdminRoute>
+            }
+          />
+
+          {/* ETAP 19 — B2C foydalanuvchilar admin */}
+          <Route
+            path="/super/b2c-users"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminB2CUsersPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/b2c-users/:userId"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminB2CUserDetailPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/credits"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminCreditsPage />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/super/promo-codes"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminPromoCodesPage />
               </SuperAdminRoute>
             }
           />

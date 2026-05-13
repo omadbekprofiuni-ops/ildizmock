@@ -32,6 +32,7 @@ function extractErrorDetail(err: unknown, fallback: string): string {
 interface Participant {
   id: number
   full_name: string
+  exam_taker_id: string
   joined_at: string
   has_joined: boolean
   claimed_at: string | null
@@ -74,6 +75,7 @@ interface SessionDetail {
   allow_late_join: boolean
   allow_guests: boolean
   link_expires_at: string | null
+  is_official_exam: boolean
   participants: Participant[]
 }
 
@@ -278,6 +280,11 @@ export default function MockControlPage() {
           >
             {STATUS_LABEL[session.status]}
           </Chip>
+          {session.is_official_exam && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+              🔒 Rasmiy mock imtihon — natija talabaga ko'rinmaydi
+            </span>
+          )}
         </div>
       </div>
 
@@ -526,6 +533,11 @@ export default function MockControlPage() {
                           </span>
                         )}
                       </div>
+                      {p.exam_taker_id && (
+                        <div className="mt-1 inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-rose-700">
+                          {p.exam_taker_id}
+                        </div>
+                      )}
                       <div className="mt-1 text-xs text-slate-500">
                         {pending ? (
                           <span className="font-semibold text-amber-700">

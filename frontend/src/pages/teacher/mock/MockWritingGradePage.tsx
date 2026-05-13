@@ -15,12 +15,11 @@ interface WritingTaskInfo {
 interface Detail {
   id: number
   full_name: string
+  exam_taker_id: string
+  anonymous_grading?: boolean
   session: { id: number; name: string; date: string; status: string }
-  listening_score: string | null
-  reading_score: string | null
   writing_score: string | null
   speaking_score: string | null
-  overall_band_score: string | null
   writing_status: string
   writing_task1_text: string
   writing_task2_text: string
@@ -125,14 +124,20 @@ export default function MockWritingGradePage() {
   return (
     <TeacherLayout>
       <header className="border-b bg-white px-8 py-5">
-        <h1 className="text-2xl font-bold">{detail.full_name}</h1>
-        <p className="text-sm text-slate-500">
-          {detail.session.name} · {detail.session.date}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="font-mono text-2xl font-bold tracking-wider text-rose-700">
+              {detail.exam_taker_id || detail.full_name}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {detail.session.name} · {detail.session.date}
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+            🔒 Anonim baholash
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-4 text-sm">
-          <Stat label="Listening" value={detail.listening_score} />
-          <Stat label="Reading" value={detail.reading_score} />
-          <Stat label="Speaking" value={detail.speaking_score} />
           <Stat
             label="Calculated Writing band"
             value={writingBand}

@@ -36,6 +36,24 @@ User = get_user_model()
 SECTION_ORDER = ('listening', 'reading', 'writing', 'speaking')
 
 
+def _auto_commit_writing_drafts(session):
+    """Sessiya 'writing' bo'limidan chiqishda — har bir participant uchun
+    avval autosave qilingan draftni "submitted" deb belgilab qo'yamiz.
+
+    Kech submit qilish UX uchun: admin "advance" bosib o'tib ketganda yoki
+    sessiya yopilganda, talaba "Submit"'ni bosolmagan bo'lsa ham yozgan
+    drafti yo'qolmaydi va teacher baholash navbatiga tushadi. writing
+    test biriktirilmagan sessiyalarda no-op.
+    """
+    if not session.writing_test_id:
+        return 0
+    now = timezone.now()
+    return MockParticipant.objects.filter(
+        session=session,
+        writing_submitted_at__isnull=True,
+    ).update(writing_submitted_at=now)
+
+
 def _next_configured_section(session, after=None):
     """Sessiyada testi bor keyingi bo'limni qaytaradi.
 
@@ -304,6 +322,11 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Writing bo'limidan chiqayotgan bo'lsa, draftlarni auto-commit
+        # qilamiz — talabaning yozuvi yo'qolmasin va teacher navbatiga tushsin.
+        if session.status == 'writing':
+            _auto_commit_writing_drafts(session)
+
         nxt = _next_configured_section(session, after=session.status)
         if nxt is None:
             nxt = 'finished'
@@ -326,6 +349,8 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
         session = self.get_object()
         if session.status == 'finished':
             return Response(MockSessionDetailSerializer(session).data)
+        # Writing draftlarini commit qilish — kech submit qilolmaganlar uchun.
+        _auto_commit_writing_drafts(session)
         session.status = 'finished'
         session.finished_at = timezone.now()
         session.save(update_fields=['status', 'finished_at'])
@@ -488,6 +513,170 @@ class CenterMockSessionViewSet(viewsets.ModelViewSet):
                 if participant.overall_band_score is not None else None
             ),
         })
+
+    # ===== ETAP 21 — Admin override (teacher bahosini o'zgartirish) =====
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'participants/(?P<participant_id>\d+)/override-writing',
+    )
+    def override_writing(self, request, pk=None, org_slug=None, participant_id=None):
+        """Admin teacher writing bahosini o'zgartiradi. Sabab majburiy.
+
+        Original `writing_score` o'zgarmaydi — yangi qiymat
+        `writing_override_band`'ga yoziladi, audit (kim, qachon, sabab)
+        saqlanadi. Overall band override hisobiga qayta yangilanadi.
+        """
+        return self._handle_override(
+            request, participant_id, kind='writing',
+        )
+
+    @action(
+        detail=True, methods=['post'],
+        url_path=r'participants/(?P<participant_id>\d+)/override-speaking',
+    )
+    def override_speaking(self, request, pk=None, org_slug=None, participant_id=None):
+        return self._handle_override(
+            request, participant_id, kind='speaking',
+        )
+
+    def _handle_override(self, request, participant_id, *, kind):
+        session = self.get_object()
+        try:
+            new_band = float(request.data.get('band'))
+        except (TypeError, ValueError):
+            return Response({'detail': 'Band must be a number.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not (0 <= new_band <= 9):
+            return Response({'detail': 'Band must be between 0 and 9.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        # 0.5 qadam tekshiruvi (IELTS standard)
+        if round(new_band * 2) / 2 != new_band:
+            return Response({'detail': 'Band must be in 0.5 step.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        reason = (request.data.get('reason') or '').strip()
+        if not reason:
+            return Response({'detail': 'Reason is required for override.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        participant = get_object_or_404(
+            MockParticipant, id=participant_id, session=session,
+        )
+
+        if kind == 'writing':
+            if participant.writing_score is None:
+                return Response(
+                    {'detail': 'Original writing score yet — use score-writing first.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            participant.writing_override_band = round(new_band, 1)
+            participant.writing_override_reason = reason
+            participant.writing_overridden_by = request.user
+            participant.writing_overridden_at = timezone.now()
+        else:
+            if participant.speaking_score is None:
+                return Response(
+                    {'detail': 'Original speaking score yet — use score-speaking first.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            participant.speaking_override_band = round(new_band, 1)
+            participant.speaking_override_reason = reason
+            participant.speaking_overridden_by = request.user
+            participant.speaking_overridden_at = timezone.now()
+
+        participant.calculate_overall_band_score()
+        participant.save()
+        return Response({
+            'kind': kind,
+            'original_band': (
+                str(participant.writing_score if kind == 'writing'
+                    else participant.speaking_score)
+            ),
+            'override_band': str(
+                participant.writing_override_band if kind == 'writing'
+                else participant.speaking_override_band
+            ),
+            'reason': reason,
+            'overall_band_score': (
+                str(participant.overall_band_score)
+                if participant.overall_band_score is not None else None
+            ),
+        })
+
+    # ===== ETAP 21 — Excel eksport =====
+
+    @action(detail=True, methods=['get'], url_path='export')
+    def export_xlsx(self, request, pk=None, org_slug=None):
+        """Mock natijalarini .xlsx faylga eksport qilish (openpyxl).
+
+        Ustunlar: Exam Taker ID, F.I.O, Email, Listening, Reading, Writing,
+        Speaking, Overall, Override izohlari.
+        """
+        import openpyxl
+        from django.http import HttpResponse
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        session = self.get_object()
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Mock Results'
+
+        # Header
+        ws.cell(1, 1, f'Mock Exam Results — {session.name}').font = Font(bold=True, size=14)
+        ws.cell(2, 1, f"Sana: {session.date.strftime('%Y-%m-%d')}")
+        ws.cell(3, 1, f"Tashkilot: {session.organization.name}")
+
+        headers = [
+            'Exam Taker ID', 'F.I.O', 'Email/Username',
+            'Listening', 'Reading', 'Writing', 'Speaking', 'Overall',
+            'Writing override izohi', 'Speaking override izohi',
+        ]
+        for col, h in enumerate(headers, start=1):
+            cell = ws.cell(5, col, h)
+            cell.font = Font(bold=True, color='FFFFFF')
+            cell.fill = PatternFill('solid', fgColor='DC2626')
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        def _band(value):
+            return float(value) if value is not None else '—'
+
+        row = 6
+        participants = session.participants.select_related('user').order_by(
+            'exam_taker_id', 'full_name',
+        )
+        for p in participants:
+            user_email = ''
+            if p.user_id:
+                user_email = p.user.email or p.user.username or ''
+            ws.cell(row, 1, p.exam_taker_id or '—')
+            ws.cell(row, 2, p.get_display_name())
+            ws.cell(row, 3, user_email)
+            ws.cell(row, 4, _band(p.listening_score))
+            ws.cell(row, 5, _band(p.reading_score))
+            ws.cell(row, 6, _band(p.effective_writing_score))
+            ws.cell(row, 7, _band(p.effective_speaking_score))
+            ws.cell(row, 8, _band(p.overall_band_score))
+            ws.cell(row, 9, p.writing_override_reason or '')
+            ws.cell(row, 10, p.speaking_override_reason or '')
+            for col in range(4, 9):
+                ws.cell(row, col).alignment = Alignment(horizontal='center')
+            row += 1
+
+        # Column widths
+        widths = [18, 28, 24, 11, 11, 11, 11, 11, 36, 36]
+        for i, w in enumerate(widths, start=1):
+            ws.column_dimensions[get_column_letter(i)].width = w
+
+        response = HttpResponse(
+            content_type=(
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ),
+        )
+        filename = f"mock_{session.date.strftime('%Y%m%d')}_{session.id}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        wb.save(response)
+        return response
 
     # ===== ETAP 19 — Pre-registered participants =====
 
